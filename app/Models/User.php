@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Notepad;
+use App\Models\ChatRoom;
 
 class User extends Authenticatable
 {
@@ -17,10 +19,21 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+
+    public function notepads() {
+        return $this->hasMany(Notepad::class);
+    }
+
+    public function chatrooms() {
+        return $this->hasMany(ChatRoom::class);
+    }
+
     protected $fillable = [
+        'user_id',
+        'password',
         'name',
         'email',
-        'password',
+        'role',
     ];
 
     /**

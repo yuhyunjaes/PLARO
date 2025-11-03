@@ -129,17 +129,47 @@ input[type=number]::-webkit-inner-spin-button {
     @apply bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white transition-colors duration-300;
 }
 .form-btn {
-    @apply bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white transition-colors duration-300 pl-1 pr-2 sm:px-4 py-2 rounded-e-3xl rounded-s-sm shadow font-semibold cursor-pointer;
+    @apply bg-gray-100 text-black border border-gray-200 hover:bg-gray-200 hover:border-gray-300
+        dark:bg-[#21242a] dark:hover:bg-gray-800 dark:active:bg-gray-950 dark:text-white dark:border-gray-700 dark:hover:border-gray-800
+        transition-colors duration-300 px-4 py-2 rounded-4xl shadow font-semibold cursor-pointer;
 }
 
 .form-label {
-    @apply text-gray-950 dark:text-white font-semibold block mb-2;
+    @apply text-gray-950 dark:text-white font-semibold block mb-1;
 }
 .form-control {
-    @apply bg-gray-50 pl-2 dark:bg-[#2A2B31] border border-gray-200
-    focus:border-gray-200 dark:focus:border-gray-900 dark:border-gray-800 py-2 w-full rounded dark:text-white
+    @apply bg-white pl-3 dark:bg-gray-950 border border-gray-200
+    focus:border-gray-300 dark:focus:border-gray-600 dark:border-gray-700 py-2 w-full rounded-4xl dark:text-white
     focus:outline-none
     focus:ring-0
     active:outline-none
     active:ring-0;
 }
+
+form > div {
+    @apply mb-1;
+}
+
+.form-message {
+    @apply text-sm text-gray-500 dark:text-gray-300 mt-1;
+}
+
+@keyframes fadeUp {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0.3;
+        transform: translateY(0);
+    }
+}
+
+@utility animate-fadeUp {
+    animation: fadeUp 1.2s ease-in-out infinite;
+}
+

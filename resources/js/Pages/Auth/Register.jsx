@@ -1,6 +1,7 @@
 import {useState, useEffect } from "react";
 import axios from "axios";
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
+import Loading from '@/Components/Elements/Loading.jsx';
 
 export default function Register() {
     const [userId, setUserId] = useState("");
@@ -16,6 +17,8 @@ export default function Register() {
     const [emailMessage, setEmailMessage] = useState("");
     const [emailTimer, setEmailTimer] = useState(0);
     const [isEmailVerified, setIsEmailVerified] = useState(false);
+
+    const [loading, setLoading] = useState(false);
 
     // 비밀번호 일치 확인
     useEffect(() => {
@@ -44,14 +47,18 @@ export default function Register() {
     // 이메일 인증코드 전송
     async function sendEmailCode() {
         if (!email) return setEmailMessage("이메일을 입력해주세요.");
+        setLoading(true);
 
         try {
             setEmailAuthCode("");
             const res = await axios.post("/send-email-code", { email });
             const data = res.data;
-            setEmailCode(data.success)
+            setEmailCode(data.success);
             setEmailMessage(data.message);
-            if (data.success) setEmailTimer(90);
+            if (data.success) {
+                setLoading(false);
+                setEmailTimer(90);
+            }
         } catch (err) {
             console.error(err);
             setEmailMessage("이메일 전송 중 오류가 발생했습니다.");
@@ -60,14 +67,16 @@ export default function Register() {
 
     // 이메일 타이머
     useEffect(() => {
-        if (emailTimer === 0) {
-            setEmailCode(false);
-            setEmailMessage("");
-            return;
+        if(!isEmailVerified) {
+            if (emailCode && emailTimer === 0) {
+                setEmailCode(false);
+                setEmailMessage("이메일 인증에 실패하였습니다.");
+                return;
+            }
+            const timer = setInterval(() => setEmailTimer((t) => t - 1), 1000);
+            return () => clearInterval(timer);
         }
-        const timer = setInterval(() => setEmailTimer((t) => t - 1), 1000);
-        return () => clearInterval(timer);
-    }, [emailTimer]);
+    }, [emailTimer, isEmailVerified, emailCode]);
 
     // 이메일 인증 확인
     async function verifyEmailCode() {
@@ -75,6 +84,7 @@ export default function Register() {
             const res = await axios.post("/check-email-code", { code: emailAuthCode });
             const data = res.data;
             setEmailMessage(data.message);
+            setEmailCode(!data.success);
             setIsEmailVerified(data.success);
         } catch (err) {
             console.error(err);
@@ -97,16 +107,23 @@ export default function Register() {
     return (
         <>
             <Head title="회원가입" />
-            <div className="flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-950">
+            <div className="flex justify-center pt-8">
                 <form
                     method="POST"
                     action="/register"
                     onSubmit={handleSubmit}
-                    className="w-full sm:w-[500px] bg-white dark:bg-[#0d1117] rounded-xl shadow-md p-8 space-y-5"
+                    className="space-y-5 w-[400px] p-5"
                 >
-                    <div className="text-center space-y-2">
-                        <h3 className="text-2xl font-semibold dark:text-white">회원가입</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+
+                    {/*일단 CSRF토큰 때문에 안됨 여기부터 시작*/}
+
+                    <div className="text-center space-y-5">
+                        <div className="flex justify-center">
+                            <Link href="/" className="w-12 block">
+                                <img src="/asset/images/Logo/icon.png" alt="" className=""/>
+                            </Link>
+                        </div>
+                        <p className="text-xl text-gray-950 dark:text-white font-semibold">
                             계정을 생성하고 시작하세요
                         </p>
                     </div>
@@ -147,7 +164,7 @@ export default function Register() {
                             </button>
                         </div>
                         {idMessage && (
-                            <p className="text-sm text-gray-500 mt-1">{idMessage}</p>
+                            <p className="form-message">{idMessage}</p>
                         )}
                     </div>
 
@@ -173,7 +190,7 @@ export default function Register() {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             className="form-control"
                         />
-                        {((!passwordMatch && password) || !passwordMatch && confirmPassword) && (
+                        {!passwordMatch && (password || confirmPassword) && (
                             <p className="text-sm text-red-500 mt-1">비밀번호가 일치하지 않습니다.</p>
                         )}
                     </div>
@@ -196,16 +213,20 @@ export default function Register() {
                                 className="form-btn"
                                 disabled={(emailCode || isEmailVerified)}
                             >
-                                {emailTimer > 0 ? `재전송(${emailTimer}s)` : "인증코드 전송"}
+                                {isEmailVerified
+                                    ? "인증완료"
+                                    : emailTimer > 0
+                                        ? `재전송(${emailTimer}s)`
+                                        : "인증코드 전송"}
                             </button>
                         </div>
                         {emailMessage && (
-                            <p className="text-sm text-gray-500 mt-1">{emailMessage}</p>
+                            <p className="form-message">{emailMessage}</p>
                         )}
                     </div>
 
                     <div
-                        className={`${(emailCode || isEmailVerified) ? 'max-h-[400px]' : 'max-h-0'} overflow-hidden transition-[max-height] duration-300`}
+                        className={`${(emailCode && !isEmailVerified) ? 'max-h-[400px]' : 'max-h-0'} overflow-hidden transition-[max-height] duration-300`}
                     >
                         <label htmlFor="email-auth" className="form-label">이메일 인증</label>
                         <div className="flex gap-1">
@@ -232,12 +253,15 @@ export default function Register() {
 
                     <button
                         type="submit"
-                        className="btn w-full main-btn"
+                        className="btn w-full main-btn mt-1"
                     >
                         회원가입
                     </button>
                 </form>
             </div>
+            {loading ? (
+                <Loading/>
+            ) : ''}
         </>
     );
 }
