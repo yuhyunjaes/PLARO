@@ -4,7 +4,7 @@ import { faPenSquare } from "@fortawesome/free-solid-svg-icons";
 import { faSquareCaretLeft, faSquareCaretRight } from "@fortawesome/free-regular-svg-icons";
 import RoomList from "@/Components/LifeBot/SideBarSection/RoomList.jsx";
 
-export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatId, sideBar, setSideBar, setLoading, setMessages, messages }) {
+export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatId, sideBar, setSideBar, setLoading, setMessages, editId, setEditId,  editRoomRef }) {
     const resetRoom = () => {
         setChatId(null);
         setMessages([]);
@@ -33,7 +33,7 @@ export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatI
                         )}
                     </button>
                 </div>
-                <RoomList auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={(sideBar > 50)} setLoading={setLoading}/>
+                <RoomList  editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={(sideBar > 50)} setLoading={setLoading}/>
             </aside>
         </>
     );

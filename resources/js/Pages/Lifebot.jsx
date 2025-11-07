@@ -4,7 +4,8 @@ import Loading from '@/Components/Elements/Loading.jsx';
 import { Head, router } from '@inertiajs/react';
 import LifeBotSection from '@/Components/LifeBot/LifeBotSection.jsx';
 import SideBarSection from '@/Components/LifeBot/SideBarSection.jsx';
-import { useEffect, useState, useCallback } from "react";
+import {useEffect, useState, useCallback, useRef} from "react";
+import EditRoom from "@/Components/LifeBot/SideBarSection/RoomList/EditRoom.jsx";
 
 export default function Lifebot({ auth, roomId }) {
     const [sideBar, setSideBar] = useState(() => (window.innerWidth <= 640 ? 0 : 250));
@@ -15,6 +16,9 @@ export default function Lifebot({ auth, roomId }) {
     const [messages, setMessages] = useState([]);
     const [prompt, setPrompt] = useState("");
     const [newChat, setNewChat] = useState(false);
+    const [editId, setEditId] = useState("");
+
+    const editRoomRef = useRef(null);
 
     const handleResize = useCallback(() => {
         setSideBar((prev) => {
@@ -67,16 +71,30 @@ export default function Lifebot({ auth, roomId }) {
         getMessages();
     }, [chatId]);
 
+    const handleClickOutside = useCallback((e) => {
+        if (!editId) return;
+        if (editRoomRef.current && !editRoomRef.current.contains(e.target)) {
+            setEditId("");
+        }
+    }, [editId])
+
+    useEffect(() => {
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [handleClickOutside]);
 
     return (
         <>
             <Head title="LifeBot" />
             <Header auth={auth} />
             <div className="flex h-[calc(100vh-70px)] transition-[width] duration-300">
-                <SideBarSection messages={messages} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setSideBar={setSideBar} setLoading={setLoading}/>
+                <SideBarSection editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} messages={messages} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setSideBar={setSideBar} setLoading={setLoading}/>
                 <LifeBotSection setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setLoading={setLoading}/>
             </div>
-
+            {editId && <EditRoom editRoomRef={editRoomRef} sideBar={sideBar} />}
             {loading && <Loading />}
         </>
     );
