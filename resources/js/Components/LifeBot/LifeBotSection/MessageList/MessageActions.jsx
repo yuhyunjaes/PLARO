@@ -1,3 +1,6 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopy, faClipboard } from "@fortawesome/free-solid-svg-icons";
+
 export default function MessageActions({ msg, handleNotepad }) {
     return (
         <div className="absolute h-[50px] bottom-[-50px] left-0 w-full flex justify-start items-center space-x-2">
@@ -9,14 +12,14 @@ export default function MessageActions({ msg, handleNotepad }) {
                     alert("복사가 완료되었습니다.");
                 }}
             >
-                <i className="fa-solid fa-copy"></i>
+                <FontAwesomeIcon className="normal-text" icon={faCopy}/>
             </button>
             <button
                 className="btn"
                 title="메모장 저장"
                 onClick={() => handleNotepad(msg)}
             >
-                <i className="fa-solid fa-clipboard"></i>
+                <FontAwesomeIcon className="normal-text" icon={faClipboard}/>
             </button>
         </div>
     );

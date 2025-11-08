@@ -1,0 +1,66 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faX } from "@fortawesome/free-solid-svg-icons";
+import {useState} from "react";
+
+export default function Modal({ Title, Text, Position, CloseText, setEditStatus, setModal, setEditId, onClickEvent }) {
+    const [modalAnimation, setModalAnimation] = useState("in");
+
+    const Close = () => {
+        setModalAnimation("out");
+        setTimeout(() => {
+            setEditStatus("");
+            setEditId("");
+            setModal(false);
+        }, 500);
+    };
+
+    const handleConfirm = async () => {
+        setModalAnimation("out");
+        await onClickEvent();
+        setTimeout(() => {
+            setModal(false);
+        }, 500);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/30 z-[999] flex justify-center items-center" onClick={Close}>
+            <div
+                className={`w-full ${
+                    modalAnimation === "in" ? "animate-in-modal" : "animate-out-modal"
+                } overflow-hidden divide-y divide-gray-200 dark:divide-gray-700
+        max-w-[500px] rounded-4xl bg-gray-100 dark:bg-gray-950
+        border border-gray-200 dark:border-gray-700 absolute ${
+                    Position === "top" ? "top-0 mt-10" : Position === "bottom" ? "bottom-0 mb-10" : "top-1/2 -translate-y-1/2"
+                }`}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="p-5 mb-2 flex justify-between items-center">
+                    {Title && <h1 className="normal-text text-xl font-semibold">{Title}</h1>}
+                    <button onClick={Close}>
+                        <FontAwesomeIcon className="normal-text cursor-pointer" icon={faX} />
+                    </button>
+                </div>
+
+                {Text && (
+                    <div className="p-5 mb-2">
+                        <p className="normal-text font-semibold text-sm">{Text}</p>
+                    </div>
+                )}
+
+                <div className="p-5 flex justify-end items-center space-x-2">
+                    <button className="btn text-sm text-white bg-gray-700 hover:bg-gray-800 active:bg-gray-900" onClick={Close}>
+                        닫기
+                    </button>
+                    {CloseText && (
+                        <button
+                            onClick={handleConfirm}
+                            className="btn text-sm text-white bg-blue-500 hover:bg-blue-600 active:bg-blue-700"
+                        >
+                            {CloseText}
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}

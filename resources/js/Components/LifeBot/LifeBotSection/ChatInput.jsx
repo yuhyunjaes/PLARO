@@ -200,15 +200,25 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
 
             const data = res.data;
             if (data.success) {
-                if(arr) {
+                if (arr) {
                     arr[0].id = data.ai_id;
                     await handleNotepad(arr[0]);
                 }
+
                 setMessages((prev) => {
                     const updated = [...prev];
                     if (updated[updated.length - 2]) updated[updated.length - 2].id = data.user_id;
                     if (updated[updated.length - 1]) updated[updated.length - 1].id = data.ai_id;
                     return updated;
+                });
+
+                setRooms((prevRooms) => {
+                    const filtered = prevRooms.filter(r => r.room_id !== roomId);
+                    const current = prevRooms.find(r => r.room_id === roomId);
+                    if (current) {
+                        return [current, ...filtered];
+                    }
+                    return prevRooms;
                 });
             }
         } catch (err) {
@@ -227,10 +237,11 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
     );
 
     return (
-        <div className="w-full h-[80px] relative">
+        <div className="w-full h-[80px]">
             <div
-                className="w-full flex justify-center items-end absolute left-0 bottom-0 mb-3 px-5"
+                className={`w-full flex justify-center items-end absolute ${chatId ? "bottom-0 left-0" : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"} mb-3 px-5`}
             >
+                {!chatId && (<h1 className="normal-text absolute top-[-150%] text-2xl sm:text-4xl font-semibold">새로운 채팅을 시작하세요.</h1>)}
                 <div className="w-full max-w-3xl bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end overflow-hidden">
                             <textarea
                                 ref={textareaRef}
@@ -240,6 +251,7 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
                                 placeholder-gray-950 dark:placeholder-white focus:bg-transparent border-0
                                 text-gray-950 dark:text-white bg-transparent flex-grow overflow-y-auto
                                 overflow-x-hidden resize-none outline-none
+                                text-xs sm:text-base
                                 "
                                 placeholder="AI에게 물어볼 내용을 입력하세요"
                                 onInput={(e) => {

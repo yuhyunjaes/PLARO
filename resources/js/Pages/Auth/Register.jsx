@@ -20,7 +20,7 @@ export default function Register() {
     const [emailTimer, setEmailTimer] = useState(0);
     const [isEmailVerified, setIsEmailVerified] = useState(false);
 
-    const [loading, setLoading] = useState(false);
+    const [loadingToggle, setLoading] = useState(false);
 
     // 비밀번호 일치 확인
     useEffect(() => {
@@ -223,9 +223,7 @@ export default function Register() {
                     </div>
                 </form>
             </div>
-            {loading ? (
-                <Loading/>
-            ) : ''}
+            <Loading toggle={loadingToggle}/>
         </>
     );
 }

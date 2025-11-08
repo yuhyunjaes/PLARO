@@ -1,6 +1,6 @@
-export default function Loading() {
+export default function Loading({ Toggle }) {
     return (
-        <div className="fixed top-0 left-0 size-full bg-black/30 z-[999] flex items-center justify-center">
+        <div className={`fixed inset-0 bg-black/30 z-[999] justify-center items-center ${Toggle ? "flex" : "hidden"}`}>
             <div className="flex items-center gap-3">
                 <img src="/asset/images/Logo/icon.png" className="w-20 animate-pulse" alt="" />
                 <p className="font-semibold text-2xl text-white flex gap-[2px]">

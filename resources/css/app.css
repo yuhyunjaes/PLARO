@@ -182,8 +182,37 @@ form > div {
 }
 
 *::-webkit-scrollbar {
-    @apply bg-transparent w-[10px];
+    @apply bg-transparent w-[5px];
 }
 *::-webkit-scrollbar-thumb {
     @apply bg-gray-200 rounded-full;
+}
+
+
+@utility animate-in-modal {
+    animation: fade-in-modal 0.5s ease-in-out forwards;
+}
+@keyframes fade-in-modal {
+    0% {
+        opacity: 0;
+        transform: translateY(-100px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@utility animate-out-modal {
+    animation: fade-out-modal 0.5s ease-in-out forwards;
+}
+@keyframes fade-out-modal {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-100px);
+    }
 }

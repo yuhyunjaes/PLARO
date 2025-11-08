@@ -7,6 +7,7 @@ use App\Models\ChatRoom;
 use App\Models\ChatMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ChatController extends Controller
 {
@@ -24,8 +25,16 @@ class ChatController extends Controller
 
     public function GetRooms() {
         $rooms = ChatRoom::where('user_id', Auth::id())
-            ->orderByDesc('updated_at')
-            ->get(['uuid as room_id', 'title']);
+            ->select('uuid as room_id', 'title')
+            ->addSelect([
+                'latest_message_time' => DB::table('chat_messages')
+                    ->select('created_at')
+                    ->whereColumn('chat_messages.room_id', 'chat_rooms.uuid')
+                    ->latest('created_at')
+                    ->limit(1)
+            ])
+            ->orderByDesc('latest_message_time')
+            ->get();
 
         return response()->json([
             'success' => true,
