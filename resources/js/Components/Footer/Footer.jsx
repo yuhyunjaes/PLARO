@@ -4,7 +4,7 @@ import { faGithub, faInstagram } from "@fortawesome/free-brands-svg-icons";
 
 export default function Footer() {
     return (
-        <footer className="w-full h-auto py-16 bg-gray-950 dark:bg-gray-200">
+        <footer className="w-full h-auto py-16 bg-gray-950 dark:bg-gray-300">
             <div className="px-5 sm:px-12">
                 <div className="h-auto md:h-[70px] flex justify-center md:justify-between items-center flex-wrap">
                     <Logo Change={true}/>

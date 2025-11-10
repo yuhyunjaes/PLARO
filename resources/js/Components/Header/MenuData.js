@@ -2,7 +2,7 @@ export const menuData = [
     {
         title: "캘리노트",
         links: [
-            { label: "대시보드", href: "/calenote" },
+            { label: "홈", href: "/calenote" },
             { label: "메모장", href: "/calenote/notepad" },
             { label: "캘린더", href: "/calenote/calendar" },
         ],

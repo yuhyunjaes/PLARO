@@ -241,7 +241,12 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
             <div
                 className={`w-full flex justify-center items-end absolute ${chatId ? "bottom-0 left-0" : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"} mb-3 px-5`}
             >
-                {!chatId && (<h1 className="normal-text flex absolute top-[-150%] text-2xl sm:text-4xl font-semibold"><p className="hidden md:block">{auth.user.name.slice(1)+", "} </p>새로운 대화를 시작해요.</h1>)}
+                {!chatId && (
+                    <h1 className="normal-text flex absolute top-[-150%] text-2xl sm:text-4xl font-semibold">
+                        <p className="hidden md:block">{auth.user.name.slice(1)},&nbsp;</p>
+                        새로운 대화를 시작해요.
+                    </h1>
+                )}
                 <div className="w-full max-w-3xl bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end overflow-hidden">
                             <textarea
                                 ref={textareaRef}

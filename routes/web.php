@@ -85,14 +85,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('/lifebot/{uuid}', function ($uuid) {
-        return Inertia::render('LifeBot', [
+        return Inertia::render('LifeBot/LifeBot', [
             'roomId' => $uuid,
         ]);
     })->name('lifebot.room');
 
 
     Route::post('/api/notepads', [NotepadController::class, 'StoreNotepads'])->name('notepads.store');
-    Route::get('/api/notepads/{id}', [NotepadController::class, 'GetNotepads'])->name('notepads.get');
+    Route::get('/api/notepads', [NotepadController::class, 'GetNotepads'])->name('notepads.get');
 
     Route::get('/api/notepads/contents/{id}', [NotepadController::class, 'GetContents'])->name('notepads.contents.get');
 

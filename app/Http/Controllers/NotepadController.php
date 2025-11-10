@@ -39,9 +39,9 @@ class NotepadController extends Controller
             : response()->json(['success'=>true, 'id'=>$notepad->uuid, 'created_at'=>$notepad->created_at->format('Y-m-d H:i:s'), 'message'=>'메모장이 생성되었습니다.']);
     }
 
-    public function GetNotepads($id)
+    public function GetNotepads()
     {
-        $notepads = Notepad::where('user_id', $id)
+        $notepads = Notepad::where('user_id', Auth::id())
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($n) {

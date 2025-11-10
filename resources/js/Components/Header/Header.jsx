@@ -6,7 +6,7 @@ import DesktopMenu from "./DesktopMenu";
 import MobileSidebar from "./MobileSidebar";
 import Logo from "../Elements/Logo.jsx";
 
-export default function Header({ auth, className = "", smRoomListToggle, setSmRoomListToggle, smRoomList }) {
+export default function Header({ auth, className = "", toggle, setToggle, check }) {
     const [sideBar, setSideBar] = useState(false);
     const [myBox, setMyBox] = useState(false);
     const profileRef = useRef(null);
@@ -61,8 +61,8 @@ export default function Header({ auth, className = "", smRoomListToggle, setSmRo
                 `}
             >
                 <div className="w-full h-full flex justify-between items-center px-5 sm:px-12">
-                    {(!smRoomListToggle && smRoomList) && (
-                        <button onClick={() => {setSmRoomListToggle(true)}} className="normal-text text-xl block sm:hidden">
+                    {(!toggle && check) && (
+                        <button onClick={() => {setToggle(true)}} className="normal-text text-xl block sm:hidden">
                             <FontAwesomeIcon icon={faBars} />
                         </button>
                     )}
