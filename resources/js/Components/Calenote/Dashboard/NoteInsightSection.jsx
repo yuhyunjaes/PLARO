@@ -102,7 +102,7 @@ export default function NoteInsightSection() {
     }, [categories, topCategories]);
 
     return (
-        <div className="card border border-gray-300 dark:border-gray-800 col-span-2 lg:col-span-2 p-3 flex flex-col">
+        <div className="card border row-span-2 border-gray-300 dark:border-gray-800 col-span-2 lg:col-span-2 p-3 flex flex-col">
             <h3 className="text-sm normal-text font-semibold mb-3">
                 메모장 카테고리 비율
             </h3>

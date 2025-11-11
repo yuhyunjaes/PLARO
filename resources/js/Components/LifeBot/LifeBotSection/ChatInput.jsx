@@ -1,9 +1,23 @@
-import {useCallback, useRef, useState} from "react";
+import { useCallback, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp, faSpinner } from "@fortawesome/free-solid-svg-icons";
-import {DEFAULT_PROMPT, HISTORY_PROMPT, TITLE_PROMPT} from "../../../../../config/prompt.js";
-import {router} from "@inertiajs/react";
-export default function ChatInput({ chatId, setChatId, setRooms, setMessages, messages, handleNotepad, roomId, setLoading, prompt, setPrompt, setNewChat, auth }) {
+import { DEFAULT_PROMPT, HISTORY_PROMPT, TITLE_PROMPT } from "../../../../../config/prompt.js";
+import { router } from "@inertiajs/react";
+
+export default function ChatInput({
+    chatId,
+    setChatId,
+    setRooms,
+    setMessages,
+    messages,
+    handleNotepad,
+    roomId,
+    setLoading,
+    prompt,
+    setPrompt,
+    setNewChat,
+    auth
+    }) {
     const [load, setLoad] = useState(false);
     const textareaRef = useRef(null);
     const START_API = import.meta.env.VITE_GEMINI_API_START;
@@ -16,24 +30,25 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
         setLoad(true);
         const titlePrompt = `USER_TEXT***${prompt}***${TITLE_PROMPT}`;
         let newChat = false;
+
         try {
             let currentRoomId = chatId;
+
+            // 새 대화방 생성
             if (!chatId && !currentRoomId) {
                 newChat = true;
                 setNewChat(true);
+
                 try {
                     const titleRes = await axios.post("/api/lifebot/title", {
                         model_name: MODEL_NAME,
                         prompt: titlePrompt,
                     });
+
                     const title = titleRes.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || prompt.trim();
-
-                    const roomRes = await axios.post("/api/rooms", {
-                        title,
-                        model_name: MODEL_NAME,
-                    });
-
+                    const roomRes = await axios.post("/api/rooms", { title, model_name: MODEL_NAME });
                     const roomData = roomRes.data;
+
                     if (roomData.success) {
                         currentRoomId = roomData.room_id;
                         setChatId(roomData.room_id);
@@ -52,11 +67,13 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
                 }
             }
 
+            // 메시지 초기 설정
             setMessages((prev) => [
                 ...prev,
                 { role: "user", text: prompt },
                 { role: "model", text: "" },
             ]);
+
             setPrompt("");
             if (textareaRef.current) textareaRef.current.style.height = "40px";
 
@@ -67,11 +84,10 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
                         .replace(/`/g, "\\`")
                     : "empty-message";
 
+            // Gemini API 호출
             const response = await fetch(`${START_API}${MODEL_NAME}${END_API}${API_KEY}`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contents: [
                         {
@@ -90,10 +106,11 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
 
+            let combined = "";
             let fullText = "";
             let aiCode = "";
-            let combined = "";
 
+            // 스트리밍 응답 읽기
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
@@ -113,17 +130,12 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
                         if (text) {
                             combined += text;
 
-                            const patternStart = combined.indexOf("***{");
-                            const patternEnd = combined.lastIndexOf("}***");
+                            // 중간 출력 업데이트
+                            const match = combined.match(/\*\*\*({[\s\S]*?})\*\*\*/);
                             let cleaned = combined;
-
-                            if (patternStart !== -1 && patternEnd !== -1 && patternEnd > patternStart) {
-                                cleaned = combined.slice(0, patternStart) + combined.slice(patternEnd + 4);
-                            }
+                            if (match) cleaned = combined.replace(match[0], "");
 
                             fullText = cleaned.trim();
-                            if (fullText.includes("***{")) break;
-
                             setMessages((prev) => {
                                 const updated = [...prev];
                                 updated[updated.length - 1].text = fullText;
@@ -136,28 +148,30 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
                 }
             }
 
-            const startIdx = combined.indexOf("***{");
-            const endIdx = combined.lastIndexOf("}***");
-
-            if (startIdx !== -1 && endIdx !== -1) {
-                aiCode = combined.slice(startIdx + 3, endIdx + 1).trim();
-                fullText = (combined.slice(0, startIdx) + combined.slice(endIdx + 4)).trim();
+            // JSON 블록 추출
+            const match = combined.match(/\*\*\*({[\s\S]*?})\*\*\*/);
+            if (match) {
+                aiCode = match[1].trim();
+                fullText = combined.replace(match[0], "").trim();
             }
 
+            // 응답 없을 때 리로드
             if (fullText.trim().length === 0) {
-                alert("AI 응답이 비어있습니다.");
+                alert("서버가 응답하지 않습니다. 잠시 후 다시 시도해주세요.");
+
                 setLoad(false);
-                setPrompt("");
                 setLoading(false);
+
+                // 여기서 chatId를 삭제하여 타이틀 자체를 다시 만들어야 함.
+
+                handleSubmit();
                 return;
             }
 
             let aiArr = [];
-
             if (aiCode) {
                 try {
                     aiArr = [JSON.parse(aiCode)];
-
                     if (aiArr[0].chat_id) {
                         aiArr = aiArr.map(obj => {
                             const { chat_id, ...rest } = obj;
@@ -169,7 +183,7 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
                 }
             }
 
-
+            // DB 저장
             if (aiArr.length > 0) {
                 if (aiArr[0].id) {
                     await handleNotepad(aiArr[0]);
@@ -182,14 +196,13 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
         } catch (err) {
             console.error("Chat submit error:", err);
         } finally {
-            if(newChat) {
-                setNewChat(false);
-            }
+            if (newChat) setNewChat(false);
             setLoad(false);
             setPrompt("");
         }
     }, [prompt, chatId, MODEL_NAME, roomId]);
 
+    // 메시지 저장 함수
     const saveMessageToDB = async (roomId, userText, aiText, arr) => {
         try {
             const res = await axios.post("/api/messages", {
@@ -215,9 +228,7 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
                 setRooms((prevRooms) => {
                     const filtered = prevRooms.filter(r => r.room_id !== roomId);
                     const current = prevRooms.find(r => r.room_id === roomId);
-                    if (current) {
-                        return [current, ...filtered];
-                    }
+                    if (current) return [current, ...filtered];
                     return prevRooms;
                 });
             }
@@ -226,6 +237,7 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
         }
     };
 
+    // Enter 전송
     const handleKeyDown = useCallback(
         (e) => {
             if (e.key === "Enter" && !e.shiftKey && !load) {
@@ -248,28 +260,28 @@ export default function ChatInput({ chatId, setChatId, setRooms, setMessages, me
                     </h1>
                 )}
                 <div className="w-full max-w-3xl bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end overflow-hidden">
-                            <textarea
-                                autoFocus={true}
-                                ref={textareaRef}
-                                className="
-                                prompt-form
-                                leading-[40px] ms-2 min-h-[40px] max-h-[150px] font-semibold
-                                placeholder-gray-950 dark:placeholder-white focus:bg-transparent border-0
-                                text-gray-950 dark:text-white bg-transparent flex-grow overflow-y-auto
-                                overflow-x-hidden resize-none outline-none
-                                text-xs sm:text-base
-                                "
-                                placeholder="AI에게 물어볼 내용을 입력하세요"
-                                onInput={(e) => {
-                                    e.target.style.height = "auto";
-                                    e.target.style.height = `${e.target.scrollHeight}px`;
-                                }}
-                                onKeyDown={handleKeyDown}
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                rows="1"
-                                disabled={load}
-                            />
+                    <textarea
+                        autoFocus
+                        ref={textareaRef}
+                        className="
+                            prompt-form
+                            leading-[40px] ms-2 min-h-[40px] max-h-[150px] font-semibold
+                            placeholder-gray-950 dark:placeholder-white focus:bg-transparent border-0
+                            text-gray-950 dark:text-white bg-transparent flex-grow overflow-y-auto
+                            overflow-x-hidden resize-none outline-none
+                            text-xs sm:text-base
+                        "
+                        placeholder="AI에게 물어볼 내용을 입력하세요"
+                        onInput={(e) => {
+                            e.target.style.height = "auto";
+                            e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        onKeyDown={handleKeyDown}
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        rows="1"
+                        disabled={load}
+                    />
 
                     <button
                         onClick={handleSubmit}
