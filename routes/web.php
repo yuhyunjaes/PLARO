@@ -115,6 +115,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/messages', [ChatController::class, 'StoreMessages'])->name('messages.store');
     Route::get('/api/messages/{roomId}', [ChatController::class, 'getMessages'])->name('messages.get');
 
+    Route::post("/api/notepads/{notepad}/share/email", [NotepadController::class, 'ShareEmail'])->name('notepads.share.email');
+
 });
 
 Route::get('/user', function () {

@@ -2,12 +2,16 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faShareNodes, faHeart as faHeartSolid } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import {useCallback, useEffect, useState} from "react";
+import NotepadShare from "@/Components/Calenote/Notepad/NotepadsSection/NotepadShare.jsx";
 
-export default function NotepadsSection({ notepads, setNotepads, setLoading, viewOption, notepadLikes, setNotepadLikes }) {
+export default function NotepadsSection({ notepads, setNotepads, setLoading, viewOption, notepadLikes, setNotepadLikes, tab }) {
+    const [shareId, setShareId] = useState("");
+
     const getNotepads = useCallback(async () => {
+        if(!tab) return;
         setLoading(true);
         try {
-            const res = await axios.get("/api/notepads");
+            const res = await axios.get(`/api/notepads?liked=${tab === "liked"}`);
             if(res.data.success) {
                 setNotepads(res.data.notepads);
             }
@@ -16,7 +20,7 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [tab]);
 
     useEffect(() => {
         getNotepads();
@@ -54,21 +58,22 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
         }
     };
 
-    const handleLikeDelete = async (uuid) => {
+    const handleLikeDelete = useCallback(async (uuid) => {
         setLoading(true);
         try {
             const res = await axios.delete(`/notepads/${uuid}/like`);
             if(res.data.success) {
                 setNotepadLikes(prev => prev.filter(like => like.notepad_id !== uuid));
             }
+            if(res.data.success && (tab === "liked")) {
+                setNotepads(prev => prev.filter(notepad => notepad.id !== uuid));
+            }
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
         }
-    };
-
-
+    }, [tab]);
 
     return (
         <div className={`grid gap-5 ${viewOption === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"}`}>
@@ -82,10 +87,8 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
                     <div className="flex justify-between items-center">
                         <p className="text-gray-500 text-sm">{notepad.category}</p>
 
-                        <div className="space-x-2">
-                            <button className="transition-colors duration-300 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700">
-                                <FontAwesomeIcon icon={faShareNodes}/>
-                            </button>
+                        <div className="space-x-2 flex">
+                            <NotepadShare notepadId={notepad.id} shareId={shareId} setShareId={setShareId} setLoading={setLoading}/>
                             {
                                 notepadLikes.some(like => like.notepad_id === notepad.id) ? (
                                     <button

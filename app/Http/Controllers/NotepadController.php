@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use App\Models\ChatMessage;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class NotepadController extends Controller
 {
@@ -67,10 +68,22 @@ class NotepadController extends Controller
         ]);
     }
 
-    public function GetNotepads()
+    public function GetNotepads(Request $request)
     {
-        $notepads = Notepad::where('user_id', Auth::id())
-            ->orderByDesc('created_at')
+        $user = Auth::user();
+        $query = Notepad::query();
+
+        // 유저 노트만
+        $query->where('user_id', $user->id);
+
+        // liked 필터
+        if ($request->boolean('liked')) {
+            $query->whereHas('likes', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        }
+
+        $notepads = $query->orderByDesc('created_at')
             ->get()
             ->map(function ($n) {
                 return [
@@ -121,6 +134,25 @@ class NotepadController extends Controller
         if(!$notepad) return response()->json(['success' => false]);
         $notepad->delete();
         return response()->json(['success' => true, 'message'=>'메모장이 삭제되었습니다.']);
+    }
+
+    public function shareEmail($notepad) {
+        $notepad = Notepad::where('uuid', $notepad)->first();
+        if (!$notepad) {
+            return response()->json(['success' => false]);
+        }
+
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false]);
+        }
+
+        Mail::raw($notepad->content, function ($message) use ($user, $notepad) {
+            $message->to($user->email)
+                ->subject($notepad->title);
+        });
+
+        return response()->json(['success' => true]);
     }
 
 }
