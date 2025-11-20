@@ -40,7 +40,11 @@ export default function ChatInput({
     const getCategoryCandidates = useCallback(() => {
         if (!chatId) return;
         const saved = localStorage.getItem(`categoryCandidates_${chatId}`);
-        if (saved) setLocalCategory(JSON.parse(saved));
+        if (saved) {
+            setLocalCategory(JSON.parse(saved))
+        } else {
+            setLocalCategory([]);
+        }
     }, [chatId])
 
     useEffect(() => {
@@ -52,7 +56,9 @@ export default function ChatInput({
     const textareaRef = useRef(null);
 
     const inputSize = useCallback(() => {
-        if(!chatId || !textareaRef.current) return;
+        if(!chatId) return;
+        setPrompt("");
+        if(!textareaRef.current) return;
         textareaRef.current.style.height = "40px"
     }, [chatId]);
 
@@ -65,10 +71,11 @@ export default function ChatInput({
     const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     const MODEL_NAME = import.meta.env.VITE_GEMINI_API_MODEL;
 
-    const handleSubmit = useCallback(async () => {
-        if (!prompt.trim()) return;
+    const handleSubmit = useCallback(async (value = "") => {
+        const text = value ? value : prompt;
+        if (!text.trim()) return;
         setLoad(true);
-        const titlePrompt = `USER_TEXT***${prompt}***${TITLE_PROMPT}`;
+        const titlePrompt = `USER_TEXT***${text}***${TITLE_PROMPT}`;
         let newChat = false;
 
         try {
@@ -84,7 +91,7 @@ export default function ChatInput({
                         prompt: titlePrompt,
                     });
 
-                    const title = titleRes.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || prompt.trim();
+                    const title = titleRes.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || text.trim();
                     const roomRes = await axios.post("/api/rooms", { title, model_name: MODEL_NAME });
                     const roomData = roomRes.data;
 
@@ -108,7 +115,7 @@ export default function ChatInput({
 
             setMessages((prev) => [
                 ...prev,
-                { role: "user", text: prompt },
+                { role: "user", text: text },
                 { role: "model", text: "" },
             ]);
 
@@ -133,7 +140,7 @@ export default function ChatInput({
                                 { text: DEFAULT_PROMPT },
                                 { text: HISTORY_PROMPT },
                                 { text: `HISTORY-JSON***${historyText}***` },
-                                { text: `USER-TEXT***${prompt}***` },
+                                { text: `USER-TEXT***${text}***` },
                             ],
                         },
                     ],
@@ -263,9 +270,9 @@ export default function ChatInput({
                 if (aiArr[0].id) {
                     await handleNotepad(aiArr[0]);
                 }
-                await saveMessageToDB(currentRoomId, prompt, fullText, !aiArr[0].id ? aiArr : '');
+                await saveMessageToDB(currentRoomId, text, fullText, !aiArr[0].id ? aiArr : '');
             } else {
-                await saveMessageToDB(currentRoomId, prompt, fullText, '');
+                await saveMessageToDB(currentRoomId, text, fullText, '');
             }
 
         } catch (err) {
@@ -275,7 +282,14 @@ export default function ChatInput({
             setLoad(false);
             setPrompt("");
         }
-    }, [prompt, chatId, MODEL_NAME, roomId]);
+    }, [
+        prompt,
+        chatId,
+        messages,
+        MODEL_NAME,
+        roomId,
+        handleNotepad,
+    ]);
 
     const saveMessageToDB = async (roomId, userText, aiText, arr) => {
         try {
@@ -333,11 +347,16 @@ export default function ChatInput({
                         새로운 대화를 시작해요.
                     </h1>
                 )}
-                <div className="w-full max-w-3xl bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end relative">
+                <div className="w-full max-w-3xl bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end relative">
                     {(localCategory.length > 0) && (
                         <div className="space-x-2 h-[40px] top-[-40px] left-0 absolute flex justify-start">
                             {localCategory.map((category, index) => (
-                                <div key={index} className="px-3 h-[80%] cursor-pointer dark:bg-gray-950  border border-gray-200 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl">
+                                <div
+                                    onClick={() => {
+                                        handleSubmit(category);
+                                        setLocalCategory([]);
+                                    }}
+                                    key={index} className="px-3 h-[80%] cursor-pointer bg-gray-100 dark:bg-gray-950  border border-gray-300 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl text-sm sm:text-base">
                                     {category}
                                 </div>
                             ))}
@@ -367,8 +386,10 @@ export default function ChatInput({
                     />
 
                     <button
-                        onClick={handleSubmit}
-                        className="w-[40px] h-[40px] bg-gray-950 dark:bg-white border rounded-full px-3 ml-2 flex justify-center items-center"
+                        onClick={() => {
+                            handleSubmit();
+                        }}
+                        className="w-[40px] h-[40px] bg-gray-950 dark:bg-white border rounded-full px-3 ml-2 flex justify-center items-center cursor-pointer"
                     >
                         {load ? (
                             <div className="animate-spin m-0 p-0 w-[1rem] text-white dark:text-gray-950 h-[1rem] flex justify-center items-center">

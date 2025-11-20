@@ -80,7 +80,6 @@ export default function LifeBot({ auth, roomId }) {
             const data = res.data;
             if(data.success) {
                 setMessages([]);
-                setPrompt("");
                 setMessages(data.messages || []);
             } else {
                 router.visit('/lifebot');
