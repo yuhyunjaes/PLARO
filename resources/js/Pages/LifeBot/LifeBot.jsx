@@ -168,6 +168,7 @@ export default function LifeBot({ auth, roomId }) {
         try {
             const res = await axios.delete(`/api/rooms/${editId}`);
             if(res.data.success) {
+                localStorage.removeItem(`categoryCandidates_${editId}`);
                 if(editId === chatId) {
                     router.visit('/lifebot');
                 }

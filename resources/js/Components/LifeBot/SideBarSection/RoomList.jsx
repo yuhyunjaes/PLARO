@@ -20,7 +20,7 @@ export default function RoomList({ sideBar = false, auth, setLoading, setRooms, 
 
     useEffect(() => {
         getRooms();
-    }, []);
+    }, [getRooms]);
 
     return (
         <>

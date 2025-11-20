@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { DEFAULT_PROMPT, HISTORY_PROMPT, TITLE_PROMPT } from "../../../../../config/prompt.js";
@@ -19,8 +19,47 @@ export default function ChatInput({
     auth
     }) {
     const [load, setLoad] = useState(false);
+    const [localCategory, setLocalCategory] = useState([]);
+
+    // useEffect(() => {
+    //     if(localCategory.length <= 0) return;
+    //
+    //     console.log(localCategory);
+    // }, [localCategory]);
+
+    const categoryCandidates = (roomId, arr) => {
+        if(roomId && arr.length > 0) {
+            localStorage.setItem(`categoryCandidates_${roomId}`, JSON.stringify(arr));
+            setLocalCategory(arr);
+        } else {
+            localStorage.removeItem(`categoryCandidates_${roomId}`);
+            setLocalCategory([]);
+        }
+    }
+
+    const getCategoryCandidates = useCallback(() => {
+        if (!chatId) return;
+        const saved = localStorage.getItem(`categoryCandidates_${chatId}`);
+        if (saved) setLocalCategory(JSON.parse(saved));
+    }, [chatId])
+
+    useEffect(() => {
+        getCategoryCandidates();
+    }, [getCategoryCandidates]);
+
+
 
     const textareaRef = useRef(null);
+
+    const inputSize = useCallback(() => {
+        if(!chatId || !textareaRef.current) return;
+        textareaRef.current.style.height = "40px"
+    }, [chatId]);
+
+    useEffect(() => {
+        inputSize();
+    }, [inputSize]);
+
     const START_API = import.meta.env.VITE_GEMINI_API_START;
     const END_API = import.meta.env.VITE_GEMINI_API_END;
     const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -35,7 +74,6 @@ export default function ChatInput({
         try {
             let currentRoomId = chatId;
 
-            // 새 대화방 생성
             if (!chatId && !currentRoomId) {
                 newChat = true;
                 setNewChat(true);
@@ -68,7 +106,6 @@ export default function ChatInput({
                 }
             }
 
-            // 메시지 초기 설정
             setMessages((prev) => [
                 ...prev,
                 { role: "user", text: prompt },
@@ -111,7 +148,6 @@ export default function ChatInput({
             let fullText = "";
             let aiCode = "";
 
-            // 스트리밍 응답 읽기
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
@@ -130,6 +166,20 @@ export default function ChatInput({
 
                         if (text) {
                             combined += text;
+
+                            const catMatch = combined.match(/<<<\[([\s\S]*?)\]>>>/);
+                            if (catMatch) {
+                                try {
+                                    const arr = JSON.parse("[" + catMatch[1] + "]");
+                                    categoryCandidates(currentRoomId, arr);
+                                    setLocalCategory(arr)
+                                } catch (err) {
+                                    console.warn("카테고리 배열 파싱 실패:", err);
+                                }
+                                combined = combined.replace(catMatch[0], "");
+                            } else {
+                                categoryCandidates(currentRoomId, []);
+                            }
 
                             if (combined.includes('***{')) {
                                 const jsonStart = combined.indexOf('***{');
@@ -172,6 +222,7 @@ export default function ChatInput({
                     try {
                         const res = await axios.delete(`/api/rooms/${currentRoomId}`);
                         if(res.data.success) {
+                            localStorage.removeItem(`categoryCandidates_${currentRoomId}`);
                             router.visit(`/lifebot`, {
                                 preserveScroll: false,
                                 preserveState: false,
@@ -226,7 +277,6 @@ export default function ChatInput({
         }
     }, [prompt, chatId, MODEL_NAME, roomId]);
 
-    // 메시지 저장 함수
     const saveMessageToDB = async (roomId, userText, aiText, arr) => {
         try {
             const res = await axios.post("/api/messages", {
@@ -283,7 +333,16 @@ export default function ChatInput({
                         새로운 대화를 시작해요.
                     </h1>
                 )}
-                <div className="w-full max-w-3xl bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end overflow-hidden">
+                <div className="w-full max-w-3xl bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end relative">
+                    {(localCategory.length > 0) && (
+                        <div className="space-x-2 h-[40px] top-[-40px] left-0 absolute flex justify-start">
+                            {localCategory.map((category, index) => (
+                                <div key={index} className="px-3 h-[80%] cursor-pointer dark:bg-gray-950  border border-gray-200 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl">
+                                    {category}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     <textarea
                         autoFocus
                         ref={textareaRef}
