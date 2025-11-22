@@ -1,3 +1,5 @@
+// 라이프 봇 채팅방 수정 및 삭제 박스
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan, faPen } from "@fortawesome/free-solid-svg-icons";
 import {useEffect} from "react";

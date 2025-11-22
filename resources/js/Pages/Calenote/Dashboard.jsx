@@ -1,3 +1,5 @@
+// 대시보드 영역
+
 import { Head, router } from '@inertiajs/react';
 import NoteInsightSection from "@/Pages/Calenote/Sections/Dashboard/NoteInsightSection.jsx";
 import NotepadCountSection from "@/Pages/Calenote/Sections/Dashboard/NotepadCountSection.jsx";
@@ -9,6 +11,7 @@ export default function Calendar({ auth }) {
             py-5 text-2xl md:text-4xl pl-5">대시보드</h1>
 
             <div className="w-full min-h-full p-5 bg-gray-100 dark:bg-gray-950 grid grid-cols-2 lg:grid-cols-4 grid-rows-5 gap-5 overflow-y-auto">
+                {/*메모장 카운트*/}
                 <NotepadCountSection />
 
                 <div className="card border border-gray-300 dark:border-gray-800"></div>
@@ -16,6 +19,7 @@ export default function Calendar({ auth }) {
                 <div className="card border border-gray-300 dark:border-gray-800 col-span-2 lg:col-span-2 lg:row-span-3">
                 </div>
 
+                {/*메모장 카테고리 수치*/}
                 <NoteInsightSection />
 
 

@@ -1,3 +1,5 @@
+// 데스크톱에서 보여질 헤더 menuData 배열을 가져와 menuData 정보들을 삽입
+
 import { Link } from "@inertiajs/react";
 import { menuData } from "./MenuData";
 

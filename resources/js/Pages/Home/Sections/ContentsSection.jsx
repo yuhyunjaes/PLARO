@@ -1,3 +1,5 @@
+/*콘텐츠 소개 영역 ContentsData 배열을 이용하여 정보들을 삽입*/
+
 import { ContentsData } from "./HomeData.js"
 export default function ContentsSection() {
     return (

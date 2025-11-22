@@ -83,6 +83,10 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Calenote/Notepad');
     })->name('notepad');
 
+    Route::get('/calenote/notepad/{uuid}', function () {
+        return Inertia::render('Calenote/Sections/Notepad/NotepadWriteSection');
+    })->name('notepad');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('/lifebot/{uuid}', function ($uuid) {
@@ -98,6 +102,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/notepads/{uuid}/like', [NotepadLikeController::class, 'StoreNotepadsLike'])->name('notepads.like.store');
     Route::delete('/notepads/{uuid}/like', [NotepadLikeController::class, 'DeleteNotepadsLike'])->name('notepads.like.delete');
     Route::get('/notepads/likes', [NotepadLikeController::class, 'GetNotepadsLike'])->name('notepads.like.get');
+    Route::put('/api/notepads/{uuid}/title', [NotepadController::class, 'UpdateNotepadTitle'])->name('notepads.title.update');
 
     Route::get('/api/notepads/categories', [NotepadController::class, 'GetNotepadsByCategory'])->name('notepads.category.get');
     Route::get('/api/notepads/count', [NotepadController::class, 'GetNotepadsCount'])->name('notepads.count.get');
@@ -105,7 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/notepads/contents/{id}', [NotepadController::class, 'GetContents'])->name('notepads.contents.get');
 
     Route::put('/api/notepads/{noteId}', [NotepadController::class, 'UpdateNotepads'])->name('notepads.update');
-    Route::delete('/api/notepads/{noteId}', [NotepadController::class, 'DeleteNotepads'])->name('notepads.delete');
+    Route::delete('/api/notepads/{uuid}', [NotepadController::class, 'DeleteNotepads'])->name('notepads.delete');
 
     Route::post('/api/rooms', [ChatController::class, 'StoreRooms'])->name('rooms.store');
     Route::get('/api/rooms', [ChatController::class, 'GetRooms'])->name('rooms.get');

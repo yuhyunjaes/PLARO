@@ -1,3 +1,4 @@
+// 메인페이지 메인 영역
 export default function MainSection() {
     return (
         <div className="w-full relative h-[600px]">

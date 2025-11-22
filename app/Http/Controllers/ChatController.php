@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class ChatController extends Controller
 {
+//    새로운 봇 채팅방 생성
     public function StoreRooms(Request $request) {
 
         $room = ChatRoom::create([
@@ -23,6 +24,7 @@ class ChatController extends Controller
         return response()->json(['success'=>true, 'room_id'=>$room->uuid, 'title'=>$room->title]);
     }
 
+//    봇 채팅방 가져오기
     public function GetRooms() {
         $rooms = ChatRoom::where('user_id', Auth::id())
             ->select('uuid as room_id', 'title')
@@ -42,6 +44,7 @@ class ChatController extends Controller
         ]);
     }
 
+//    봇 채팅방 삭제
     public function DeleteRooms($roomId) {
         $room = ChatRoom::where('uuid', $roomId)->first()->delete();
 
@@ -50,6 +53,7 @@ class ChatController extends Controller
         return response()->json(['success'=>true, 'message'=>'채팅방이 삭제되었습니다.']);
     }
 
+//    봇 채팅방 타이틀 수정
     public function UpdateRooms(Request $request, $roomId) {
         $room = ChatRoom::where('uuid', $roomId)->first()->update([
             'title'=>$request->title
@@ -60,6 +64,7 @@ class ChatController extends Controller
         return response()->json(['success'=>true, 'message'=>'체팅방 제목이 수정되었습니다.']);
     }
 
+//    봇 채팅방 메시지 저장
     public function StoreMessages(Request $request) {
         $user_message = ChatMessage::create([
             'room_id' => $request->room_id,
@@ -81,6 +86,7 @@ class ChatController extends Controller
 
     }
 
+    //    봇 채팅방 메시지들 가져오기 uuid기반
     public function getMessages($roomId) {
         $room = ChatRoom::where('uuid', $roomId)
             ->where('user_id', Auth::id())

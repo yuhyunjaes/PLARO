@@ -1,3 +1,5 @@
+// 회원가입 페이지
+
 import { useCallback, useState, useEffect, useRef} from "react";
 import axios from "axios";
 import { Head, Link, router } from "@inertiajs/react";

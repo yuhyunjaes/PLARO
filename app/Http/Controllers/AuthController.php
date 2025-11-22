@@ -14,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+//    아이디 중복체크
     public function checkId(Request $request) {
         $id = $request->id;
 
@@ -26,6 +27,7 @@ class AuthController extends Controller
         return response()->json(['success' => true]);
     }
 
+//    이메일 확인 코드 전송
     public function sendEmail(Request $request) {
         $email = $request->email;
         if(empty($email)) return response()->json(['success' => false, 'message' => '이메일을 작성해주세요.', 'type' => 'danger']);
@@ -44,6 +46,7 @@ class AuthController extends Controller
         return response()->json(['success' => true, 'message' => '인증번호가 발송되었습니다.', 'type' => 'success']);
     }
 
+//    이메일 코드 확인(세션기반)
     public function checkEmail(Request $request) {
         $code = $request->code;
 
@@ -59,6 +62,7 @@ class AuthController extends Controller
         return response()->json(['success' => false, 'message' => '인증번호가 일치하지 않습니다.', 'type' => 'danger']);
     }
 
+//    회원가입
     public function register(Request $request) {
         $data = $request->validate([
             'user_id'=>['required', 'string', 'min:4', 'max:15', 'unique:users,user_id', 'regex:/^[a-zA-Z0-9]+$/'],
@@ -77,6 +81,7 @@ class AuthController extends Controller
         return Inertia::render('Auth/Login');
     }
 
+//    로그인
     public function login(Request $request)
     {
         if (Auth::attempt($request->only(['user_id', 'password']))) {
@@ -91,6 +96,7 @@ class AuthController extends Controller
     }
 
 
+//    로그아웃
     public function logout(Request $request)
     {
         Auth::logout();

@@ -1,3 +1,5 @@
+// 모달 컴포넌트
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faX } from "@fortawesome/free-solid-svg-icons";
 import {useState} from "react";

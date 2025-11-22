@@ -1,3 +1,5 @@
+// 로그인 페이지
+
 import {Head, Link, router} from '@inertiajs/react';
 import FormInput from '@/Components/Elements/FormInput.jsx';
 import {useEffect, useState} from "react";

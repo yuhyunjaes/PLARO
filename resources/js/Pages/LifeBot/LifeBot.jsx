@@ -1,3 +1,5 @@
+// 라이프 봇 메인 영역
+
 import Header from '@/Components/Header/Header.jsx';
 import Footer from '@/Components/Footer/Footer.jsx';
 import Loading from '@/Components/Elements/Loading.jsx';
@@ -31,6 +33,7 @@ export default function LifeBot({ auth, roomId }) {
     const [smRoomList, setSmRoomList] = useState(window.innerWidth <= 640);
     const [smRoomListToggle, setSmRoomListToggle] = useState(false);
 
+    // 사이드바 사이즈 조절
     useEffect(() => {
         const smSideBar = () => {
             setSmRoomList(window.innerWidth <= 640);
@@ -67,7 +70,7 @@ export default function LifeBot({ auth, roomId }) {
             setSaveWidth(sideBar);
         }
     }, [sideBar]);
-
+    
     useEffect(() => {
         if (roomId) setChatId(roomId);
     }, [roomId]);
@@ -117,6 +120,7 @@ export default function LifeBot({ auth, roomId }) {
         if(editId && editStatus === "update") {
             setEditStatus("");
             setEditId("");
+            setTemporaryEditTitle("");
             return;
         }
 
@@ -127,9 +131,12 @@ export default function LifeBot({ auth, roomId }) {
 
     const deleteRoom = useCallback(() => {
         if(!editId) return;
+        if(temporaryEditTitle) {
+            setTemporaryEditTitle("");
+        }
         setEditStatus("delete");
         setModal(true);
-    }, [editId]);
+    }, [editId, temporaryEditTitle]);
 
     const handleEditRoom = useCallback(async () => {
         if (!editId || !temporaryEditTitle.trim()) return;
@@ -151,13 +158,14 @@ export default function LifeBot({ auth, roomId }) {
 
                 setEditId("");
                 setEditStatus("");
+                setTemporaryEditTitle("");
             }
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
         }
-    }, [editId, temporaryEditTitle, setRooms]);
+    }, [editId, temporaryEditTitle]);
 
     const handleDeleteRoom = useCallback( async () => {
         if(!editId) return;
@@ -180,7 +188,7 @@ export default function LifeBot({ auth, roomId }) {
         } finally {
             setLoading(false);
         }
-    }, [editId, setRooms]);
+    }, [editId]);
 
     return (
         <>

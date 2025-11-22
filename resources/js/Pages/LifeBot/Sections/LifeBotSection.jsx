@@ -1,8 +1,9 @@
+// 라이프 봇 채팅 영역
+
 import {useCallback, useEffect, useRef, useState} from "react";
 import MessageList from '@/Pages/LifeBot/Sections/LifeBotSection/MessageList.jsx';
 import ChatInput from '@/Pages/LifeBot/Sections/LifeBotSection/ChatInput.jsx';
 import FormModal from "@/Components/Elements/FormModal.jsx";
-
 export default function LifeBotSection({ setNewChat, sideBar, setLoading, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt }) {
     const [category, setCategory] = useState("");
     const [categoryToggle, setCategoryToggle] = useState(false);

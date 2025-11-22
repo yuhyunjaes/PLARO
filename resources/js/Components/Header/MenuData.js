@@ -1,3 +1,4 @@
+// 메뉴, 서브메뉴 데이터
 export const menuData = [
     {
         title: "캘리노트",

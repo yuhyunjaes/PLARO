@@ -1,3 +1,5 @@
+// 모바일에서 보여질 헤더
+
 import { Link } from "@inertiajs/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faX, faAngleDown, faUser, faAngleRight } from "@fortawesome/free-solid-svg-icons";

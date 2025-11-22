@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 
 class NotepadController extends Controller
 {
+//    새로운 메모장 생성
     public function StoreNotepads(Request $request) {
         $title = null;
 
@@ -41,6 +42,20 @@ class NotepadController extends Controller
             : response()->json(['success'=>true, 'id'=>$notepad->uuid, 'created_at'=>$notepad->created_at->format('Y-m-d H:i:s'), 'message'=>'메모장이 생성되었습니다.']);
     }
 
+//    메모장 타이틀 수정
+    public function UpdateNotepadTitle($uuid, Request $request)
+    {
+        $notepad = Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->first();
+        if(!$notepad) return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.']);
+
+        $notepad->update([
+            'title' => $request->title
+        ]);
+
+        return response()->json(['success' => true, 'message' => '메모장 이름이 변경되었습니다.']);
+    }
+
+//    사용자 메모장 카테고리들 가져오기
     public function GetNotepadsByCategory()
     {
         $categories = Notepad::where('user_id', Auth::id())
@@ -53,6 +68,7 @@ class NotepadController extends Controller
         return response()->json(['success', false]);
     }
 
+//    오늘의 사용자 메모장 생성 갯수
     public function GetNotepadsCount()
     {
         $totalCount = Notepad::where('user_id', Auth::id())->count();
@@ -68,6 +84,7 @@ class NotepadController extends Controller
         ]);
     }
 
+//    메모장들 가져오기
     public function GetNotepads(Request $request)
     {
         $user = Auth::user();
@@ -98,6 +115,7 @@ class NotepadController extends Controller
         return response()->json(['success' => true, 'notepads' => $notepads]);
     }
 
+//    메모장 내용 가져오기
     public function GetContents($id) {
         $content = Notepad::where('uuid', $id)
             ->where('user_id', auth('web')->id())
@@ -108,6 +126,7 @@ class NotepadController extends Controller
         return response()->json(['success' => true, 'content' => $content]);
     }
 
+//    메모장 내용 수정
     public function UpdateNotepads(Request $request)
     {
         $notepad = Notepad::where('uuid', $request->noteId)->first();
@@ -128,14 +147,15 @@ class NotepadController extends Controller
         return response()->json(['success' => true, 'message'=>'메모장이 수정되었습니다.']);
     }
 
-
-    public function DeleteNotepads($noteId) {
-        $notepad = Notepad::where('uuid', $noteId)->first();
+//    메모장 삭제
+    public function DeleteNotepads($uuid) {
+        $notepad = Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->first();
         if(!$notepad) return response()->json(['success' => false]);
         $notepad->delete();
         return response()->json(['success' => true, 'message'=>'메모장이 삭제되었습니다.']);
     }
 
+//    메모장 내용 이메일 전송
     public function shareEmail($notepad) {
         $notepad = Notepad::where('uuid', $notepad)->first();
         if (!$notepad) {

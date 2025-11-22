@@ -1,8 +1,9 @@
+// 라이프 봇 채팅방 read 영역
+
 import {useCallback, useEffect, useState} from "react";
 import {router} from "@inertiajs/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisH } from "@fortawesome/free-solid-svg-icons";
-
 export default function RoomList({ sideBar = false, auth, setLoading, setRooms, rooms, setChatId, chatId, setEditId, editRoomRef, setBaseTop, setBaseScroll, editId, editStatus, temporaryEditTitle, setTemporaryEditTitle, handleEditRoom, smRoomList, smRoomListToggle, setSmRoomListToggle }) {
     const getRooms = useCallback(async () => {
         if(!auth.user) return;
@@ -54,7 +55,6 @@ export default function RoomList({ sideBar = false, auth, setLoading, setRooms, 
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
                                                 if(temporaryEditTitle.trim().length <= 0) return;
-                                                e.preventDefault();
                                                 e.stopPropagation();
                                                 handleEditRoom();
                                             }

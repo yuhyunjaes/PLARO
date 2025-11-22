@@ -1,3 +1,5 @@
+// 본 헤더 컴포넌트
+
 import { Link, router } from "@inertiajs/react";
 import {useEffect, useCallback, useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

@@ -1,6 +1,6 @@
-// MessageBubble.jsx
-import MessageActions from './MessageActions.jsx';
+// 라이프 봇 채팅 위치, 컬러 기능
 
+import MessageActions from './MessageActions.jsx';
 export default function MessageBubble({ msg, handleNotepad }) {
     const isUser = msg.role === "user";
 

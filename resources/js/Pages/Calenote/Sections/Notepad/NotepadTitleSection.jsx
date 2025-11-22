@@ -1,3 +1,5 @@
+// 메모장 페이지 메인 타이틀 영역
+
 export default function NotepadTitleSection() {
     const today = new Date();
 

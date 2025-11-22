@@ -1,6 +1,7 @@
+// 라이프 봇 각 채팅마다 팔요로한 기능들 (복사, 매모장 저장)
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faClipboard } from "@fortawesome/free-solid-svg-icons";
-
 export default function MessageActions({ msg, handleNotepad }) {
     return (
         <div className="absolute h-[50px] bottom-[-50px] left-0 w-full flex justify-start items-center space-x-2">

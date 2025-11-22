@@ -1,6 +1,7 @@
+// 로고 컴포넌트
+
 import {Link} from "@inertiajs/react";
 import {useEffect} from "react";
-
 export default function Logo({ className = "", Change = false }) {
     useEffect(() => {
         const htmlClass = document.documentElement.className;

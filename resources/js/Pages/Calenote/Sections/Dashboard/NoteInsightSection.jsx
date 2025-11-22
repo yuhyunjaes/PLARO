@@ -1,3 +1,5 @@
+// 메모장 카테고리 수치 영역
+
 import { useCallback, useEffect, useState, useMemo } from "react";
 import * as echarts from "echarts";
 

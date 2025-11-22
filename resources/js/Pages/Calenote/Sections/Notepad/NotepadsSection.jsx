@@ -1,23 +1,23 @@
+// 메모장들 read영역
+
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faShareNodes, faHeart as faHeartSolid } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import {useCallback, useEffect, useState} from "react";
 import NotepadShare from "@/Pages/Calenote/Sections/Notepad/NotepadsSection/NotepadShare.jsx";
 import NotepadEdit from "@/Pages/Calenote/Sections/Notepad/NotepadsSection/NotepadEdit.jsx";
+import axios from "axios";
+import {router} from "@inertiajs/react";
 
-export default function NotepadsSection({ notepads, setNotepads, setLoading, viewOption, notepadLikes, setNotepadLikes, tab }) {
+export default function NotepadsSection({ notepads, setNotepads, setLoading, viewOption, notepadLikes, setNotepadLikes, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal }) {
     const [shareId, setShareId] = useState("");
-
-    const [editId, setEditId] = useState("");
-    const [editStatus, setEditStatus] = useState("");
-    const [temporaryEditTitle, setTemporaryEditTitle] = useState("");
-
     const EditTitle = useCallback(() => {
         if(!editId) return;
 
         if(editId && editStatus === "update") {
-            setEditStatus("");
             setEditId("");
+            setEditStatus("");
+            setTemporaryEditTitle("");
             return;
         }
 
@@ -25,6 +25,15 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
         setTemporaryEditTitle(title);
         setEditStatus("update");
     }, [editId, editStatus, notepads]);
+
+    const deleteNotepad = useCallback(() => {
+        if(!editId) return;
+        if(temporaryEditTitle) {
+            setTemporaryEditTitle("");
+        }
+        setEditStatus("delete");
+        setModal(true);
+    }, [editId, temporaryEditTitle]);
 
     const getNotepads = useCallback(async () => {
         if(!tab) return;
@@ -104,6 +113,34 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
         return 1;
     };
 
+    const handleEditNotepadTitle = useCallback(async () => {
+        if (!editId || !temporaryEditTitle.trim()) return;
+        setLoading(true);
+
+        try {
+            const res = await axios.put(`/api/notepads/${editId}/title`, {
+                title : temporaryEditTitle.trim()
+            });
+            if(res.data.success) {
+                setNotepads((prevNotepads) =>
+                    prevNotepads.map((notepad) =>
+                        notepad.id === editId
+                            ? { ...notepad, title: temporaryEditTitle.trim() }
+                            : notepad
+                    )
+                );
+                setEditId("");
+                setEditStatus("");
+                setTemporaryEditTitle("");
+            }
+
+        } catch (err) {
+            console.log(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [editId, temporaryEditTitle]);
+
     return (
         <div className={`grid gap-5 ${viewOption === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"}`}>
             {notepads.map((notepad, index) => {
@@ -111,9 +148,29 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
                 const isLastInRow = (index + 1) % colCount === 0;
                 return (
                     (
-                        <div key={index} className="notepad-item">
+                        <div onClick={() => {
+                            router.visit(`/calenote/notepad/${notepad.id}`, {
+                                method: "get",
+                                preserveState: true,
+                                preserveScroll: true,
+                            });
+                        }} key={index} className="notepad-item">
                             {(editStatus === "update" && editId === notepad.id) ? (
-                                <input type="text" name="" id="" value="asd"/>
+                                <input autoFocus
+                                       onClick={(e) => e.stopPropagation()}
+                                       onMouseDown={(e) => e.stopPropagation()}
+                                       onFocus={(e) => e.stopPropagation()}
+                                       onChange={(e) => {
+                                    setTemporaryEditTitle(e.target.value);
+                                }}
+                                       onKeyDown={(e) => {
+                                           if (e.key === "Enter") {
+                                               if(temporaryEditTitle.trim().length <= 0) return;
+                                               e.stopPropagation();
+                                               handleEditNotepadTitle();
+                                           }
+                                       }}
+                                       type="text" name="" id="" className="normal-text font-semibold truncate border-0 outline-none max-w-full min-w-full" value={temporaryEditTitle}/>
                             ) : (
                                 <h5 className="normal-text font-semibold truncate">
                                     {notepad.title}
@@ -127,7 +184,7 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
                                 <p className="text-gray-500 text-sm">{notepad.category}</p>
 
                                 <div className="space-x-2 flex">
-                                    <NotepadEdit temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setEditStatus={setEditStatus} editId={editId} setEditId={setEditId} notepadId={notepad.id} isLastInRow={isLastInRow}/>
+                                    <NotepadEdit modal={modal} deleteNotepad={deleteNotepad} EditTitle={EditTitle} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setEditStatus={setEditStatus} editId={editId} setEditId={setEditId} notepadId={notepad.id} isLastInRow={isLastInRow}/>
 
                                     <NotepadShare
                                         isLastInRow={isLastInRow}
@@ -137,23 +194,19 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
                                         setLoading={setLoading}
                                     />
 
-                                    {
-                                        notepadLikes.some(like => like.notepad_id === notepad.id) ? (
-                                            <button
-                                                className="transition-colors duration-300 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
-                                                onClick={() => handleLikeDelete(notepad.id)}
-                                            >
-                                                <FontAwesomeIcon icon={faHeartSolid} />
-                                            </button>
-                                        ) : (
-                                            <button
-                                                className="transition-colors duration-300 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
-                                                onClick={() => handleLikeInsert(notepad.id)}
-                                            >
-                                                <FontAwesomeIcon icon={faHeartRegular} />
-                                            </button>
-                                        )
-                                    }
+                                    <button
+                                        className="transition-colors duration-300 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if(notepadLikes.some(like => like.notepad_id === notepad.id)) {
+                                                handleLikeDelete(notepad.id);
+                                            } else {
+                                                handleLikeInsert(notepad.id);
+                                            }
+                                        }}
+                                    >
+                                        <FontAwesomeIcon icon={(notepadLikes.some(like => like.notepad_id === notepad.id)) ? (faHeartSolid) : (faHeartRegular)} />
+                                    </button>
                                 </div>
                             </div>
                         </div>

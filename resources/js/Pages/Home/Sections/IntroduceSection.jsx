@@ -1,6 +1,7 @@
+// 메안페이지 소개 영역
+
 import { IntroduceData } from "./HomeData.js";
 import { useEffect, useState } from "react";
-
 export default function IntroduceSection() {
     return (
         <div className="w-full bg-white dark:bg-[#0d1117]">

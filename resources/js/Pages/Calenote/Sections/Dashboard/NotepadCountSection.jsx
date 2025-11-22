@@ -1,7 +1,8 @@
+// 메모장 갯수, 오늘 작성된 메모장 갯수 데이터 read 영역
+
 import { useCallback, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboard, faArrowUp } from "@fortawesome/free-solid-svg-icons";
-
 export default function NotepadCountSection() {
     const [notepads, setNotepads] = useState(0);
     const [todayNotepads, setTodayNotepads] = useState(0);

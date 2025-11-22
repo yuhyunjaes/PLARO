@@ -1,4 +1,4 @@
-// resources/js/Components/FormInputWithButton.jsx
+// input:text + button 컴포넌트
 export default function FormInputWithButton({
     className = "",
     label,

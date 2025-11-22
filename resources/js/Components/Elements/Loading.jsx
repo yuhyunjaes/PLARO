@@ -1,3 +1,4 @@
+// 로딩 컴포넌트
 export default function Loading({ Toggle }) {
     return (
         <div className={`fixed inset-0 bg-black/30 z-[999] justify-center items-center ${Toggle ? "flex" : "hidden"}`}>

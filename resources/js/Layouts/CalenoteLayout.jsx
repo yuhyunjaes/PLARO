@@ -1,3 +1,5 @@
+// 캘리노트 레이아웃
+
 import { useCallback, useEffect, useState } from "react";
 import SideBarSection from "@/Pages/Calenote/Sections/SideBarSection.jsx";
 import Header from "@/Components/Header/Header.jsx";

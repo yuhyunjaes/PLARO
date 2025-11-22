@@ -1,4 +1,5 @@
-// IntroduceSection Data
+// 메인페이지 콘텐츠 데이터
+
 export const IntroduceData = [
     {
         text : "디지털로 확장되는 삶",

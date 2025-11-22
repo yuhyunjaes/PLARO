@@ -1,8 +1,11 @@
+// 캘리노트 사이드바 영역
+
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faChartLine, faClipboard, faCalendar, faX } from "@fortawesome/free-solid-svg-icons";
 import {faSquareCaretLeft, faSquareCaretRight} from "@fortawesome/free-regular-svg-icons";
 import {CalenoteSectionsData} from "@/Pages/Calenote/Sections/CalenoteSectionsData.js";
 import {Link, usePage} from "@inertiajs/react";
+import {useCallback, useEffect, useState} from "react";
 
 export default function SideBarSection({sideBar, setSideBar, sideBarToggle, setSideBarToggle }) {
     const {url} = usePage();
@@ -45,7 +48,7 @@ export default function SideBarSection({sideBar, setSideBar, sideBarToggle, setS
                             href={section.link}
                             className={`
                             ${(sideBar > 50 || sideBarToggle) ? "btn justify-start" : "justify-center rounded"} transition-colors duration-300 w-full flex items-center px-0 py-2
-                            ${(url === section.link)
+                            ${((index !== 0) ? (url.includes(section.link)) : (url === section.link))
                                 ? "bg-blue-500 text-white"
                                 : "text-gray-950 dark:text-white hover:bg-blue-500 hover:text-white"}
                         `}

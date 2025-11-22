@@ -1,16 +1,20 @@
+// 메모장 수정 및 삭제를 담당하는 영역
+
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEllipsis, faPen, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import {useCallback, useEffect, useRef} from "react";
-export default function NotepadEdit({ editId, setEditId, notepadId, isLastInRow, editStatus, setEditStatus, temporaryEditTitle, setTemporaryEditTitle }) {
+export default function NotepadEdit({ editId, setEditId, notepadId, isLastInRow, editStatus, setEditStatus, temporaryEditTitle, setTemporaryEditTitle, EditTitle, deleteNotepad, modal }) {
     const menuRef = useRef(null);
 
     const handleClickOutside = useCallback( (e) => {
-        if (editId === notepadId && menuRef.current && !menuRef.current.contains(e.target)) {
+        if (!editId || modal) return;
+
+        if (menuRef.current && !menuRef.current.contains(e.target)) {
             setEditId("");
             setEditStatus("");
             setTemporaryEditTitle("");
         }
-    }, [editId, notepadId]);
+    }, [editId, modal]);
 
     useEffect(() => {
         document.addEventListener("mousedown", handleClickOutside);
@@ -18,8 +22,9 @@ export default function NotepadEdit({ editId, setEditId, notepadId, isLastInRow,
     }, [handleClickOutside]);
 
     return (
-        <div onClick={() => {
-            setEditId(notepadId)
+        <div onClick={(e) => {
+            e.stopPropagation();
+            setEditId(notepadId);
         }}
              className={`transition-colors duration-300 relative ${
                  editId === notepadId
@@ -36,16 +41,18 @@ export default function NotepadEdit({ editId, setEditId, notepadId, isLastInRow,
                         ${isLastInRow ? "right-0" : "left-0"}
                     `}
                 >
-                    <button onClick={() => {
-                        setEditStatus("update");
+                    <button onClick={(e) => {
+                        e.stopPropagation();
+                        EditTitle();
                     }} className="btn transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-gray-950 dark:text-white hover:bg-gray-950/10 dark:hover:bg-gray-600 space-x-1">
                         <FontAwesomeIcon icon={faPen}/>
                         <span>
                             제목변경
                         </span>
                     </button>
-                    <button onClick={() => {
-                        setEditStatus("delete");
+                    <button onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotepad();
                     }} className="btn transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-red-400 hover:bg-red-400/20 space-x-1">
                         <FontAwesomeIcon icon={faTrashCan}/>
                         <span>

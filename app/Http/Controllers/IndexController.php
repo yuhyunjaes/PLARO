@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 
 class IndexController extends Controller
 {
+//    메인페이지 이동
     public function index() {
         return view('app');
     }
+
 
     public function login() {
         return view('login');

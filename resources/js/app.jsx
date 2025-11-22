@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// 다크모드
 function initializeDarkMode() {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -25,6 +26,7 @@ function initializeDarkMode() {
     });
 }
 
+// 이동
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: async (name) => {

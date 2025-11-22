@@ -1,9 +1,12 @@
+// 메모장 영역
+
 import { Head, router } from '@inertiajs/react';
-import { useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import Loading from "@/Components/Elements/Loading.jsx";
 import NotepadTitleSection from "@/Pages/Calenote/Sections/Notepad/NotepadTitleSection.jsx";
 import NotepadFilterSection from "@/Pages/Calenote/Sections/Notepad/NotepadFilterSection.jsx";
 import NotepadsSection from "@/Pages/Calenote/Sections/Notepad/NotepadsSection.jsx";
+import Modal from "@/Components/Elements/Modal.jsx";
 
 export default function Notepad({ auth }) {
     const [loading, setLoading] = useState(false);
@@ -11,6 +14,29 @@ export default function Notepad({ auth }) {
     const [viewOption, setViewOption] = useState("grid");
     const [notepads, setNotepads] = useState([]);
     const [notepadLikes, setNotepadLikes] = useState([]);
+
+    const [editId, setEditId] = useState("");
+    const [editStatus, setEditStatus] = useState("");
+    const [temporaryEditTitle, setTemporaryEditTitle] = useState("");
+
+    const [modal, setModal] = useState(false);
+
+    const handleDeleteNotepad = useCallback( async () => {
+        if(!editId) return;
+        setLoading(true);
+        try {
+            const res = await axios.delete(`/api/notepads/${editId}`);
+            if(res.data.success) {
+                setEditStatus("");
+                setEditId("");
+                setNotepads((prevNotepads) => prevNotepads.filter(notepad => notepad.id !== editId));
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [editId]);
 
     return (
         <>
@@ -26,12 +52,22 @@ export default function Notepad({ auth }) {
                     )
                 }
 
+                {/*메모장 메인 타이틀 영역*/}
                 <NotepadTitleSection />
+
                 <div className="py-10 px-5 space-y-5 flex-1">
+                    {/*메모장 필터 영역(search, grid)*/}
                     <NotepadFilterSection viewOption={viewOption} setViewOption={setViewOption} tab={tab} setTab={setTab}/>
-                    <NotepadsSection notepadLikes={notepadLikes} tab={tab} setNotepadLikes={setNotepadLikes} viewOption={viewOption} setLoading={setLoading} notepads={notepads} setNotepads={setNotepads} />
+
+                    {/*메모장 read영역*/}
+                    <NotepadsSection modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} notepadLikes={notepadLikes} tab={tab} setNotepadLikes={setNotepadLikes} viewOption={viewOption} setLoading={setLoading} notepads={notepads} setNotepads={setNotepads} />
                 </div>
+
+                {/*로딩창*/}
                 <Loading Toggle={loading}/>
+
+                {/*메모장 삭제 모달창*/}
+                {modal && <Modal Title="메모장 삭제" onClickEvent={handleDeleteNotepad} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId && '"'+notepads.filter(item => item.id === editId)[0].title+'"' + " 메모장을 정말 삭제 하시겠습니까?"} Position="top" CloseText="삭제" />}
             </div>
         </>
     );

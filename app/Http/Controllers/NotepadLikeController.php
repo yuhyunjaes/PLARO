@@ -9,6 +9,7 @@ use App\Models\NotepadLikes;
 
 class NotepadLikeController extends Controller
 {
+//    메모장 찜 추가
     public function StoreNotepadsLike($uuid) {
         $user = auth()->user();
 
@@ -30,6 +31,7 @@ class NotepadLikeController extends Controller
         return response()->json(['success' => true, 'message' => '노트 찜']);
     }
 
+//    메모장 찜 삭제
     public function DeleteNotepadsLike($uuid) {
         $user = auth()->user();
 
@@ -42,6 +44,7 @@ class NotepadLikeController extends Controller
         return response()->json(['success' => true, 'message' => '노트 찜 취소']);
     }
 
+//    찜된 메모장들 가져오기
     public function GetNotepadsLike() {
         $user = auth()->user();
 

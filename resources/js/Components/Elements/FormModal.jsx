@@ -1,8 +1,9 @@
+// form 모달 컴포넌트
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faX } from "@fortawesome/free-solid-svg-icons";
 import FormInput from "@/Components/Elements/FormInput.jsx";
 import {useCallback} from "react";
-
 export default function FormModal({Title, SubmitText, Label, Type, Id, Name, Value, onChange, toggle, setToggle, Submit }) {
     const close = useCallback(() => {
         if(toggle) return setToggle(false);

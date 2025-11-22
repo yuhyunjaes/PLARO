@@ -1,3 +1,5 @@
+// 메모장 공유 영역
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faShareNodes, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import {useCallback, useEffect, useRef} from "react";
@@ -31,7 +33,8 @@ export default function NotepadShare({ notepadId, shareId, setShareId, setLoadin
 
     return (
         <div
-            onClick={() => {
+            onClick={(e) => {
+                e.stopPropagation();
                 setShareId(notepadId)
             }}
             className={`transition-colors duration-300 relative ${

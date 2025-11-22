@@ -1,4 +1,4 @@
-// resources/js/Components/FormInput.jsx
+// input:text 컴포넌트
 export default function FormInput({
     label,
     id,

@@ -1,9 +1,11 @@
+// 메모장 필터 영역 (찜, grid)
+
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faHeart, faLayerGroup, faGrip, faBarsStaggered } from "@fortawesome/free-solid-svg-icons";
 
 export default function NotepadFilterSection({ tab, setTab, viewOption, setViewOption }) {
     return (
-        <div className="flex justify-between sticky top-0 py-3 z-[1] bg-white dark:bg-gray-950">
+        <div className="flex justify-between sticky top-0 py-3 z-[1] bg-gray-100 dark:bg-gray-950">
             <div className="space-x-3 text-sm sm:text-base">
                 <button onClick={() => {
                     setTab("all");

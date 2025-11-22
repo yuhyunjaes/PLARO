@@ -1,9 +1,10 @@
+// 라이프 봇 프롬프트 전송 및 받기, 채팅에 필요한 영역
+
 import {useCallback, useEffect, useRef, useState} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { DEFAULT_PROMPT, HISTORY_PROMPT, TITLE_PROMPT } from "../../../../../../config/prompt.js";
 import { router } from "@inertiajs/react";
-
 export default function ChatInput({
     chatId,
     setChatId,
