@@ -3,7 +3,7 @@ import axios from "axios";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 
-export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNotepads, setLoading, categories, setCategories, getNotepadCategories }) {
+export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNotepads, setLoading, categories, getNotepadCategories }) {
     const [categoryEditId, setCategoryEditId] = useState("");
     const [temporaryEditCategory, setTemporaryEditCategory] = useState("");
 
@@ -27,6 +27,7 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
 
                 setCategoryEditId("");
                 setTemporaryEditCategory("");
+                getNotepadCategories();
             }
         } catch (err) {
             console.error(err);

@@ -1,13 +1,22 @@
 import FormInputWithButton from "@/Components/Elements/FormInputWithButton.jsx";
-export default function NotepadTitle({searchTitle, setSearchTitle, handleSearchNotepadTitle}) {
+import {useState} from "react";
+export default function NotepadTitle({ setSearchTitle, temporarySearchCategory, setSearchCategory }) {
+    const [temporarySearchTitle, setTemporarySearchTitle] = useState("");
+
     return (
         <FormInputWithButton
+            name="searchTitle"
+            id="searchTitle"
             buttonText="검색"
-            value={searchTitle}
+            label="타이틀"
+            value={temporarySearchTitle}
             onChange={(e) => {
-            setSearchTitle(e.target.value);
+                setTemporarySearchTitle(e.target.value);
             }}
-            onButtonClick={handleSearchNotepadTitle}
+            onButtonClick={() => {
+                setSearchTitle(temporarySearchTitle);
+                setSearchCategory(temporarySearchCategory);
+            }}
         />
     );
 }

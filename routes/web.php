@@ -111,7 +111,6 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/api/notepads', [NotepadController::class, 'StoreNotepads'])->name('notepads.store');
     Route::get('/api/notepads', [NotepadController::class, 'GetNotepads'])->name('notepads.get');
-    Route::get('/api/notepads/search/title/{title}', [NotepadController::class, 'SearchTitleNotepads'])->name('search.title.notepads.get');
 
     Route::post('/notepads/{uuid}/like', [NotepadLikeController::class, 'StoreNotepadsLike'])->name('notepads.like.store');
     Route::delete('/notepads/{uuid}/like', [NotepadLikeController::class, 'DeleteNotepadsLike'])->name('notepads.like.delete');

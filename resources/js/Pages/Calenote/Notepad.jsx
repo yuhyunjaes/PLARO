@@ -22,31 +22,39 @@ export default function Notepad({ auth }) {
 
     const [modal, setModal] = useState(false);
 
-    const [searchTitle, setSearchTitle] = useState("");
+    const [categories, setCategories] = useState([]);
 
-    const handleSearchNotepadTitle = useCallback(async () => {
-        if(!searchTitle) {
-            getNotepads();
-        }
-        setLoading(true);
+    const getNotepadCategories = useCallback(async () => {
         try {
-            const res = await axios.get(`/api/notepads/search/title/${searchTitle}`);
+            const res = await axios.get("/api/notepads/categories");
             if(res.data.success) {
-                setNotepads(res.data.notepads);
+                setCategories(res.data.categories);
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
-    }, [searchTitle])
+    }, []);
+
+    useEffect(() => {
+        getNotepadCategories();
+    }, [getNotepadCategories]);
+
+    const [searchTitle, setSearchTitle] = useState("");
+    const [searchCategory, setSearchCategory] = useState("");
 
     const getNotepads = useCallback(async () => {
         if(!tab) return;
         setLoading(true);
         try {
-            const res = await axios.get(`/api/notepads?liked=${tab === "liked"}`);
-            if(res.data.success) {
+            const res = await axios.get('/api/notepads', {
+                params: {
+                    title: searchTitle,
+                    category: searchCategory,
+                    liked: tab === 'liked'
+                }
+            });
+
+            if (res.data.success) {
                 setNotepads(res.data.notepads);
             }
         } catch (err) {
@@ -54,7 +62,7 @@ export default function Notepad({ auth }) {
         } finally {
             setLoading(false);
         }
-    }, [tab]);
+    }, [tab, searchTitle, searchCategory]);
 
     useEffect(() => {
         getNotepads();
@@ -94,12 +102,12 @@ export default function Notepad({ auth }) {
                 {/*메모장 메인 타이틀 영역*/}
                 <NotepadTitleSection />
 
-                <div className="py-5 px-5 space-y-5 flex-1">
+                <div className="px-5 space-y-3 flex-1">
                     {/*메모장 필터 영역(search, grid)*/}
-                    <NotepadFilterSection handleSearchNotepadTitle={handleSearchNotepadTitle} searchTitle={searchTitle} setSearchTitle={setSearchTitle} viewOption={viewOption} setViewOption={setViewOption} tab={tab} setTab={setTab}/>
+                    <NotepadFilterSection setSearchCategory={setSearchCategory} categories={categories} setSearchTitle={setSearchTitle} getNotepads={getNotepads} viewOption={viewOption} setViewOption={setViewOption} tab={tab} setTab={setTab}/>
 
                     {/*메모장 read영역*/}
-                    <NotepadsSection modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} notepadLikes={notepadLikes} tab={tab} setNotepadLikes={setNotepadLikes} viewOption={viewOption} setLoading={setLoading} notepads={notepads} setNotepads={setNotepads} />
+                    <NotepadsSection getNotepadCategories={getNotepadCategories} categories={categories} setCategories={setCategories} modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} notepadLikes={notepadLikes} tab={tab} setNotepadLikes={setNotepadLikes} viewOption={viewOption} setLoading={setLoading} notepads={notepads} setNotepads={setNotepads} />
                 </div>
 
                 {/*로딩창*/}

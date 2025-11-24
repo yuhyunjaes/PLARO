@@ -10,24 +10,8 @@ import axios from "axios";
 import {router} from "@inertiajs/react";
 import NotepadCategoryEdit from "@/Pages/Calenote/Sections/Notepad/NotepadsSection/NotepadCategoryEdit.jsx";
 
-export default function NotepadsSection({ notepads, setNotepads, setLoading, viewOption, notepadLikes, setNotepadLikes, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal }) {
+export default function NotepadsSection({ notepads, setNotepads, setLoading, viewOption, notepadLikes, setNotepadLikes, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal, categories, setCategories, getNotepadCategories }) {
     const [shareId, setShareId] = useState("");
-    const [categories, setCategories] = useState([]);
-
-    const getNotepadCategories = useCallback(async () => {
-        try {
-            const res = await axios.get("/api/notepads/categories");
-            if(res.data.success) {
-                setCategories(res.data.categories);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    }, []);
-
-    useEffect(() => {
-        getNotepadCategories();
-    }, [getNotepadCategories]);
 
     const EditTitle = useCallback(() => {
         if(!editId) return;
@@ -181,7 +165,7 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
                             </p>
                             <p className="text-sm normal-text truncate">{notepad.created_at.substring(0, 10)}</p>
                             <div className="flex justify-between items-center">
-                                <NotepadCategoryEdit categories={categories} setCategories={setCategories} getNotepadCategories={getNotepadCategories} setLoading={setLoading} setNotepads={setNotepads} notepadCategory={notepad.category} notepadId={notepad.id}/>
+                                <NotepadCategoryEdit categories={categories} getNotepadCategories={getNotepadCategories} setLoading={setLoading} setNotepads={setNotepads} notepadCategory={notepad.category} notepadId={notepad.id}/>
 
                                 <div className="space-x-2 flex">
                                     <NotepadEdit handleEditNotepadTitle={handleEditNotepadTitle} modal={modal} deleteNotepad={deleteNotepad} EditTitle={EditTitle} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setEditStatus={setEditStatus} editId={editId} setEditId={setEditId} notepadId={notepad.id} isLastInRow={isLastInRow}/>

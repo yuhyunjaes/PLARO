@@ -129,7 +129,7 @@ input[type=number]::-webkit-inner-spin-button {
     @apply bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white transition-colors duration-300;
 }
 .form-btn {
-    @apply bg-gray-100 text-black border border-gray-200 hover:bg-gray-200 hover:border-gray-300
+    @apply bg-gray-50 text-black border border-gray-200 hover:bg-gray-100 hover:border-gray-200
         dark:bg-[#21242a] dark:hover:bg-gray-800 dark:active:bg-gray-950 dark:text-white dark:border-gray-700 dark:hover:border-gray-800
         transition-colors duration-300 px-4 py-2 rounded-4xl shadow font-semibold cursor-pointer;
 }
@@ -145,6 +145,21 @@ input[type=number]::-webkit-inner-spin-button {
     active:outline-none
     active:ring-0;
 }
+
+.select-control {
+    @apply bg-white pl-3 dark:bg-gray-950 border border-gray-200
+    focus:border-gray-300 dark:focus:border-gray-600 dark:border-gray-700 py-2 w-full sm:w-[230px] max-w-full sm:max-w-[230px] rounded-4xl dark:text-white
+    focus:outline-none
+    focus:ring-0
+    active:outline-none
+    active:ring-0
+    appearance-none;
+}
+
+.select-control option {
+    @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-white;
+}
+
 
 form > div {
     @apply mb-1;

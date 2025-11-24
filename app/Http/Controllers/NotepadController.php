@@ -101,10 +101,16 @@ class NotepadController extends Controller
     public function GetNotepads(Request $request)
     {
         $user = Auth::user();
-        $query = Notepad::query();
 
-        // 유저 노트만
-        $query->where('user_id', $user->id);
+        $query = Notepad::where('user_id', $user->id);
+
+        if ($request->filled('title')) {
+            $query->where('title', 'like', '%'.$request->query('title').'%');
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->query('category'));
+        }
 
         // liked 필터
         if ($request->boolean('liked')) {
@@ -128,11 +134,7 @@ class NotepadController extends Controller
         return response()->json(['success' => true, 'notepads' => $notepads]);
     }
 
-    public function SearchTitleNotepads($title) {
-        $notepads = Notepad::where('title', 'like', '%'.$title.'%')->where(['user_id' => Auth::id()])->get();
 
-        return response()->json(['success' => true, 'notepads' => $notepads]);
-    }
 
 //    메모장 내용 가져오기
     public function GetContents($id) {
