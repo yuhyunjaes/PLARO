@@ -50,7 +50,7 @@ export default function SideBarSection({sideBar, setSideBar, sideBarToggle, setS
                             ${(sideBar > 50 || sideBarToggle) ? "btn justify-start" : "justify-center rounded"} transition-colors duration-300 w-full flex items-center px-0 py-2
                             ${((index !== 0) ? (url.includes(section.link)) : (url === section.link))
                                 ? "bg-blue-500 text-white"
-                                : "text-gray-950 dark:text-white hover:bg-blue-500 hover:text-white"}
+                                : "text-gray-950 dark:text-white hover:bg-blue-500/50 hover:text-white"}
                         `}
                             onClick={() => {
                                 setSideBarToggle(false);
@@ -71,7 +71,7 @@ export default function SideBarSection({sideBar, setSideBar, sideBarToggle, setS
             </div>
             <div className="h-[200px] sm:h-[70px] bg-white dark:bg-gray-950 border-t border-gray-300 dark:border-gray-800 flex justify-center items-center">
                 {(sideBarToggle) && (
-                    <button className="size-8 rounded-full shadow bg-gray-950 dark:bg-white text-white dark:text-gray-950" onClick={() => {
+                    <button className="size-8 rounded-full shadow bg-blue-500 cursor-pointer text-white" onClick={() => {
                         setSideBarToggle(false);
                     }}>
                         <FontAwesomeIcon icon={faX} />

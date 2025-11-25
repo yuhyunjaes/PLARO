@@ -7,7 +7,10 @@ import NotepadTitleSection from "@/Pages/Calenote/Sections/Notepad/NotepadTitleS
 import NotepadFilterSection from "@/Pages/Calenote/Sections/Notepad/NotepadFilterSection.jsx";
 import NotepadsSection from "@/Pages/Calenote/Sections/Notepad/NotepadsSection.jsx";
 import Modal from "@/Components/Elements/Modal.jsx";
+import FormModal from "@/Components/Elements/FormModal.jsx";
 import axios from "axios";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
 
 export default function Notepad({ auth }) {
     const [loading, setLoading] = useState(false);
@@ -23,6 +26,49 @@ export default function Notepad({ auth }) {
     const [modal, setModal] = useState(false);
 
     const [categories, setCategories] = useState([]);
+
+    const [formModal, setFormModal] = useState(false);
+    const [notepadTitle, setNotepadTitle] = useState("");
+    const [notepadCategory, setNotepadCategory] = useState("");
+
+    const [formInputs, setFormInputs] = useState([
+        { label: "타이틀", type: "text", id: "new-title", name: "new-title", value: notepadTitle },
+        { label: "카테고리", type: "text", id: "new-category", name: "new-category", value: notepadCategory }
+    ]);
+
+    const handleInputChange = (index, newValue) => {
+        setFormInputs((prev) => {
+            const copy = [...prev];
+            copy[index].value = newValue;
+            return copy;
+        });
+
+        if (index === 0) setNotepadTitle(newValue);
+        if (index === 1) setNotepadCategory(newValue);
+    };
+
+    const handleStoreNotepad = useCallback(async () => {
+        if(!notepadTitle || !notepadCategory) return;
+        setLoading(true);
+
+        try {
+            const res = await axios.post("/api/notepads", {
+                note_title: notepadTitle,
+                category: notepadCategory
+            });
+            if(res.data.success) {
+                router.visit(`/calenote/notepad/${res.data.id}`, {
+                    method: "get",
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [notepadTitle, notepadCategory]);
 
     const getNotepadCategories = useCallback(async () => {
         try {
@@ -77,6 +123,7 @@ export default function Notepad({ auth }) {
                 setEditStatus("");
                 setEditId("");
                 setNotepads((prevNotepads) => prevNotepads.filter(notepad => notepad.id !== editId));
+                getNotepadCategories();
             }
         } catch (err) {
             console.error(err);
@@ -102,7 +149,7 @@ export default function Notepad({ auth }) {
                 {/*메모장 메인 타이틀 영역*/}
                 <NotepadTitleSection />
 
-                <div className="px-5 space-y-3 flex-1">
+                <div className="px-5 space-y-3 pb-5 flex-1">
                     {/*메모장 필터 영역(search, grid)*/}
                     <NotepadFilterSection setSearchCategory={setSearchCategory} categories={categories} setSearchTitle={setSearchTitle} getNotepads={getNotepads} viewOption={viewOption} setViewOption={setViewOption} tab={tab} setTab={setTab}/>
 
@@ -115,6 +162,24 @@ export default function Notepad({ auth }) {
 
                 {/*메모장 삭제 모달창*/}
                 {modal && <Modal Title="메모장 삭제" onClickEvent={handleDeleteNotepad} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId && '"'+notepads.filter(item => item.id === editId)[0].title+'"' + " 메모장을 정말 삭제 하시겠습니까?"} Position="top" CloseText="삭제" />}
+
+                <button onClick={() => {
+                    setFormModal(true);
+                }} className="fixed bottom-0 cursor-pointer right-0 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-10 rounded-full text-white font-semibold m-[25px] sm:m-[50px]">
+                    <FontAwesomeIcon icon={faPlus} />
+                </button>
+
+                {formModal && (
+                    <FormModal
+                        Title="메모장 생성"
+                        SubmitText="생성"
+                        Inputs={formInputs}            // 다중 입력 배열 전달
+                        toggle={formModal}
+                        setToggle={setFormModal}
+                        onChangeArray={handleInputChange} // index 기반 onChange
+                        Submit={handleStoreNotepad}
+                    />
+                )}
             </div>
         </>
     );

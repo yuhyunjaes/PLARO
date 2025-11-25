@@ -40,7 +40,7 @@ export default function RoomList({ sideBar = false, auth, setLoading, setRooms, 
                             preserveScroll: true,
                         });
                     }} key={room.room_id} className={`btn group transition-colors duration-300 w-full text-gray-950 dark:text-white flex justify-between items-center py-2
-                ${chatId === room.room_id ? "bg-blue-500 text-white" : "hover:bg-blue-500 hover:text-white"}
+                ${chatId === room.room_id ? "bg-blue-500 text-white" : "hover:bg-blue-500/50 hover:text-white"}
                 `}>
                         {
                             (editStatus === "update" && editId === room.room_id) ?
