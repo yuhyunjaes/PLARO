@@ -11,6 +11,7 @@ import { Room, Message, AuthUser, Notepad } from "../../../../Types/LifeBotTypes
 import axios from "axios";
 
 interface ChatInputProps {
+    handleDeleteChatCategories: (roomId: string) => Promise<void>;
     chatId: string | null;
     setChatId: Dispatch<SetStateAction<string | null>>;
     setRooms: Dispatch<SetStateAction<Room[]>>;
@@ -27,41 +28,60 @@ interface ChatInputProps {
     };
 }
 
-export default function ChatInput({
-                                      chatId,
-                                      setChatId,
-                                      setRooms,
-                                      setMessages,
-                                      messages,
-                                      handleNotepad,
-                                      setLoading,
-                                      prompt,
-                                      setPrompt,
-                                      setNewChat,
-                                      auth
-                                  }: ChatInputProps) {
-    const [load, setLoad] = useState<boolean>(false);
-    const [localCategory, setLocalCategory] = useState<string[]>([]);
+interface Categories {
+    room_id: string;
+    category: string;
+}
 
-    const categoryCandidates = (roomId: string | null, arr: string[]) => {
-        if (roomId && arr.length > 0) {
-            localStorage.setItem(`categoryCandidates_${roomId}`, JSON.stringify(arr));
-            setLocalCategory(arr);
-        } else {
+export default function ChatInput({
+    handleDeleteChatCategories,
+    chatId,
+    setChatId,
+    setRooms,
+    setMessages,
+    messages,
+    handleNotepad,
+    setLoading,
+    prompt,
+    setPrompt,
+    setNewChat,
+    auth
+}: ChatInputProps) {
+    const [load, setLoad] = useState<boolean>(false);
+    const [roomCategories, setRoomCategories] = useState<Categories[]>([]);
+
+    const categoryCandidates = async (roomId: string | null, arr: string[]) => {
+        if(!roomId || arr.length <= 0) {
             if (roomId) {
-                localStorage.removeItem(`categoryCandidates_${roomId}`);
+                await handleDeleteChatCategories(roomId);
             }
-            setLocalCategory([]);
+            setRoomCategories([]);
+            return;
+        }
+
+        try {
+            const res = await axios.post(`/api/rooms/${roomId}/categories`, {arr});
+            if(res.data.success) {
+                setRoomCategories(res.data.categories);
+            } else {
+                setRoomCategories([]);
+            }
+        } catch (err) {
+            console.error(err);
         }
     }
 
-    const getCategoryCandidates = useCallback(() => {
+    const getCategoryCandidates = useCallback(async () => {
         if (!chatId) return;
-        const saved = localStorage.getItem(`categoryCandidates_${chatId}`);
-        if (saved) {
-            setLocalCategory(JSON.parse(saved))
-        } else {
-            setLocalCategory([]);
+        try {
+            const res = await axios.get(`/api/rooms/${chatId}/categories`);
+            if(res.data.success) {
+                setRoomCategories(res.data.categories);
+            } else {
+                setRoomCategories([]);
+            }
+        } catch (err) {
+            console.log(err);
         }
     }, [chatId])
 
@@ -97,7 +117,7 @@ export default function ChatInput({
         let newChat = false;
 
         try {
-            let currentRoomId = chatId;
+            let currentRoomId: string | null = chatId ? chatId : null;
 
             if (!chatId && !currentRoomId) {
                 newChat = true;
@@ -203,8 +223,9 @@ export default function ChatInput({
                             if (catMatch) {
                                 try {
                                     const arr = JSON.parse("[" + catMatch[1] + "]");
-                                    categoryCandidates(currentRoomId, arr);
-                                    setLocalCategory(arr)
+                                    if(arr.length > 0) {
+                                        categoryCandidates(currentRoomId, arr);
+                                    }
                                 } catch (err) {
                                     console.warn("카테고리 배열 파싱 실패:", err);
                                 }
@@ -257,7 +278,9 @@ export default function ChatInput({
                     try {
                         const res = await axios.delete(`/api/rooms/${currentRoomId}`);
                         if (res.data.success) {
-                            localStorage.removeItem(`categoryCandidates_${currentRoomId}`);
+                            if(currentRoomId) {
+                                await handleDeleteChatCategories(currentRoomId);
+                            }
                             router.visit(`/lifebot`, {
                                 preserveScroll: false,
                                 preserveState: false,
@@ -386,20 +409,20 @@ export default function ChatInput({
                     </h1>
                 )}
                 <div className="w-full max-w-3xl bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end relative">
-                    {(localCategory.length > 0) && (
-                        <div className="space-x-2 h-[40px] top-[-40px] left-0 absolute flex justify-start">
-                            {localCategory.map((category, index) => (
+                    {(roomCategories.length > 0) && (
+                        <div className="space-x-2 h-[40px] top-[-40px] left-0 absolute flex justify-start overflow-x-auto scrollbar-thin">
+                            {roomCategories.map((item, index) => (
                                 <div
                                     onClick={() => {
                                         if (!load) {
-                                            handleSubmit(category);
-                                            setLocalCategory([]);
+                                            handleSubmit(item.category);
+                                            setRoomCategories([]);
                                         }
                                     }}
                                     key={index}
-                                    className="px-3 h-[80%] cursor-pointer bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl text-sm sm:text-base"
+                                    className="flex-shrink-0 px-3 h-[80%] cursor-pointer bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl text-sm sm:text-base"
                                 >
-                                    {category}
+                                    {item.category}
                                 </div>
                             ))}
                         </div>

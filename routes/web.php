@@ -1,4 +1,4 @@
-<?php
+                                <?php
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -11,6 +11,7 @@ use App\Http\Controllers\ChatController;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\NotepadLikeController;
 use App\Models\Notepad;
+use App\Http\Controllers\ChatCategoryController;
 
 Route::post('api/lifebot/title', function (Request $request) {
     $apiKey = env('GEMINI_API_KEY');
@@ -130,6 +131,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/rooms', [ChatController::class, 'GetRooms'])->name('rooms.get');
     Route::delete('/api/rooms/{roomId}', [ChatController::class, 'DeleteRooms'])->name('rooms.delete');
     Route::put('/api/rooms/{roomId}', [ChatController::class, 'UpdateRooms'])->name('rooms.update');
+
+    Route::get('/api/rooms/{roomId}/categories', [ChatCategoryController::class, 'GetRoomsCategories'])->name('rooms.categories.get');
+    Route::post('/api/rooms/{roomId}/categories', [ChatCategoryController::class, 'StoreRoomsCategories'])->name('rooms.categories.store');
+    Route::delete('/api/rooms/{roomId}/categories', [ChatCategoryController::class, 'DeleteRoomsCategories'])->name('rooms.categories.delete');
 
     Route::post('/api/messages', [ChatController::class, 'StoreMessages'])->name('messages.store');
     Route::get('/api/messages/{roomId}', [ChatController::class, 'getMessages'])->name('messages.get');

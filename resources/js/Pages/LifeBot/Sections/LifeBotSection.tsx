@@ -9,6 +9,7 @@ import { Dispatch, SetStateAction, RefObject } from 'react';
 import {AuthUser, Message, Room} from "../../../Types/LifeBotTypes";
 
 interface LifeBotSectionProps {
+    handleDeleteChatCategories: (roomId: string) => Promise<void>;
     setNewChat: Dispatch<SetStateAction<boolean>>;
     sideBar: number;
     setLoading: Dispatch<SetStateAction<boolean>>;
@@ -25,7 +26,7 @@ interface LifeBotSectionProps {
     setPrompt: Dispatch<SetStateAction<string>>;
 }
 
-export default function LifeBotSection({ setNewChat, sideBar, setLoading, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt } : LifeBotSectionProps) {
+export default function LifeBotSection({ handleDeleteChatCategories, setNewChat, sideBar, setLoading, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt } : LifeBotSectionProps) {
     const [category, setCategory] = useState("");
     const [categoryToggle, setCategoryToggle] = useState(false);
     const [saveMsg, setSaveMsg] = useState([]);
@@ -75,7 +76,7 @@ export default function LifeBotSection({ setNewChat, sideBar, setLoading, chatId
                     <FormModal Submit={categorySubmit} toggle={categoryToggle} setToggle={setCategoryToggle} Title="메모장 저장" SubmitText="저장" Label="카테고리" Type="text" Name="category" Id="category" onChange={setCategory} Value={category}/>
                 )}
                 <MessageList chatId={chatId} messages={messages} handleNotepad={handleNotepad}/>
-                <ChatInput auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} setLoading={setLoading} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
+                <ChatInput handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} setLoading={setLoading} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
             </main>
         </>
     );

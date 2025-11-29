@@ -178,6 +178,15 @@ export default function LifeBot({ auth, roomId }: LifeBotProps) {
         }
     }, [editId, temporaryEditTitle]);
 
+    const handleDeleteChatCategories = async (roomId: string) => {
+        if(!roomId) return;
+        try {
+            await axios.delete(`/api/rooms/${roomId}/categories`);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
     const handleDeleteRoom = useCallback( async () => {
         if(!editId) return;
 
@@ -186,7 +195,7 @@ export default function LifeBot({ auth, roomId }: LifeBotProps) {
         try {
             const res = await axios.delete(`/api/rooms/${editId}`);
             if(res.data.success) {
-                localStorage.removeItem(`categoryCandidates_${editId}`);
+                await handleDeleteChatCategories(editId);
                 if(editId === chatId) {
                     router.visit('/lifebot');
                 }
@@ -207,7 +216,7 @@ export default function LifeBot({ auth, roomId }: LifeBotProps) {
             <Header auth={auth} setToggle={setSmRoomListToggle} toggle={smRoomListToggle} check={smRoomList} />
             <div className="relative overflow-hidden flex h-[calc(100vh-70px)] transition-[width] duration-300">
                 <SideBarSection setSmRoomListToggle={setSmRoomListToggle} smRoomListToggle={smRoomListToggle} smRoomList={smRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} baseScroll={baseScroll} setBaseScroll={setBaseScroll} baseTop={baseTop} setBaseTop={setBaseTop} editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setSideBar={setSideBar} setLoading={setLoading}/>
-                <LifeBotSection setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setLoading={setLoading}/>
+                <LifeBotSection handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setLoading={setLoading}/>
                 <EditRoom temporaryEditTitle={temporaryEditTitle} handleEditRoom={handleEditRoom} editStatus={editStatus} smRoomList={smRoomList} smRoomListToggle={smRoomListToggle} EditTitle={EditTitle} deleteRoom={deleteRoom} editRoomRef={editRoomRef} sideBar={sideBar} toggle={editId} />
             </div>
             {modal && <Modal Title="채팅방 삭제" onClickEvent={handleDeleteRoom} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId ? '"'+rooms.find(item => item.room_id === editId)?.title+'"' + " 채팅방을 정말 삭제 하시겠습니까?" : undefined} Position="top" CloseText="삭제" />}

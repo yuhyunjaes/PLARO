@@ -197,7 +197,7 @@ form > div {
 }
 
 *::-webkit-scrollbar {
-    @apply bg-transparent w-[5px];
+    @apply bg-transparent h-[6px] w-[6px];
 }
 *::-webkit-scrollbar-thumb {
     @apply bg-gray-200 rounded-full;
