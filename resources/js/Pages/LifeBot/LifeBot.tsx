@@ -4,7 +4,7 @@ import { Head, router } from '@inertiajs/react';
 import {useEffect, useState, useCallback, useRef} from "react";
 import EditRoom from "./Sections/SideBarSection/RoomList/EditRoom";
 import axios from 'axios';
-import { AuthUser, Message, Room } from "../../Types/LifeBotTypes";
+import { Categories, AuthUser, Message, Room } from "../../Types/LifeBotTypes";
 import SideBarSection from "./Sections/SideBarSection";
 import LifeBotSection from "./Sections/LifeBotSection";
 import Modal from "../../Components/Elements/Modal";
@@ -29,6 +29,7 @@ export default function LifeBot({ auth, roomId }: LifeBotProps) {
     const [prompt, setPrompt] = useState<string>("");
     const [newChat, setNewChat] = useState<boolean>(false);
     const [editId, setEditId] = useState<string>("");
+    const [roomCategories, setRoomCategories] = useState<Categories[]>([]);
 
     const editRoomRef = useRef<HTMLDivElement>(null);
     const [baseTop, setBaseTop] = useState<number>(0);
@@ -181,7 +182,10 @@ export default function LifeBot({ auth, roomId }: LifeBotProps) {
     const handleDeleteChatCategories = async (roomId: string) => {
         if(!roomId) return;
         try {
-            await axios.delete(`/api/rooms/${roomId}/categories`);
+            const res = await axios.delete(`/api/rooms/${roomId}/categories`);
+            if(res.data.success) {
+                setRoomCategories([]);
+            }
         } catch (err) {
             console.error(err);
         }
@@ -216,7 +220,7 @@ export default function LifeBot({ auth, roomId }: LifeBotProps) {
             <Header auth={auth} setToggle={setSmRoomListToggle} toggle={smRoomListToggle} check={smRoomList} />
             <div className="relative overflow-hidden flex h-[calc(100vh-70px)] transition-[width] duration-300">
                 <SideBarSection setSmRoomListToggle={setSmRoomListToggle} smRoomListToggle={smRoomListToggle} smRoomList={smRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} baseScroll={baseScroll} setBaseScroll={setBaseScroll} baseTop={baseTop} setBaseTop={setBaseTop} editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setSideBar={setSideBar} setLoading={setLoading}/>
-                <LifeBotSection handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setLoading={setLoading}/>
+                <LifeBotSection roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setLoading={setLoading}/>
                 <EditRoom temporaryEditTitle={temporaryEditTitle} handleEditRoom={handleEditRoom} editStatus={editStatus} smRoomList={smRoomList} smRoomListToggle={smRoomListToggle} EditTitle={EditTitle} deleteRoom={deleteRoom} editRoomRef={editRoomRef} sideBar={sideBar} toggle={editId} />
             </div>
             {modal && <Modal Title="채팅방 삭제" onClickEvent={handleDeleteRoom} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId ? '"'+rooms.find(item => item.room_id === editId)?.title+'"' + " 채팅방을 정말 삭제 하시겠습니까?" : undefined} Position="top" CloseText="삭제" />}

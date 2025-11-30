@@ -81,6 +81,16 @@ Route::middleware('auth')->group(function () {
         return Inertia::render('Calenote/Calendar');
     })->name('calendar');
 
+    Route::get('/calenote/calendar/{mode}', function ($mode) {
+        $modeTypes = ['month', 'week', 'day'];
+
+        if (!in_array($mode, $modeTypes)) {
+            return Inertia::render('Status/Status', ['status' => 404]);
+        }
+
+        return Inertia::render('Calenote/Calendar', ['mode' => $mode]);
+    })->name('calendar');
+
     Route::get('/calenote/notepad', function () {
         return Inertia::render('Calenote/Notepad');
     })->name('notepad');

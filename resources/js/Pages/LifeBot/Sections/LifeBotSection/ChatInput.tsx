@@ -7,10 +7,12 @@ import { prompts } from "../../../../../../config/prompt";
 
 
 import { router } from "@inertiajs/react";
-import { Room, Message, AuthUser, Notepad } from "../../../../Types/LifeBotTypes";
+import {Room, Message, AuthUser, Notepad, Categories} from "../../../../Types/LifeBotTypes";
 import axios from "axios";
 
 interface ChatInputProps {
+    roomCategories: Categories[];
+    setRoomCategories: Dispatch<SetStateAction<Categories[]>>;
     handleDeleteChatCategories: (roomId: string) => Promise<void>;
     chatId: string | null;
     setChatId: Dispatch<SetStateAction<string | null>>;
@@ -28,12 +30,9 @@ interface ChatInputProps {
     };
 }
 
-interface Categories {
-    room_id: string;
-    category: string;
-}
-
 export default function ChatInput({
+    roomCategories,
+    setRoomCategories,
     handleDeleteChatCategories,
     chatId,
     setChatId,
@@ -48,15 +47,12 @@ export default function ChatInput({
     auth
 }: ChatInputProps) {
     const [load, setLoad] = useState<boolean>(false);
-    const [roomCategories, setRoomCategories] = useState<Categories[]>([]);
 
     const categoryCandidates = async (roomId: string | null, arr: string[]) => {
-        if(!roomId || arr.length <= 0) {
-            if (roomId) {
-                await handleDeleteChatCategories(roomId);
-            }
-            setRoomCategories([]);
-            return;
+        if(!roomId || arr.length <= 0) return;
+
+        if(arr.length > 10) {
+            arr = arr.slice(0, 10);
         }
 
         try {
@@ -196,9 +192,10 @@ export default function ChatInput({
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
 
-            let combined = "";
-            let fullText = "";
             let aiCode = "";
+            let catMatch: RegExpMatchArray | null = null;
+            let combined: string = "";
+            let fullText: string = "";
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -219,38 +216,27 @@ export default function ChatInput({
                         if (text) {
                             combined += text;
 
-                            const catMatch = combined.match(/<<<\[([\s\S]*?)\]>>>/);
-                            if (catMatch) {
-                                try {
-                                    const arr = JSON.parse("[" + catMatch[1] + "]");
-                                    if(arr.length > 0) {
-                                        categoryCandidates(currentRoomId, arr);
-                                    }
-                                } catch (err) {
-                                    console.warn("카테고리 배열 파싱 실패:", err);
-                                }
-                                combined = combined.replace(catMatch[0], "");
-                            } else {
-                                categoryCandidates(currentRoomId, []);
+                            const match = combined.match(/<<<\[([\s\S]*?)\]>>>/);
+                            if (match) {
+                                catMatch = match; // 마지막 매칭 저장
+                                combined = combined.replace(match[0], "");
                             }
 
                             if (combined.includes('***{')) {
                                 const jsonStart = combined.indexOf('***{');
-                                const beforeJson = combined.slice(0, jsonStart);
-                                fullText = beforeJson.trim();
+                                fullText = combined.slice(0, jsonStart).trim();
                             } else {
                                 fullText = combined.trim();
                             }
 
-                            const match = fullText.match(/\*\*\*({[\s\S]*?})\*\*\*/);
-                            if (match) fullText = fullText.replace(match[0], "").trim();
+                            const aiMatch = fullText.match(/\*\*\*({[\s\S]*?})\*\*\*/);
+                            if (aiMatch) fullText = fullText.replace(aiMatch[0], "").trim();
 
                             setMessages((prev) => {
                                 if (!prev.length) return prev;
-
                                 return prev.map((msg, i) =>
                                     i === prev.length - 1
-                                        ? { ...msg, text: fullText }  // 새 객체로 교체
+                                        ? { ...msg, text: fullText }
                                         : msg
                                 );
                             });
@@ -261,6 +247,19 @@ export default function ChatInput({
                 }
             }
 
+            if (catMatch && currentRoomId) {
+                try {
+                    const arr = JSON.parse("[" + catMatch[1] + "]");
+                    if (arr.length > 0) {
+                        await categoryCandidates(currentRoomId, arr);
+                    }
+                } catch (err) {
+                    console.warn("카테고리 배열 파싱 실패:", err);
+                }
+            } else if (!catMatch && currentRoomId) {
+                await handleDeleteChatCategories(currentRoomId);
+            }
+
             const match = combined.match(/\*\*\*({[\s\S]*?})\*\*\*/);
             if (match && match[1]) {
                 aiCode = match[1].trim();
@@ -268,8 +267,6 @@ export default function ChatInput({
             }
 
             if (fullText.trim().length === 0) {
-                alert("서버가 응답하지 않습니다. 잠시 후 다시 시도해주세요.");
-
                 setLoad(false);
                 setPrompt("");
                 setLoading(false);

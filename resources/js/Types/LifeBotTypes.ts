@@ -20,3 +20,8 @@ export interface Notepad {
     text: string;
     category?: string;
 }
+
+export interface Categories {
+    room_id: string;
+    category: string;
+}

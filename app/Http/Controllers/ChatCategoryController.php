@@ -12,6 +12,7 @@ class ChatCategoryController extends Controller
 {
     public function DeleteRoomsCategories($roomId) {
         ChatCategory::where('room_id', $roomId)->delete();
+        return response()->json(['success' => true]);
     }
 
     public function StoreRoomsCategories($roomId, Request $request) {
@@ -21,6 +22,9 @@ class ChatCategoryController extends Controller
                 return response()->json(['success' => false]);
             }
             $Room = ChatRoom::where('uuid', $roomId)->where('user_id', Auth::id())->first();
+
+            ChatCategory::where('room_id', $Room->uuid)->delete();
+
             if(!$Room) {
                 return response()->json(['success' => false]);
             }

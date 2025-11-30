@@ -23,8 +23,8 @@ export default function CalenoteLayout({ children, auth }: CalenoteLayoutProps) 
     const [saveWidth, setSaveWidth] = useState<number>(250);
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
 
-    const handleResize = useCallback(() => {
-        setSideBar((prev) => {
+    const handleResize: ()=> void = useCallback(() => {
+        setSideBar((prev: number):number => {
             if (window.innerWidth <= 640) {
                 setSideBarToggle(false);
                 return 0;
@@ -34,10 +34,10 @@ export default function CalenoteLayout({ children, auth }: CalenoteLayoutProps) 
         });
     }, [saveWidth]);
 
-    useEffect(() => {
+    useEffect((): ()=> void => {
         window.addEventListener("resize", handleResize);
         handleResize();
-        return () => window.removeEventListener("resize", handleResize);
+        return ():void => window.removeEventListener("resize", handleResize);
     }, [handleResize]);
 
     useEffect(() => {

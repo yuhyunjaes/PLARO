@@ -6,7 +6,7 @@ import ChatInput from "./LifeBotSection/ChatInput";
 import FormModal from "../../../Components/Elements/FormModal";
 import axios from "axios";
 import { Dispatch, SetStateAction, RefObject } from 'react';
-import {AuthUser, Message, Room} from "../../../Types/LifeBotTypes";
+import { Categories, AuthUser, Message, Room} from "../../../Types/LifeBotTypes";
 
 interface LifeBotSectionProps {
     handleDeleteChatCategories: (roomId: string) => Promise<void>;
@@ -24,9 +24,11 @@ interface LifeBotSectionProps {
     setMessages: Dispatch<SetStateAction<Message[]>>;
     prompt: string;
     setPrompt: Dispatch<SetStateAction<string>>;
+    roomCategories: Categories[];
+    setRoomCategories: Dispatch<SetStateAction<Categories[]>>;
 }
 
-export default function LifeBotSection({ handleDeleteChatCategories, setNewChat, sideBar, setLoading, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt } : LifeBotSectionProps) {
+export default function LifeBotSection({ handleDeleteChatCategories, setNewChat, sideBar, setLoading, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories } : LifeBotSectionProps) {
     const [category, setCategory] = useState("");
     const [categoryToggle, setCategoryToggle] = useState(false);
     const [saveMsg, setSaveMsg] = useState([]);
@@ -76,7 +78,7 @@ export default function LifeBotSection({ handleDeleteChatCategories, setNewChat,
                     <FormModal Submit={categorySubmit} toggle={categoryToggle} setToggle={setCategoryToggle} Title="메모장 저장" SubmitText="저장" Label="카테고리" Type="text" Name="category" Id="category" onChange={setCategory} Value={category}/>
                 )}
                 <MessageList chatId={chatId} messages={messages} handleNotepad={handleNotepad}/>
-                <ChatInput handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} setLoading={setLoading} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
+                <ChatInput roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} setLoading={setLoading} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
             </main>
         </>
     );
