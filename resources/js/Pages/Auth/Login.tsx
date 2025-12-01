@@ -17,7 +17,8 @@ export default function Login() {
             password : password
         }, {
             onError: (err) => {
-                alert(err.message)
+                alert(err.message);
+                setPassword("");
             }
         })
     }

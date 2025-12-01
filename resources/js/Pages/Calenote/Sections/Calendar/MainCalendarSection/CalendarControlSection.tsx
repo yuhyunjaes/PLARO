@@ -1,5 +1,7 @@
 import {Dispatch, SetStateAction} from "react";
 import {router} from "@inertiajs/react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 
 interface Mode {
     title: string;
@@ -28,32 +30,38 @@ export default function CalendarControlSection({viewMode, setViewMode}: Calendar
     ];
 
     return(
-        <div className="h-[70px] border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950  rounded-2xl flex justify-between items-center px-5">
+        <div className="h-[70px] border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950  rounded-xl flex justify-between items-center px-5">
             <div className="normal-text">
-                {viewMode}
+
             </div>
 
-            <select
-                name="category"
-                id="category"
-                className="select-control h-2/3"
-                onChange={(e) => {
-                    const value:string = e.target.value;
-                    if (value === "month" || value === "week" || value === "day") {
-                        router.visit(`/calenote/calendar/${value}`, {
-                            method: "get",
-                            preserveState: true,
-                            preserveScroll: true,
-                        });
-                    }
-                }}
-            >
-                {modes && (
-                    modes.map((mode:any, index:number) => (
-                        <option key={index} value={mode.key}>{mode.title}</option>
-                    ))
-                )}
-            </select>
+            <div className="relative flex items-center">
+                <select
+                    name="category"
+                    id="category"
+                    className="self-select-control w-[80px] h-2/3"
+                    value={viewMode}
+                    onChange={(e) => {
+                        const value:string = e.target.value;
+                        if (value === "month" || value === "week" || value === "day") {
+                            router.visit(`/calenote/calendar/${value}`, {
+                                method: "get",
+                                preserveState: true,
+                                preserveScroll: true,
+                            });
+                        }
+                    }}
+                >
+                    {modes && (
+                        modes.map((mode:any, index:number) => (
+                            <option className="normal-text" key={index} value={mode.key}>
+                                {mode.title}
+                            </option>
+                        ))
+                    )}
+                </select>
+                <FontAwesomeIcon className="normal-text absolute end-0 pointer-events-none pe-2" icon={faChevronDown}/>
+            </div>
         </div>
     );
 }
