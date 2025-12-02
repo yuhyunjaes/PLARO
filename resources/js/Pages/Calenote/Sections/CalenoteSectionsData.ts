@@ -26,3 +26,13 @@ export const CalenoteSectionsData: CalenoteSection[] = [
         icon: "faCalendar",
     },
 ];
+
+export interface CalendarAtData {
+    day: number;
+    year: number;
+    month: number;
+    isWeekend: boolean;
+    isActive: boolean;
+    isCurrentMonth: boolean;
+    count?: number;
+}

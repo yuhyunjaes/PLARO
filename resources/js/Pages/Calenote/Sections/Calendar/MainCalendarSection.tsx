@@ -1,9 +1,13 @@
-import {useState, useRef, useEffect, RefObject} from "react";
+import {useState, useRef, useEffect, RefObject, useCallback} from "react";
 import CalendarSection from "./MainCalendarSection/CalendarSection";
 import CalendarControlSection from "./MainCalendarSection/CalendarControlSection";
 import { Dispatch, SetStateAction } from "react";
+import {CalendarAtData} from "../CalenoteSectionsData";
+import {all} from "axios";
 
 interface SideBarSectionProps {
+    months: Date[];
+    setMonths: Dispatch<SetStateAction<Date[]>>;
     sideBar: number;
     viewMode: "month" | "week" | "day";
     setViewMode: Dispatch<SetStateAction<"month" | "week" | "day">>;
@@ -12,72 +16,120 @@ interface SideBarSectionProps {
     setActiveAt: Dispatch<SetStateAction<Date>>;
 }
 
-export default function MainCalendarSection({ sideBar, activeAt, setActiveAt, viewMode, setViewMode, today }: SideBarSectionProps) {
-    // 순차적 초기화: [이전 달, 현재 달, 다음 달]
-    const [months, setMonths] = useState<Date[]>([
-        new Date(today.getFullYear(), today.getMonth() - 1, 1), // 이전 달
-        today, // 현재 달
-        new Date(today.getFullYear(), today.getMonth() + 1, 1), // 다음 달
-    ]);
+export default function MainCalendarSection({ months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, today }: SideBarSectionProps) {
     const scrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
+    const [allDates, setAllDates] = useState<CalendarAtData[]>([]);
 
-    // 스크롤 처리: 위/아래 끝에서 무한 스크롤 (useCallback 적용)
-    const handleScroll = ():void => {
-        if(!scrollRef.current) return;
+    const [isScrolling, setIsScrolling] = useState(false);
+
+    const handleScroll = useCallback(() => {
+        if(!scrollRef.current || isScrolling) return;
+
         const container = scrollRef.current;
         const scrollTop = container.scrollTop;
         const clientHeight = container.clientHeight;
         const scrollHeight = container.scrollHeight;
 
-        if (scrollTop <= 0) {
+        const threshold = 10;
+
+        if (scrollTop <= threshold) {
+            setIsScrolling(true);
+            setAllDates([]);
             setMonths(prev => {
-                const first:Date | undefined = prev[0];
+                const first = prev[0];
                 if(!first) return [...prev];
                 const newMonth = new Date(first.getFullYear(), first.getMonth() - 1, 1);
                 let updated = [newMonth, ...prev];
                 if (updated.length > 3) {
                     updated.pop();
                 }
-
                 return updated;
-            })
-            center();
+            });
+            setTimeout(() => setIsScrolling(false), 300);
         }
-
-        if (scrollTop + clientHeight >= scrollHeight) {
+        else if (scrollTop + clientHeight >= scrollHeight - threshold) {
+            setIsScrolling(true);
+            setAllDates([]);
             setMonths(prev => {
-                const last: Date | undefined = prev[2];
+                const last = prev[2];
                 if (!last) return [...prev];
-
                 const newMonth = new Date(last.getFullYear(), last.getMonth() + 1, 1);
                 let updated = [...prev, newMonth];
-
                 if (updated.length > 3) {
                     updated.shift();
                 }
-
                 return updated;
             });
-            center();
+            setTimeout(() => setIsScrolling(false), 300);
         }
-    }
-
-    const center:() => void = ():void => {
-        if (scrollRef.current) {
-            const container:HTMLDivElement = scrollRef.current;
-            container.scrollTop = (container.scrollHeight - container.clientHeight) / 2;
-        }
-    }
-
-    useEffect(():void => {
-        center();
-    }, []);
+    }, [isScrolling]);
 
     useEffect(() => {
-        if (months[1]) {
-            setActiveAt(months[1]);
-        }
+        if(months.length <= 0) return;
+
+        console.log(`${months[0] && months[0].getMonth()+1} ${months[1] && months[1].getMonth()+1} ${months[2] && months[2].getMonth()+1}`)
     }, [months]);
+
+    const center = () => {
+        const container = scrollRef.current;
+        if (!container) return;
+
+        // first 요소 찾기
+        const firstEl = container.querySelectorAll(".count-2")[0] as HTMLElement | null;
+        if (!firstEl) return;
+
+        // first 요소의 위치 정보
+        const rect = firstEl.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // container 기준 first의 상대적 top 위치 계산
+        const offsetTop = rect.top - containerRect.top;
+
+        container.scrollTop = offsetTop;
+    };
+
+    useEffect(() => { requestAnimationFrame(() => { center(); }); }, [months]);
+
+
+    useEffect(() => {
+        if(months.length <= 0) return;
+
+        setAllDates((pre: CalendarAtData[]): CalendarAtData[] => {
+            const map = new Map<string, CalendarAtData>();
+
+            for (const item of pre) {
+                const key = `${item.year}-${item.month}-${item.day}`;
+
+                if (map.has(key)) {
+                    const existing = map.get(key)!;
+                    if (!existing.isActive && item.isActive) {
+                        map.set(key, item);
+                    }
+                } else {
+                    map.set(key, item);
+                }
+            }
+
+            const CleanDate = pre
+                .map(item => map.get(`${item.year}-${item.month}-${item.day}`)!)
+                .filter((item, index, self) => self.indexOf(item) === index);
+
+            return CleanDate;
+        });
+
+    }, [months]);
+
+    useEffect(() => {
+        if (months.length === 3) {
+            const activeMonth:Date | undefined = months[1];
+            if(activeMonth) {
+                setActiveAt(activeMonth);
+            }
+        }
+
+    }, [months]);
+
+
 
     return (
         <div className="flex-1 flex flex-col gap-5">
@@ -91,16 +143,46 @@ export default function MainCalendarSection({ sideBar, activeAt, setActiveAt, vi
                 <div
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    className="flex-1 hidden-scroll overflow-x-hidden overflow-y-auto snap-y snap-mandatory"
+                    className="flex-1 hidden-scroll user-select-none overflow-x-hidden overflow-y-auto snap-y snap-mandatory"
                 >
-                    {months.map((m, index) => (
-                        <CalendarSection
-                            scrollRef={scrollRef}
-                            key={index}
-                            date={m}
-                            activeAt={activeAt}
-                        />
-                    ))}
+                    {(() => {
+                        return months.map((m: Date, index: number) => {
+                            return (
+                                <CalendarSection
+                                    key={index}
+                                    scrollRef={scrollRef}
+                                    count={index+1}
+                                    date={m}
+                                    activeAt={activeAt}
+                                    setAllDates={setAllDates}
+                                />
+                            );
+                        });
+                    })()}
+                    <div className="flex flex-col" style={{maxHeight: `${(scrollRef.current) && scrollRef.current.clientHeight}px`}}>
+                        {(() => {
+                            const weeks:CalendarAtData[] [] = [];
+                            for (let i:number = 0; i < allDates.length; i += 7) {
+                                weeks.push(allDates.slice(i, i + 7));
+                            }
+
+                            return (
+                                weeks.map((week:CalendarAtData[], index:number) => (
+                                    <div key={index} className="grid grid-cols-7 text-sm text-right flex-1 snap-start">
+                                        {week.map((dayData:CalendarAtData, i:number) => (
+                                            <div
+                                                style={{height: `${scrollRef.current && (scrollRef.current.clientHeight/6)+'px'}` }}
+                                                key={`${index}-${i}`} className={`border-[0.5px] count-${dayData.count} border-gray-800 ${dayData.isWeekend && "bg-[#0d1117]"} ${dayData.isActive ? "normal-text" : "text-gray-500"}`}>
+                                                <p className="py-2">
+                                                    <span className="px-2">{dayData.day}</span>
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))
+                            );
+                        })()}
+                    </div>
                 </div>
             </div>
         </div>

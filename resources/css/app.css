@@ -260,3 +260,6 @@ form > div {
 .ql-toolbar {
     @apply sticky top-[2.6rem] bg-white dark:bg-gray-950 z-[1];
 }
+.user-select-none {
+    user-select: none;
+}

@@ -67,14 +67,28 @@ Route::middleware('web')->group(function () {
             return Inertia::render('Calenote/Calendar');
         })->name('calendar');
 
-        Route::get('/calenote/calendar/{mode}', function ($mode) {
+        Route::get('/calenote/calendar/{mode}/{year?}/{month?}', function ($mode, $year = null, $month = null) {
+            // mode 체크
             $modeTypes = ['month', 'week', 'day'];
-
             if (!in_array($mode, $modeTypes)) {
                 return Inertia::render('Status/Status', ['status' => 404]);
             }
 
-            return Inertia::render('Calenote/Calendar', ['mode' => $mode]);
+            if ($year === null || !preg_match('/^[0-9]{4}$/', $year) || $year < 2015 || $year > 5000) {
+                return Inertia::render('Status/Status', ['status' => 404]);
+            }
+
+            if ($month === null) {
+                $month = 1;
+            } elseif ($month < 1 || $month > 12) {
+                return Inertia::render('Status/Status', ['status' => 404]);
+            }
+
+            return Inertia::render('Calenote/Calendar', [
+                'mode' => $mode,
+                'year' => (int)$year,
+                'month' => (int)$month,
+            ]);
         })->name('calendar');
 
         Route::get('/calenote/notepad', function () {

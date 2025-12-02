@@ -32,10 +32,10 @@ export default function CalendarControlSection({viewMode, setViewMode, activeAt}
 
     return(
         <div className="h-[70px] border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950  rounded-xl flex justify-between items-center px-5">
-            <div className="normal-text">
+            <div className="normal-text font-semibold">
                 {activeAt.getFullYear()}
                 -
-                {(activeAt.getMonth()+1 > 9) ? activeAt.getMonth()+1 : `0${activeAt.getMonth()+1}`}
+                {(activeAt.getMonth()+1 > 9) ? activeAt.getMonth()+1 : `0${activeAt.getMonth()+1}`}월
             </div>
 
             <div className="relative flex items-center">
@@ -47,7 +47,7 @@ export default function CalendarControlSection({viewMode, setViewMode, activeAt}
                     onChange={(e) => {
                         const value:string = e.target.value;
                         if (value === "month" || value === "week" || value === "day") {
-                            router.visit(`/calenote/calendar/${value}`, {
+                            router.visit(`/calenote/calendar/${value}/${activeAt.getFullYear()}/${activeAt.getMonth()+1}`, {
                                 method: "get",
                                 preserveState: true,
                                 preserveScroll: true,
