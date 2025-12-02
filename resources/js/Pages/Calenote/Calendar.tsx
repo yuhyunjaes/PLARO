@@ -24,11 +24,12 @@ export default function Calendar({ auth, mode, year, month } : CalendarProps) {
     const [viewMode, setViewMode] = useState<"month" | "week" | "day">(mode ? mode : "month");
 
     const today = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const At:Date = (year && month) ? new Date(year, month-1, 1) : today;
     const [activeAt, setActiveAt] = useState<Date>(today);
     const [months, setMonths] = useState<Date[]>([
-        new Date(today.getFullYear(), today.getMonth() - 1, 1),
-        (year && month) ? new Date(year, month-1, 1) : today,
-        new Date(today.getFullYear(), today.getMonth() + 1, 1),
+        new Date(At.getFullYear(), At.getMonth() - 1, 1),
+        At,
+        new Date(At.getFullYear(), At.getMonth() + 1, 1),
     ]);
 
     useEffect(() => {

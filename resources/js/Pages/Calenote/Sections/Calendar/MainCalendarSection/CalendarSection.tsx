@@ -10,6 +10,7 @@ interface CalendarSectionProps {
 }
 
 export default function CalendarSection({ date, scrollRef, activeAt, count, setAllDates }: CalendarSectionProps) {
+
     const year = date.getFullYear();
     const month = date.getMonth();
 
