@@ -47,6 +47,11 @@ export default function Calendar({ auth, mode, year, month } : CalendarProps) {
         eventAtUpdate();
     }, [eventAtUpdate]);
 
+    // useEffect(() => {
+    //     if(!startAt || !endAt) return;
+    //     console.log(`startAt: ${startAt.getFullYear()}-${startAt.getMonth()+1}-${startAt.getDate()},  endAt: ${endAt.getFullYear()}-${endAt.getMonth()+1}-${endAt.getDate()}`)
+    // }, [startAt, endAt]);
+
     useEffect(() => {
         if (mode) {
             setViewMode(mode);

@@ -12,6 +12,9 @@ import NotepadCategoryEdit from "./NotepadsSection/NotepadCategoryEdit";
 import {Notepads, NotepadsLike, Category} from "../../../../Types/CalenoteTypes";
 
 interface NotepadsSectionProps {
+    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
+    setAlertMessage: Dispatch<SetStateAction<any>>;
+    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
     notepads: Notepads[];
     setNotepads: Dispatch<SetStateAction<Notepads[]>>;
     setLoading: Dispatch<SetStateAction<boolean>>;
@@ -31,7 +34,7 @@ interface NotepadsSectionProps {
     getNotepadCategories: () => Promise<void>;
 }
 
-export default function NotepadsSection({ notepads, setNotepads, setLoading, viewOption, notepadLikes, setNotepadLikes, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal, categories, getNotepadCategories } : NotepadsSectionProps) {
+export default function NotepadsSection({ setAlertSwitch, setAlertMessage, setAlertType, notepads, setNotepads, setLoading, viewOption, notepadLikes, setNotepadLikes, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal, categories, getNotepadCategories } : NotepadsSectionProps) {
     const [shareId, setShareId] = useState<string>("");
 
     const EditTitle = useCallback(() => {
@@ -139,6 +142,9 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
                 setEditStatus("");
                 setTemporaryEditTitle("");
             }
+            setAlertSwitch(true);
+            setAlertType(res.data.type);
+            setAlertMessage(res.data.message);
 
         } catch (err) {
             console.log(err);
@@ -188,12 +194,15 @@ export default function NotepadsSection({ notepads, setNotepads, setLoading, vie
                             </p>
                             <p className="text-sm normal-text truncate">{notepad.created_at.substring(0, 10)}</p>
                             <div className="flex justify-between items-center">
-                                <NotepadCategoryEdit categories={categories} getNotepadCategories={getNotepadCategories} setLoading={setLoading} setNotepads={setNotepads} notepadCategory={notepad.category} notepadId={notepad.id}/>
+                                <NotepadCategoryEdit setAlertSwitch={setAlertSwitch} setAlertMessage={setAlertMessage} setAlertType={setAlertType} categories={categories} getNotepadCategories={getNotepadCategories} setLoading={setLoading} setNotepads={setNotepads} notepadCategory={notepad.category} notepadId={notepad.id}/>
 
                                 <div className="space-x-2 flex">
                                     <NotepadEdit handleEditNotepadTitle={handleEditNotepadTitle} modal={modal} deleteNotepad={deleteNotepad} EditTitle={EditTitle} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setEditStatus={setEditStatus} editId={editId} setEditId={setEditId} notepadId={notepad.id} isLastInRow={isLastInRow}/>
 
                                     <NotepadShare
+                                        setAlertSwitch={setAlertSwitch}
+                                        setAlertMessage={setAlertMessage}
+                                        setAlertType={setAlertType}
                                         isLastInRow={isLastInRow}
                                         notepadId={notepad.id}
                                         shareId={shareId}

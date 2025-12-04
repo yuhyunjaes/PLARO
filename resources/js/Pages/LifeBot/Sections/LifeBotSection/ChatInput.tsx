@@ -11,6 +11,10 @@ import {Room, Message, AuthUser, Notepad, Categories} from "../../../../Types/Li
 import axios from "axios";
 
 interface ChatInputProps {
+    getMessages: () => Promise<void>;
+    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
+    setAlertMessage: Dispatch<SetStateAction<any>>;
+    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
     roomCategories: Categories[];
     setRoomCategories: Dispatch<SetStateAction<Categories[]>>;
     handleDeleteChatCategories: (roomId: string) => Promise<void>;
@@ -31,6 +35,10 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({
+    getMessages,
+    setAlertSwitch,
+    setAlertMessage,
+    setAlertType,
     roomCategories,
     setRoomCategories,
     handleDeleteChatCategories,
@@ -279,10 +287,14 @@ export default function ChatInput({
                                 await handleDeleteChatCategories(currentRoomId);
                             }
                             router.visit(`/lifebot`, {
-                                preserveScroll: false,
-                                preserveState: false,
-                                replace: true,
+                                method: "get",
+                                preserveState: true,
+                                preserveScroll: true,
                             });
+                            setAlertSwitch(true);
+                            setAlertType("danger");
+                            setAlertMessage("연결이 원활하지 않습니다.");
+
                         }
                     } catch (err) {
                         console.error(err);
@@ -290,11 +302,19 @@ export default function ChatInput({
                     return;
                 }
 
+                setMessages([]);
+
                 router.visit(`/lifebot${currentRoomId ? "/" + currentRoomId : ""}`, {
-                    preserveScroll: false,
-                    preserveState: false,
-                    replace: true,
+                    method: "get",
+                    preserveState: true,
+                    preserveScroll: true,
                 });
+
+                setAlertSwitch(true);
+                setAlertType("danger");
+                setAlertMessage("연결이 원활하지 않습니다.");
+
+                await getMessages();
                 return;
             }
 

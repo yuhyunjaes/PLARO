@@ -6,6 +6,9 @@ import {Dispatch, SetStateAction, useCallback, useEffect, useRef} from "react";
 import axios from "axios";
 
 interface NotepadShareProps {
+    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
+    setAlertMessage: Dispatch<SetStateAction<any>>;
+    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
     notepadId: string;
     shareId: string;
     setShareId: Dispatch<SetStateAction<string>>;
@@ -13,7 +16,7 @@ interface NotepadShareProps {
     isLastInRow: boolean;
 }
 
-export default function NotepadShare({ notepadId, shareId, setShareId, setLoading, isLastInRow } : NotepadShareProps) {
+export default function NotepadShare({ setAlertSwitch, setAlertMessage, setAlertType, notepadId, shareId, setShareId, setLoading, isLastInRow } : NotepadShareProps) {
     const menuRef = useRef<HTMLDivElement>(null);
 
     const handleClickOutside = useCallback( (e: MouseEvent) => {
@@ -32,6 +35,9 @@ export default function NotepadShare({ notepadId, shareId, setShareId, setLoadin
         setLoading(true);
         try {
             const res = await axios.post(`/api/notepads/${notepad}/share/email`);
+            setAlertSwitch(true);
+            setAlertType(res.data.type);
+            setAlertMessage(res.data.message);
         } catch (err) {
             console.error(err);
         } finally {
@@ -58,7 +64,7 @@ export default function NotepadShare({ notepadId, shareId, setShareId, setLoadin
                 <div
                     ref={menuRef}
                     className={`
-                        w-[200px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-2xl
+                        w-[200px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-xl
                         ${isLastInRow ? "right-0" : "left-0"}
                     `}
                 >

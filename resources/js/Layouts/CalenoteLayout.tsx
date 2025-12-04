@@ -1,7 +1,17 @@
 // CalenoteLayout.tsx
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import {
+    cloneElement,
+    Dispatch,
+    isValidElement,
+    ReactNode,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useState
+} from "react";
 import Header from "../Components/Header/Header";
 import SideBarSection from "../Pages/Calenote/Sections/SideBarSection";
+import Alert from "../Components/Elements/Alert";
 
 // Props 타입 정의
 export interface AuthUser {
@@ -18,10 +28,20 @@ interface CalenoteLayoutProps {
     };
 }
 
+interface AlertProps {
+    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
+    setAlertMessage: Dispatch<SetStateAction<any>>;
+    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
+}
+
 export default function CalenoteLayout({ children, auth }: CalenoteLayoutProps) {
-    const [sideBar, setSideBar] = useState<number>(() => (window.innerWidth <= 640 ? 0 : 250));
+    const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
     const [saveWidth, setSaveWidth] = useState<number>(250);
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
+
+    const [alertSwitch, setAlertSwitch] = useState<boolean>(false);
+    const [alertMessage, setAlertMessage] = useState<any>("");
+    const [alertType, setAlertType] = useState<"success" | "danger" | "info" | "warning">("success");
 
     const handleResize: ()=> void = useCallback(() => {
         setSideBar((prev: number):number => {
@@ -46,6 +66,14 @@ export default function CalenoteLayout({ children, auth }: CalenoteLayoutProps) 
         }
     }, [sideBar]);
 
+    const childrenWithProps = isValidElement<AlertProps>(children)
+        ? cloneElement<AlertProps>(children, {
+            setAlertSwitch,
+            setAlertMessage,
+            setAlertType,
+        })
+        : children;
+
     return (
         <>
             <Header
@@ -62,9 +90,11 @@ export default function CalenoteLayout({ children, auth }: CalenoteLayoutProps) 
                     setSideBar={setSideBar}
                 />
                 <main className="transition-[width] duration-300 h-full flex-1 overflow-y-auto overflow-x-hidden">
-                    {children}
+                    {alertSwitch && <Alert close={setAlertSwitch} message={alertMessage} type={alertType} width={sideBar}/>}
+                    {childrenWithProps}
                 </main>
             </div>
         </>
     );
 }
+

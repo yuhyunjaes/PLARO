@@ -46,26 +46,26 @@ class NotepadController extends Controller
     public function UpdateNotepadTitle($uuid, Request $request)
     {
         $notepad = Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->first();
-        if(!$notepad) return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.']);
+        if(!$notepad) return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.', 'type' => 'danger']);
 
         $notepad->update([
             'title' => $request->title
         ]);
 
-        return response()->json(['success' => true, 'message' => '메모장 이름이 변경되었습니다.']);
+        return response()->json(['success' => true, 'message' => '메모장 이름이 변경되었습니다.', 'type' => 'success']);
     }
 
     //    메모장 카테고리 수정
     public function UpdateNotepadCategory($uuid, Request $request)
     {
         $notepad = Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->first();
-        if(!$notepad) return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.']);
+        if(!$notepad) return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.', 'type' => 'danger']);
 
         $notepad->update([
             'category' => $request->category
         ]);
 
-        return response()->json(['success' => true, 'message' => '메모장 카테고리가 변경되었습니다.']);
+        return response()->json(['success' => true, 'message' => '메모장 카테고리가 변경되었습니다.', 'type' => 'success']);
     }
 
 //    사용자 메모장 카테고리들 가져오기
@@ -177,7 +177,7 @@ class NotepadController extends Controller
 
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['success' => false]);
+            return response()->json(['success' => false, 'message' => '로그인 후 이용 가능합니다.', 'type' => 'danger']);
         }
 
         $content = $notepad->content ?: "공유된 메모장의 내용이 없습니다.";
@@ -187,7 +187,7 @@ class NotepadController extends Controller
                 ->subject($notepad->title ?: "메모장 공유");
         });
 
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true, 'message' => '메모장 내용이 이메일로 전송되었습니다', 'type' => 'success']);
     }
 
 }

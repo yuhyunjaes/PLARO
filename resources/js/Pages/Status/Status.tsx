@@ -40,7 +40,7 @@ export default function Status({ status, auth }: StatusProps) {
         <>
             <Head title={message} />
 
-            <div className="flex flex-col h-screen bg-[#0d1117]">
+            <div className="flex flex-col h-screen bg-gray-100 dark:bg-[#0d1117]">
                 <Header auth={auth} />
 
                 <div className="w-full flex flex-col justify-center items-center flex-1">

@@ -2,14 +2,18 @@
 
 import MessageActions from "./MessageActions";
 import { Message, Notepad } from "../../../../../Types/LifeBotTypes";
+import {Dispatch, SetStateAction} from "react";
 
 interface MessageBubbleProps {
+    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
+    setAlertMessage: Dispatch<SetStateAction<any>>;
+    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
     msg: Message;
     handleNotepad: (notepad: Notepad) => Promise<void>;
 }
 
 
-export default function MessageBubble({ msg, handleNotepad } : MessageBubbleProps) {
+export default function MessageBubble({ msg, handleNotepad, setAlertSwitch, setAlertMessage, setAlertType } : MessageBubbleProps) {
     const isUser = msg.role === "user";
 
     return (
@@ -26,7 +30,7 @@ export default function MessageBubble({ msg, handleNotepad } : MessageBubbleProp
                 {msg.text}
             </div>
 
-            {!isUser && msg.id && <MessageActions msg={msg} handleNotepad={handleNotepad} />}
+            {!isUser && msg.id && <MessageActions msg={msg} handleNotepad={handleNotepad} setAlertSwitch={setAlertSwitch} setAlertMessage={setAlertMessage} setAlertType={setAlertType} />}
         </div>
     );
 }

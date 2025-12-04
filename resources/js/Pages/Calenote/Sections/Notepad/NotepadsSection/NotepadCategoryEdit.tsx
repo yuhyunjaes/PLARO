@@ -5,6 +5,9 @@ import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import {Category, Notepads} from "../../../../../Types/CalenoteTypes";
 
 interface NotepadCategoryEdit {
+    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
+    setAlertMessage: Dispatch<SetStateAction<any>>;
+    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
     notepadId: string;
     notepadCategory: string;
     setNotepads: Dispatch<SetStateAction<Notepads[]>>;
@@ -13,7 +16,7 @@ interface NotepadCategoryEdit {
     getNotepadCategories: () => Promise<void>;
 }
 
-export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNotepads, setLoading, categories, getNotepadCategories } : NotepadCategoryEdit) {
+export default function NotepadCategoryEdit({ setAlertSwitch, setAlertMessage, setAlertType, notepadId, notepadCategory, setNotepads, setLoading, categories, getNotepadCategories } : NotepadCategoryEdit) {
     const [categoryEditId, setCategoryEditId] = useState<string>("");
     const [temporaryEditCategory, setTemporaryEditCategory] = useState<string>("");
 
@@ -39,6 +42,9 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
                 setTemporaryEditCategory("");
                 await getNotepadCategories();
             }
+            setAlertType(res.data.type);
+            setAlertSwitch(true);
+            setAlertMessage(res.data.message);
         } catch (err) {
             console.error(err);
         } finally {
@@ -99,7 +105,7 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
                                 editNotepadCategory();
                             }
                     }}
-                            className="size-5 text-green-400 hover:bg-green-400/20 rounded-full cursor-pointer">
+                            className="size-5 transition-colors duration-150 text-green-500 hover:text-green-50 hover:bg-green-500/80 rounded-full cursor-pointer">
                         <FontAwesomeIcon icon={faFloppyDisk} />
                     </button>
                 </div>
@@ -108,7 +114,7 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
             )}
             {
                 (notepadId === categoryEditId) && (
-                    <div ref={categoryRef} className="w-[200px] max-h-[100px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-2xl left-0 divide-y divide-gray-800 overflow-y-auto">
+                    <div ref={categoryRef} className="w-[200px] max-h-[100px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-xl left-0 divide-y divide-gray-800 overflow-y-auto">
                         {(categories.filter(item => item.category !== notepadCategory).length <= 0) ? (
                             <div className="py-2 rounded">
                                 <p className="normal-text">등록된 카테고리가 없습니다.</p>

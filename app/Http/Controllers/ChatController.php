@@ -48,9 +48,9 @@ class ChatController extends Controller
     public function DeleteRooms($roomId) {
         $room = ChatRoom::where('uuid', $roomId)->first()->delete();
 
-        if(!$room) return response()->json(['success'=>false, 'message'=>'채팅방이 존재하지 않습니다.']);
+        if(!$room) return response()->json(['success'=>false, 'message'=>'채팅방이 존재하지 않습니다.', 'type'=>'danger']);
 
-        return response()->json(['success'=>true, 'message'=>'채팅방이 삭제되었습니다.']);
+        return response()->json(['success'=>true, 'message'=>'채팅방이 삭제되었습니다.', 'type'=>'success']);
     }
 
 //    봇 채팅방 타이틀 수정
@@ -59,9 +59,9 @@ class ChatController extends Controller
             'title'=>$request->title
         ]);
 
-        if(!$room) return response()->json(['success'=>false, 'message'=>'체팅방 제목 수정중 오류가 발생했습니다.']);
+        if(!$room) return response()->json(['success'=>false, 'message'=>'체팅방 제목 수정중 오류가 발생했습니다.', 'type'=>'danger']);
 
-        return response()->json(['success'=>true, 'message'=>'체팅방 제목이 수정되었습니다.']);
+        return response()->json(['success'=>true, 'message'=>'체팅방 제목이 수정되었습니다.', 'type'=>'success']);
     }
 
 //    봇 채팅방 메시지 저장
@@ -93,12 +93,13 @@ class ChatController extends Controller
             ->first();
         if(!$room) return response()->json([
             'success'=>false,
-            'message'=>'채팅방이 존재하지 않습니다.'
+            'message'=>'채팅방이 존재하지 않습니다.',
+            'type'=>'danger'
         ]);
 
         $messages = $room->chatmessages()
             ->get(['id', 'role', 'text']);
 
-        return response()->json(['success'=>true, 'messages'=>$messages]);
+        return response()->json(['success'=>true, 'messages'=>$messages, 'type'=>'success']);
     }
 }

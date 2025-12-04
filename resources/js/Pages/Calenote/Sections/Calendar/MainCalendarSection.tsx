@@ -134,7 +134,7 @@ export default function MainCalendarSection({ isDragging, setIsDragging, months,
     }, [months]);
 
     const formatDate:(dayData: CalendarAtData) => Date | undefined = (dayData: CalendarAtData):Date | undefined => {
-        if(!dayData.year || !dayData.month || !dayData.day) return;
+        if(!dayData.year || !dayData.day) return;
 
 
         return new Date(dayData.year, dayData.month, dayData.day);
@@ -175,8 +175,8 @@ export default function MainCalendarSection({ isDragging, setIsDragging, months,
     return (
         <div className="flex-1 flex flex-col gap-5">
             <CalendarControlSection activeAt={activeAt} viewMode={viewMode} setViewMode={setViewMode}/>
-            <div className="border border-gray-800 rounded flex-1 flex flex-col overflow-hidden">
-                <div className="py-2 grid grid-cols-7 text-center text-sm">
+            <div className="border border-gray-300 dark:border-gray-800 rounded flex-1 flex flex-col overflow-hidden">
+                <div className="py-2 grid grid-cols-7 text-center text-sm bg-white dark:bg-gray-800">
                     {['일','월','화','수','목','금','토'].map((d) => (
                         <div key={d} className="font-bold normal-text items-center flex justify-center">{d}</div>
                     ))}
@@ -227,9 +227,10 @@ export default function MainCalendarSection({ isDragging, setIsDragging, months,
                                                     (endAt <= new Date(dayData.year, dayData.month, dayData.day)) &&
                                                     (startAt >= new Date(dayData.year, dayData.month, dayData.day)))
                                             ) ? "bg-blue-500/10" : (
-                                                dayData.isWeekend ? "bg-[#0d1117]" : ""
+                                                dayData.isWeekend ? "bg-gray-200 dark:bg-[#0d1117]" : "bg-white"
                                             ) }
-                                                 count-${dayData.count} border-gray-800 ${dayData.isActive ? "normal-text text-base" : "text-gray-700 text-sm"}`}>
+                                                 count-${dayData.count} border-gray-300 dark:border-gray-800 ${dayData.isActive ? "normal-text text-base" : "text-gray-700 text-sm"}`}
+                                            >
                                                 <p className="py-2">
                                                     <span className="px-2">{
                                                         (dayData.day === 1) ?

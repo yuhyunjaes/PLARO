@@ -41,7 +41,11 @@ export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatI
         setChatId(null);
         setMessages([]);
         setRooms([]);
-        router.visit('/lifebot');
+        router.visit('/lifebot', {
+            method: "get",
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     return (

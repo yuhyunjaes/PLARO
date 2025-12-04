@@ -67,7 +67,7 @@ export default function FormModal({
             <div
                 onClick={(e) => e.stopPropagation()}
                 className="overflow-hidden divide-y divide-gray-200 dark:divide-gray-700
-                    max-w-[500px] rounded-4xl bg-gray-100 dark:bg-gray-950
+                    max-w-[500px] rounded-xl bg-gray-100 dark:bg-gray-950
                     border border-gray-200 dark:border-gray-700 container"
             >
                 <div className="p-5 mb-2 flex justify-between items-center">

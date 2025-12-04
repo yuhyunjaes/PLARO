@@ -1,7 +1,7 @@
 // 메모장 영역
 
 import { Head, router } from '@inertiajs/react';
-import {useCallback, useEffect, useState} from "react";
+import {Dispatch, SetStateAction, useCallback, useEffect, useState} from "react";
 import axios from "axios";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
@@ -18,9 +18,12 @@ interface NotepadProps {
     auth: {
         user: AuthUser | null;
     };
+    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
+    setAlertMessage: Dispatch<SetStateAction<any>>;
+    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
 }
 
-export default function Notepad({ auth } : NotepadProps) {
+export default function Notepad({ auth, setAlertSwitch, setAlertMessage, setAlertType } : NotepadProps) {
     const [loading, setLoading] = useState<boolean>(false);
     const [tab, setTab] = useState<"all" | "liked">("all");
     const [viewOption, setViewOption] = useState<"grid" | "list">("grid");
@@ -134,6 +137,9 @@ export default function Notepad({ auth } : NotepadProps) {
                 setEditId("");
                 setNotepads((prevNotepads) => prevNotepads.filter(notepad => notepad.id !== editId));
                 getNotepadCategories();
+                setAlertSwitch(true);
+                setAlertType("success");
+                setAlertMessage(res.data.message);
             }
         } catch (err) {
             console.error(err);
@@ -164,7 +170,7 @@ export default function Notepad({ auth } : NotepadProps) {
                     <NotepadFilterSection setSearchCategory={setSearchCategory} categories={categories} setSearchTitle={setSearchTitle} viewOption={viewOption} setViewOption={setViewOption} tab={tab} setTab={setTab}/>
 
                     {/*메모장 read영역*/}
-                    <NotepadsSection getNotepadCategories={getNotepadCategories} categories={categories} modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} notepadLikes={notepadLikes} tab={tab} setNotepadLikes={setNotepadLikes} viewOption={viewOption} setLoading={setLoading} notepads={notepads} setNotepads={setNotepads} />
+                    <NotepadsSection setAlertSwitch={setAlertSwitch} setAlertMessage={setAlertMessage} setAlertType={setAlertType} getNotepadCategories={getNotepadCategories} categories={categories} modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} notepadLikes={notepadLikes} tab={tab} setNotepadLikes={setNotepadLikes} viewOption={viewOption} setLoading={setLoading} notepads={notepads} setNotepads={setNotepads} />
                 </div>
 
                 {/*로딩창*/}
