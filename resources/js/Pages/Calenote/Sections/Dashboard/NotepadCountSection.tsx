@@ -71,7 +71,7 @@ export default function NotepadCountSection() {
                 <div className="relative h-full">
                     {todayNotepads > 0 && (
                         <span className={`
-                        px-2 bg-green-400/20 absolute right-0 flex justify-center items-center rounded-xl text-sm text-green-600
+                        px-2 bg-green-500/80 absolute right-0 flex justify-center items-center rounded-xl text-sm text-green-50
                         transition-[bottom] duration-300 delay-300
                         ${endAnimation ? "bottom-0" : "-bottom-10"}
                         `}>

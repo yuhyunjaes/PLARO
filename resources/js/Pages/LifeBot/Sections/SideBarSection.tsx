@@ -60,7 +60,7 @@ export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatI
             >
                 <div className="sticky top-0 bg-white dark:bg-gray-950">
                     {(!smRoomListToggle || !smRoomList) && (
-                        <div className={`px-5 w-full text-gray-950 dark:text-white flex ${(sideBar > 50) ? "justify-end" : "justify-center"} items-center py-2`}>
+                        <div className={`px-5 w-full text-gray-950 dark:text-white flex ${(sideBar > 50) ? "justify-end" : "justify-center"} items-center py-2 border-b border-gray-300 dark:border-gray-800`}>0
                             <button className="m-0 cursor-pointer" onClick={() => {
                                 (sideBar > 50) ? setSideBar(50) : setSideBar(250)
                             }}>

@@ -1,11 +1,12 @@
 // 캘린더 영역
 import CalendarTitleSection from "./Sections/Calendar/CalendarTitleSection";
 import SideBarSection from "./Sections/Calendar/SideBarSection";
-import MainCalendarSection from "./Sections/Calendar/MainCalendarSection";
+import MonthCalendarSection from "./Sections/Calendar/MonthCalendarSection";
 import { Head } from '@inertiajs/react';
 import {AuthUser} from "../../Types/CalenoteTypes";
 import {useCallback, useEffect, useState} from "react";
 import {router} from "@inertiajs/react";
+import CalendarControlSection from "./Sections/Calendar/CalendarSection/CalendarControlSection";
 interface CalendarProps {
     auth: {
         user: AuthUser | null;
@@ -44,6 +45,17 @@ export default function Calendar({ auth, mode, year, month } : CalendarProps) {
     }, [startAt, endAt, isDragging]);
 
     useEffect(() => {
+        const handleResize = () => {
+            setSideBar(window.innerWidth <= 640 ? 0 : 250);
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
         eventAtUpdate();
     }, [eventAtUpdate]);
 
@@ -74,7 +86,14 @@ export default function Calendar({ auth, mode, year, month } : CalendarProps) {
             <div className="min-h-full bg-gray-100 dark:bg-gray-950 relative flex flex-col">
                 <CalendarTitleSection />
                 <div className="flex-1 flex px-5 gap-5 flex-row pb-5">
-                    <MainCalendarSection isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} today={today} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                    <div className="flex-1 flex flex-col gap-5">
+                        <CalendarControlSection activeAt={activeAt} viewMode={viewMode} setViewMode={setViewMode}/>
+                        {
+                            mode === "month" && (
+                                <MonthCalendarSection isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} today={today} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                            )
+                        }
+                    </div>
                     <SideBarSection sideBar={sideBar} />
                 </div>
             </div>

@@ -32,7 +32,7 @@ export default function CalendarControlSection({viewMode, setViewMode, activeAt}
 
     return(
         <div className="h-[70px] border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950  rounded-xl flex justify-between items-center px-5">
-            <div className="normal-text font-semibold">
+            <div className="normal-text text-xl font-semibold">
                 {activeAt.getFullYear()}
                 -
                 {(activeAt.getMonth()+1 > 9) ? activeAt.getMonth()+1 : `0${activeAt.getMonth()+1}`}월
@@ -42,7 +42,7 @@ export default function CalendarControlSection({viewMode, setViewMode, activeAt}
                 <select
                     name="category"
                     id="category"
-                    className="self-select-control w-[80px] h-2/3"
+                    className="self-select-control w-[80px] h-2/3 font-semibold"
                     value={viewMode}
                     onChange={(e) => {
                         const value:string = e.target.value;
