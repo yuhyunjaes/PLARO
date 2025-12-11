@@ -263,3 +263,6 @@ form > div {
 .user-select-none {
     user-select: none;
 }
+.today span {
+    @apply bg-red-500 rounded;
+}

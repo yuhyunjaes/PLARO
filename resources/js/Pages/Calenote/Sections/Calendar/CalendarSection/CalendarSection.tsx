@@ -10,6 +10,7 @@ interface CalendarSectionProps {
 }
 
 export default function CalendarSection({ date, scrollRef, activeAt, count, setAllDates }: CalendarSectionProps) {
+    const today = new Date();
 
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -56,6 +57,10 @@ export default function CalendarSection({ date, scrollRef, activeAt, count, setA
 
         const isActive = (count === 2);
 
+        const isToday = today.getFullYear() === year &&
+            today.getMonth() === month &&
+            today.getDate() === i;
+
         allDays.push({
             day: i,
             year: year,
@@ -63,6 +68,7 @@ export default function CalendarSection({ date, scrollRef, activeAt, count, setA
             isWeekend,
             isActive,
             isCurrentMonth: true,
+            isToday,
             count:count
         });
 

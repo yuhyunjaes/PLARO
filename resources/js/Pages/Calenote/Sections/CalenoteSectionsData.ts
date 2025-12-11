@@ -35,4 +35,5 @@ export interface CalendarAtData {
     isActive: boolean;
     isCurrentMonth: boolean;
     count?: number;
+    isToday?: boolean;
 }

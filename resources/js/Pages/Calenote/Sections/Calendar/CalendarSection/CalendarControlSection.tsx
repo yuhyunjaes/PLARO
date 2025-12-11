@@ -47,6 +47,7 @@ export default function CalendarControlSection({viewMode, setViewMode, activeAt}
                     onChange={(e) => {
                         const value:string = e.target.value;
                         if (value === "month" || value === "week" || value === "day") {
+                            // 여기서 주 | 일 일때 라우터 알맞게 변경 예) month/2025/12 에서 week 일시 week/2025/12/1 로 안내
                             router.visit(`/calenote/calendar/${value}/${activeAt.getFullYear()}/${activeAt.getMonth()+1}`, {
                                 method: "get",
                                 preserveState: true,
