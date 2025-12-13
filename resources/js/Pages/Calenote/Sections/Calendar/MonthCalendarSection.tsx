@@ -1,9 +1,7 @@
 import {useState, useRef, useEffect, RefObject, useCallback} from "react";
-import CalendarSection from "./CalendarSection/CalendarSection";
-import CalendarControlSection from "./CalendarSection/CalendarControlSection";
+import MonthCreator from "./CalendarSection/MonthCreator";
 import { Dispatch, SetStateAction } from "react";
 import {CalendarAtData} from "../CalenoteSectionsData";
-import {data} from "autoprefixer";
 
 interface SideBarSectionProps {
     isDragging: boolean;
@@ -73,11 +71,9 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
         const container = scrollRef.current;
         if (!container || !isScrolling) return;
 
-        // first 요소 찾기
         const firstEl = container.querySelectorAll(".count-2")[0] as HTMLElement | null;
         if (!firstEl) return;
 
-        // first 요소의 위치 정보
         const rect = firstEl.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
 
@@ -175,6 +171,44 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
         setIsDragging(false);
     }, [isDragging]);
 
+    const handleDateMoveOut = useCallback((e: MouseEvent) => {
+        if(!isDragging || !scrollRef.current || scrollRef.current.contains(e.target as Node)) return;
+
+        const weeks = document.querySelectorAll('.week');
+
+        weeks.forEach((week, index) => {
+            const weekRect = week.getBoundingClientRect();
+
+            if(weekRect.top <= e.clientY && weekRect.bottom >= e.clientY) {
+                let weekX: number;
+
+                if(e.clientX < weekRect.left) {
+                    weekX = 0;
+                } else {
+                    weekX = 6;
+                }
+
+                const targetDiv = week.querySelectorAll<HTMLElement>('[data-date]')[weekX];
+                if (!targetDiv) return;
+
+                const date = targetDiv.dataset.date;
+                if (!date) return;
+
+                const [year, month, day] = date.split('-').map(Number);
+
+                if(year !== undefined && month !== undefined && day !== undefined) {
+                    setEndAt(new Date(year, month, day));
+                }
+            }
+        });
+    }, [isDragging]);
+
+    useEffect(() => {
+        document.addEventListener("mousemove", handleDateMoveOut);
+
+        return () => document.removeEventListener("mousemove", handleDateMoveOut);
+    }, [handleDateMoveOut]);
+
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -203,9 +237,102 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
         }
     }, [isMobile, startAt, endAt]);
 
+    const intervalRef = useRef<any | null>(null);
+    const directionRef = useRef<-1 | 0 | 1>(0);
+    const lastMouseEvent = useRef<MouseEvent | null>(null);
+
+    const startInterval = () => {
+        if (intervalRef.current !== null) return;
+
+        intervalRef.current = window.setInterval(() => {
+            if (directionRef.current === 0) return;
+
+            setAllDates([]);
+            setIsScrolling(true);
+
+            setMonths(prev => {
+                const center = prev[1];
+                if (!center) return prev;
+
+                const next = new Date(
+                    center.getFullYear(),
+                    center.getMonth() + directionRef.current,
+                    1
+                );
+
+                return [
+                    new Date(next.getFullYear(), next.getMonth() - 1, 1),
+                    next,
+                    new Date(next.getFullYear(), next.getMonth() + 1, 1),
+                ];
+            });
+
+            requestAnimationFrame(center);
+
+            setTimeout(() => {
+                setIsScrolling(false);
+                // 인터벌 실행 후 마지막 마우스 위치로 날짜 업데이트
+                if (lastMouseEvent.current) {
+                    handleDateMoveOut(lastMouseEvent.current);
+                }
+            }, 300);
+        }, 1000);
+    };
+
+    const stopInterval = () => {
+        directionRef.current = 0;
+        if (intervalRef.current !== null) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    };
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        lastMouseEvent.current = e;
+
+        if (!scrollRef.current || !isDragging) return;
+
+        const rect = scrollRef.current.getBoundingClientRect();
+
+        if (e.clientY < rect.top) {
+            directionRef.current = -1;
+            startInterval();
+        } else if (e.clientY > rect.bottom) {
+            directionRef.current = 1;
+            startInterval();
+        } else {
+            directionRef.current = 0;
+            stopInterval();
+        }
+
+        handleDateMoveOut(e);
+    }, [isDragging, handleDateMoveOut]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        stopInterval();
+        lastMouseEvent.current = null;
+    }, []);
+
+
+    useEffect(() => {
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+
+        return () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+
+            if(intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
+    }, [handleMouseMove, handleMouseUp]);
+
     return (
         <div className="border border-gray-300 dark:border-gray-800 rounded-xl flex-1 flex flex-col overflow-hidden">
-            <div className="py-2 grid grid-cols-7 text-center text-sm bg-white dark:bg-gray-800">
+            <div className="py-2 grid grid-cols-7 text-center text-sm bg-white dark:bg-gray-800 max-h-[36px]">
                 {['일','월','화','수','목','금','토'].map((d) => (
                     <div key={d} className="font-semibold normal-text items-center flex justify-center">{d}</div>
                 ))}
@@ -218,7 +345,7 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
                 {(() => {
                     return months.map((m: Date, index: number) => {
                         return (
-                            <CalendarSection
+                            <MonthCreator
                                 key={index}
                                 scrollRef={scrollRef}
                                 count={index+1}
@@ -229,7 +356,8 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
                         );
                     });
                 })()}
-                <div className="flex flex-col" style={{maxHeight: `${(scrollRef.current) && scrollRef.current.clientHeight}px`}}>
+                <div className="flex flex-col"
+                     style={{maxHeight: `${(scrollRef.current) && scrollRef.current.clientHeight}px`}}>
                     {(() => {
                         const weeks:CalendarAtData[] [] = [];
                         for (let i:number = 0; i < allDates.length; i += 7) {
@@ -237,9 +365,10 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
                         }
                         return (
                             weeks.map((week:CalendarAtData[], index:number) => (
-                                <div key={index} className="grid grid-cols-7 text-right flex-1 snap-start">
+                                <div key={index} className="grid grid-cols-7 text-right flex-1 snap-start week">
                                     {week.map((dayData:CalendarAtData, i:number) => (
                                         <div
+                                            data-date={`${dayData.year}-${dayData.month}-${dayData.day}`}
                                             onMouseDown={() => handleDateStart(dayData)}
                                             onMouseUp={() => handleDateEnd(dayData)}
                                             onMouseEnter={() => handleDateMove(dayData)}

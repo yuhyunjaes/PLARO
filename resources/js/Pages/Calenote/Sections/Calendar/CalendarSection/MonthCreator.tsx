@@ -1,7 +1,7 @@
 import {Dispatch, RefObject, SetStateAction, useEffect} from "react";
 import {CalendarAtData} from "../../CalenoteSectionsData";
 
-interface CalendarSectionProps {
+interface MonthCreatorProps {
     date: Date;
     scrollRef: RefObject<HTMLDivElement | null>;
     activeAt: Date;
@@ -9,7 +9,7 @@ interface CalendarSectionProps {
     setAllDates: Dispatch<SetStateAction<CalendarAtData[]>>;
 }
 
-export default function CalendarSection({ date, scrollRef, activeAt, count, setAllDates }: CalendarSectionProps) {
+export default function MonthCreator({ date, scrollRef, activeAt, count, setAllDates }: MonthCreatorProps) {
     const today = new Date();
 
     const year = date.getFullYear();

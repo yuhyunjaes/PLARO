@@ -9,12 +9,13 @@ interface Mode {
 }
 
 interface CalendarControlSectionProps {
+    startAt: null | Date;
     viewMode: "month" | "week" | "day";
     setViewMode: Dispatch<SetStateAction<"month" | "week" | "day">>;
     activeAt: Date;
 }
 
-export default function CalendarControlSection({viewMode, setViewMode, activeAt}: CalendarControlSectionProps) {
+export default function CalendarControlSection({startAt, viewMode, setViewMode, activeAt}: CalendarControlSectionProps) {
     const modes:Mode[] = [
         {
             title: "월",
@@ -31,7 +32,7 @@ export default function CalendarControlSection({viewMode, setViewMode, activeAt}
     ];
 
     return(
-        <div className="h-[70px] border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950  rounded-xl flex justify-between items-center px-5">
+        <div className="bg-white dark:bg-gray-950  rounded-xl flex justify-between items-center px-5">
             <div className="normal-text text-xl font-semibold">
                 {activeAt.getFullYear()}
                 -
@@ -46,9 +47,14 @@ export default function CalendarControlSection({viewMode, setViewMode, activeAt}
                     value={viewMode}
                     onChange={(e) => {
                         const value:string = e.target.value;
-                        if (value === "month" || value === "week" || value === "day") {
-                            // 여기서 주 | 일 일때 라우터 알맞게 변경 예) month/2025/12 에서 week 일시 week/2025/12/1 로 안내
+                        if (value === "month") {
                             router.visit(`/calenote/calendar/${value}/${activeAt.getFullYear()}/${activeAt.getMonth()+1}`, {
+                                method: "get",
+                                preserveState: true,
+                                preserveScroll: true,
+                            });
+                        } else if (value === "week" || value === "day") {
+                            router.visit(`/calenote/calendar/${value}/${startAt ? startAt.getFullYear() : activeAt.getFullYear()}/${startAt ? startAt.getMonth()+1 : activeAt.getMonth()+1}${startAt ? ("/"+startAt.getDate()) : "/1"}`, {
                                 method: "get",
                                 preserveState: true,
                                 preserveScroll: true,

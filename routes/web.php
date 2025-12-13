@@ -67,7 +67,7 @@ Route::middleware('web')->group(function () {
             return Inertia::render('Calenote/Calendar');
         })->name('calendar');
 
-        Route::get('/calenote/calendar/{mode}/{year?}/{month?}', function ($mode, $year = null, $month = null) {
+        Route::get('/calenote/calendar/{mode}/{year?}/{month?}/{day?}', function ($mode, $year = 0, $month = 0, $day = 0) {
             // mode 체크
             $modeTypes = ['month', 'week', 'day'];
             if (!in_array($mode, $modeTypes)) {
@@ -84,10 +84,23 @@ Route::middleware('web')->group(function () {
                 return Inertia::render('Status/Status', ['status' => 404]);
             }
 
+            // day 기본값 및 유효성 검사
+            if (in_array($mode, ['week', 'day'])) {
+                if ($day === null) {
+                    $day = 1;
+                } else {
+                    $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                    if ($day < 1 || $day > $daysInMonth) {
+                        $day = 1;
+                    }
+                }
+            }
+
             return Inertia::render('Calenote/Calendar', [
                 'mode' => $mode,
                 'year' => (int)$year,
                 'month' => (int)$month,
+                'day' => $day !== null ? (int)$day : null,
             ]);
         })->name('calendar');
 

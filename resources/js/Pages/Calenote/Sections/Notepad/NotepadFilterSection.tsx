@@ -22,14 +22,13 @@ export default function NotepadFilterSection({ tab, setTab, viewOption, setViewO
 
     return (
         <div className="sticky top-0 py-3 z-[1] bg-gray-100 dark:bg-gray-950 space-y-3">
-            <div className="flex justify-between">
-                <NotepadTab tab={tab} setTab={setTab} />
-                <NotepadGrid viewOption={viewOption} setViewOption={setViewOption} />
-            </div>
-
             <div className="flex justify-start space-x-0 sm:space-x-5 flex-col sm:flex-row">
                 <NotepadCategory temporarySearchCategory={temporarySearchCategory} setTemporarySearchCategory={setTemporarySearchCategory} categories={categories} />
                 <NotepadTitle setSearchTitle={setSearchTitle} setSearchCategory={setSearchCategory} temporarySearchCategory={temporarySearchCategory} />
+            </div>
+            <div className="flex justify-between">
+                <NotepadTab tab={tab} setTab={setTab} />
+                <NotepadGrid viewOption={viewOption} setViewOption={setViewOption} />
             </div>
         </div>
     );

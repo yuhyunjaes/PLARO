@@ -10,7 +10,6 @@ import FormModal from "../../Components/Elements/FormModal";
 import Modal from "../../Components/Elements/Modal";
 import NotepadsSection from "./Sections/Notepad/NotepadsSection";
 import NotepadFilterSection from "./Sections/Notepad/NotepadFilterSection";
-import NotepadTitleSection from "./Sections/Notepad/NotepadTitleSection";
 import Loading from "../../Components/Elements/Loading";
 
 
@@ -162,10 +161,7 @@ export default function Notepad({ auth, setAlertSwitch, setAlertMessage, setAler
                     )
                 }
 
-                {/*메모장 메인 타이틀 영역*/}
-                <NotepadTitleSection />
-
-                <div className="px-5 space-y-3 pb-5 flex-1">
+                <div className="px-5 pb-5 flex-1">
                     {/*메모장 필터 영역(search, grid)*/}
                     <NotepadFilterSection setSearchCategory={setSearchCategory} categories={categories} setSearchTitle={setSearchTitle} viewOption={viewOption} setViewOption={setViewOption} tab={tab} setTab={setTab}/>
 
