@@ -9,13 +9,14 @@ interface Mode {
 }
 
 interface CalendarControlSectionProps {
+    setIsDragging: Dispatch<SetStateAction<boolean>>;
     startAt: null | Date;
     viewMode: "month" | "week" | "day";
     setViewMode: Dispatch<SetStateAction<"month" | "week" | "day">>;
     activeAt: Date;
 }
 
-export default function CalendarControlSection({startAt, viewMode, setViewMode, activeAt}: CalendarControlSectionProps) {
+export default function CalendarControlSection({ setIsDragging, startAt, viewMode, setViewMode, activeAt}: CalendarControlSectionProps) {
     const modes:Mode[] = [
         {
             title: "월",
@@ -33,7 +34,7 @@ export default function CalendarControlSection({startAt, viewMode, setViewMode, 
 
     return(
         <div className="rounded-xl flex justify-between items-center px-5">
-            <div className="normal-text text-2xl font-semibold">
+            <div className="normal-text text-2xl font-semibold user-select-none">
                 {activeAt.getFullYear()}
                 -
                 {(activeAt.getMonth()+1 > 9) ? activeAt.getMonth()+1 : `0${activeAt.getMonth()+1}`}월
@@ -43,10 +44,11 @@ export default function CalendarControlSection({startAt, viewMode, setViewMode, 
                 <select
                     name="category"
                     id="category"
-                    className="self-select-control w-[80px] h-2/3 font-semibold"
+                    className="self-select-control w-[80px] h-2/3 font-semibold user-select-none"
                     value={viewMode}
                     onChange={(e) => {
                         const value:string = e.target.value;
+                        setIsDragging(false);
                         if (value === "month") {
                             router.visit(`/calenote/calendar/${value}/${activeAt.getFullYear()}/${activeAt.getMonth()+1}`, {
                                 method: "get",

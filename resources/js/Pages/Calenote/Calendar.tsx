@@ -106,7 +106,7 @@ export default function Calendar({ auth, mode, year, month, day } : CalendarProp
             <div className="min-h-full bg-gray-100 dark:bg-gray-950 relative flex flex-col">
                 <div className="flex-1 flex px-5 gap-5 flex-row py-5">
                     <div className="flex-1 flex flex-col gap-5">
-                        <CalendarControlSection startAt={startAt} activeAt={activeAt} viewMode={viewMode} setViewMode={setViewMode}/>
+                        <CalendarControlSection setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} viewMode={viewMode} setViewMode={setViewMode}/>
                         {
                             mode === "month" && (
                                 <MonthCalendarSection isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} today={today} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />

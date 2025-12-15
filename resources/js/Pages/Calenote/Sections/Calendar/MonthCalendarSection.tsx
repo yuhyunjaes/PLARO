@@ -199,7 +199,6 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
 
             if(weekRect.top <= e.clientY && weekRect.bottom >= e.clientY) {
                 let weekX: number;
-
                 if(e.clientX < weekRect.left) {
                     weekX = 0;
                 } else {
@@ -279,6 +278,8 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
                     1
                 );
 
+                setActiveAt(next);
+
                 return [
                     new Date(next.getFullYear(), next.getMonth() - 1, 1),
                     next,
@@ -290,7 +291,6 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
 
             setTimeout(() => {
                 setIsScrolling(false);
-                // 인터벌 실행 후 마지막 마우스 위치로 날짜 업데이트
                 if (lastMouseEvent.current) {
                     handleDateMoveOut(lastMouseEvent.current);
                 }
@@ -351,7 +351,7 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
 
     return (
         <div className="border border-gray-300 dark:border-gray-800 rounded-xl flex-1 flex flex-col overflow-hidden">
-            <div className="py-2 grid grid-cols-7 text-xs text-gray-500 max-h-[36px]">
+            <div className="py-2 grid grid-cols-7 text-xs text-gray-500 max-h-[36px] bg-white dark:bg-gray-800">
                 {['일','월','화','수','목','금','토'].map((d) => (
                     <div key={d} className="font-semibold items-center user-select-none flex justify-center">{d}</div>
                 ))}
@@ -428,7 +428,7 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
                                              ${isSelected ? "bg-blue-500/10" : (
                                                 dayData.isWeekend ? "bg-gray-50 dark:bg-[#0d1117]" : "bg-white dark:bg-gray-950"
                                             ) }
-                                                count-${dayData.count} border-gray-300 dark:border-gray-800 ${dayData.isToday ? "today text-white font-semibold text-sm md:text-base" : (dayData.isActive ? "normal-text text-sm md:text-base font-semibold" : "text-gray-400 text-sm")}`}
+                                                count-${dayData.count} border-gray-300 dark:border-gray-800 ${dayData.isToday ? "today text-white font-semibold text-sm md:text-base" : (dayData.isActive ? "normal-text text-sm md:text-base font-semibold" : "text-gray-400 text-sm")} user-select-none`}
                                             >
                                                 {(dayData.day === 1) ?
                                                     <><span className="px-2 hidden xl:block">
