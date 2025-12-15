@@ -32,7 +32,7 @@ export default function CalendarControlSection({startAt, viewMode, setViewMode, 
     ];
 
     return(
-        <div className="bg-white dark:bg-gray-950  rounded-xl flex justify-between items-center px-5">
+        <div className="rounded-xl flex justify-between items-center px-5">
             <div className="normal-text text-2xl font-semibold">
                 {activeAt.getFullYear()}
                 -
@@ -54,7 +54,7 @@ export default function CalendarControlSection({startAt, viewMode, setViewMode, 
                                 preserveScroll: true,
                             });
                         } else if (value === "week" || value === "day") {
-                            router.visit(`/calenote/calendar/${value}/${startAt ? startAt.getFullYear() : activeAt.getFullYear()}/${startAt ? startAt.getMonth()+1 : activeAt.getMonth()+1}${startAt ? ("/"+startAt.getDate()) : "/1"}`, {
+                            router.visit(`/calenote/calendar/${value}/${startAt ? startAt.getFullYear() : activeAt.getFullYear()}/${startAt ? startAt.getMonth()+1 : activeAt.getMonth()+1}${startAt ? ("/"+startAt.getDate()) : (new Date().getMonth() === activeAt.getMonth() ? "/"+new Date().getDate() : "/1")}`, {
                                 method: "get",
                                 preserveState: true,
                                 preserveScroll: true,

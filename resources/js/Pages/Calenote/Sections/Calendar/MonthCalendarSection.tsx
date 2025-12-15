@@ -38,33 +38,45 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
         if (scrollTop <= 0) {
             setAllDates([]);
             setIsScrolling(true);
+
             setMonths(prev => {
                 const first = prev[0];
-                if(!first) return [...prev];
-                const newMonth = new Date(first.getFullYear(), first.getMonth() - 1, 1);
-                let updated = [newMonth, ...prev];
-                if (updated.length > 3) {
-                    updated.pop();
-                }
-                return updated;
+                if (!first) return prev;
+
+                const newCenter = new Date(first.getFullYear(), first.getMonth(), 1);
+
+                setActiveAt(newCenter);
+
+                return [
+                    new Date(newCenter.getFullYear(), newCenter.getMonth() - 1, 1),
+                    newCenter,
+                    new Date(newCenter.getFullYear(), newCenter.getMonth() + 1, 1),
+                ];
             });
+
             setTimeout(() => setIsScrolling(false), 300);
-        }
-        else if (scrollTop + clientHeight >= scrollHeight) {
+        }else if (scrollTop + clientHeight >= scrollHeight) {
             setAllDates([]);
             setIsScrolling(true);
+
             setMonths(prev => {
                 const last = prev[2];
-                if (!last) return [...prev];
-                const newMonth = new Date(last.getFullYear(), last.getMonth() + 1, 1);
-                let updated = [...prev, newMonth];
-                if (updated.length > 3) {
-                    updated.shift();
-                }
-                return updated;
+                if (!last) return prev;
+
+                const newCenter = new Date(last.getFullYear(), last.getMonth(), 1);
+
+                setActiveAt(newCenter);
+
+                return [
+                    new Date(newCenter.getFullYear(), newCenter.getMonth() - 1, 1),
+                    newCenter,
+                    new Date(newCenter.getFullYear(), newCenter.getMonth() + 1, 1),
+                ];
             });
+
             setTimeout(() => setIsScrolling(false), 300);
         }
+
     }, [isScrolling]);
 
     const center:()=>void = () => {
@@ -120,16 +132,6 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
 
     }, [months]);
 
-    useEffect(() => {
-        if (months.length === 3) {
-            const activeMonth:Date | undefined = months[1];
-            if(activeMonth) {
-                setActiveAt(activeMonth);
-            }
-        }
-
-    }, [months]);
-
     const formatDate:(dayData: CalendarAtData) => Date | undefined = (dayData: CalendarAtData):Date | undefined => {
         if(!dayData.year || !dayData.day) return;
 
@@ -137,39 +139,55 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
         return new Date(dayData.year, dayData.month, dayData.day);
     }
 
-    const handleDateStart:(dayData: CalendarAtData) => void = useCallback((dayData: CalendarAtData):void => {
-        if(isMobile) return;
+    const toEndOfDay = (date: Date): Date => {
+        return new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate(),
+            23, 59, 59, 999
+        );
+    };
 
-        if(startAt) {
+
+    const handleDateStart = useCallback((dayData: CalendarAtData): void => {
+        if (isMobile) return;
+
+        if (startAt) {
             setStartAt(null);
             setEndAt(null);
             return;
         }
+
         setIsDragging(true);
-        const dateStr:Date | undefined = formatDate(dayData);
-        if(dateStr) {
-            setStartAt(dateStr);
-            setEndAt(dateStr);
-        }
+
+        const date = formatDate(dayData);
+        if (!date) return;
+
+        setStartAt(date);
+        setEndAt(toEndOfDay(date));
     }, [startAt, isMobile]);
 
-    const handleDateMove:(dayData: CalendarAtData) => void = useCallback((dayData: CalendarAtData):void => {
-        if (!isDragging || isMobile) return;
-        const dateStr:Date | undefined = formatDate(dayData);
-        if(!dateStr) return;
 
-        setEndAt(dateStr);
-    }, [isDragging]);
-
-    const handleDateEnd:(dayData: CalendarAtData) => void = useCallback((dayData: CalendarAtData):void => {
+    const handleDateMove = useCallback((dayData: CalendarAtData): void => {
         if (!isDragging || isMobile) return;
 
-        const dateStr:Date | undefined = formatDate(dayData);
-        if(!dateStr) return;
+        const date = formatDate(dayData);
+        if (!date) return;
 
-        setEndAt(dateStr);
+        setEndAt(toEndOfDay(date));
+    }, [isDragging, isMobile]);
+
+
+    const handleDateEnd = useCallback((dayData: CalendarAtData): void => {
+        if (!isDragging || isMobile) return;
+
+        const date = formatDate(dayData);
+        if (!date) return;
+
+        setEndAt(toEndOfDay(date));
         setIsDragging(false);
-    }, [isDragging]);
+    }, [isDragging, isMobile]);
+
 
     const handleDateMoveOut = useCallback((e: MouseEvent) => {
         if(!isDragging || !scrollRef.current || scrollRef.current.contains(e.target as Node)) return;
@@ -196,8 +214,9 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
 
                 const [year, month, day] = date.split('-').map(Number);
 
-                if(year !== undefined && month !== undefined && day !== undefined) {
-                    setEndAt(new Date(year, month, day));
+                if (year !== undefined && month !== undefined && day !== undefined) {
+                    const date = new Date(year, month, day);
+                    setEndAt(toEndOfDay(date));
                 }
             }
         });
@@ -332,9 +351,9 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
 
     return (
         <div className="border border-gray-300 dark:border-gray-800 rounded-xl flex-1 flex flex-col overflow-hidden">
-            <div className="py-2 grid grid-cols-7 text-center text-sm bg-white dark:bg-gray-800 max-h-[36px]">
+            <div className="py-2 grid grid-cols-7 text-xs text-gray-500 max-h-[36px]">
                 {['일','월','화','수','목','금','토'].map((d) => (
-                    <div key={d} className="font-semibold normal-text items-center flex justify-center">{d}</div>
+                    <div key={d} className="font-semibold items-center user-select-none flex justify-center">{d}</div>
                 ))}
             </div>
             <div
@@ -366,37 +385,65 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
                         return (
                             weeks.map((week:CalendarAtData[], index:number) => (
                                 <div key={index} className="grid grid-cols-7 text-right flex-1 snap-start week">
-                                    {week.map((dayData:CalendarAtData, i:number) => (
-                                        <div
-                                            data-date={`${dayData.year}-${dayData.month}-${dayData.day}`}
-                                            onMouseDown={() => handleDateStart(dayData)}
-                                            onMouseUp={() => handleDateEnd(dayData)}
-                                            onMouseEnter={() => handleDateMove(dayData)}
-                                            onClick={() => handleMobileDateClick(dayData)}
-                                            style={{height: `${scrollRef.current && (scrollRef.current.clientHeight/6)+'px'}` }}
-                                            key={`${index}-${i}`} className={`border-[0.5px]
-                                             ${(startAt && endAt) && (((startAt <= new Date(dayData.year, dayData.month, dayData.day)) &&
-                                                (endAt >= new Date(dayData.year, dayData.month, dayData.day)) ||
-                                                (endAt <= new Date(dayData.year, dayData.month, dayData.day)) &&
-                                                (startAt >= new Date(dayData.year, dayData.month, dayData.day)))
-                                        ) ? "bg-blue-500/10" : (
-                                            dayData.isWeekend ? "bg-gray-50 dark:bg-[#0d1117]" : "bg-white dark:bg-gray-950"
-                                        ) }
+                                    {week.map((dayData:CalendarAtData, i:number) => {
+                                        const cellTime = new Date(
+                                            dayData.year,
+                                            dayData.month,
+                                            dayData.day,
+                                            0, 0, 0, 0
+                                        ).getTime();
+
+                                        const toStartOfDay = (date: Date) =>
+                                            new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+
+                                        const startTime = startAt ? toStartOfDay(startAt) : null;
+                                        const endTime = endAt ? toStartOfDay(endAt) : null;
+
+                                        const minTime =
+                                            startTime !== null && endTime !== null
+                                                ? Math.min(startTime, endTime)
+                                                : null;
+
+                                        const maxTime =
+                                            startTime !== null && endTime !== null
+                                                ? Math.max(startTime, endTime)
+                                                : null;
+
+                                        const isSelected =
+                                            minTime !== null &&
+                                            maxTime !== null &&
+                                            cellTime >= minTime &&
+                                            cellTime <= maxTime;
+
+
+                                        return(
+                                            <div
+                                                data-date={`${dayData.year}-${dayData.month}-${dayData.day}`}
+                                                onMouseDown={() => handleDateStart(dayData)}
+                                                onMouseUp={() => handleDateEnd(dayData)}
+                                                onMouseEnter={() => handleDateMove(dayData)}
+                                                onClick={() => handleMobileDateClick(dayData)}
+                                                style={{height: `${scrollRef.current && (scrollRef.current.clientHeight/6)+'px'}` }}
+                                                key={`${index}-${i}`} className={`border-[0.5px]
+                                             ${isSelected ? "bg-blue-500/10" : (
+                                                dayData.isWeekend ? "bg-gray-50 dark:bg-[#0d1117]" : "bg-white dark:bg-gray-950"
+                                            ) }
                                                 count-${dayData.count} border-gray-300 dark:border-gray-800 ${dayData.isToday ? "today text-white font-semibold text-sm md:text-base" : (dayData.isActive ? "normal-text text-sm md:text-base font-semibold" : "text-gray-400 text-sm")}`}
-                                        >
-                                            {(dayData.day === 1) ?
-                                                <><span className="px-2 hidden xl:block">
+                                            >
+                                                {(dayData.day === 1) ?
+                                                    <><span className="px-2 hidden xl:block">
                                                         {dayData.month+1}월 {dayData.day}
                                                 </span><span className="px-2 block xl:hidden">
                                                         {dayData.day}
                                                     </span>
-                                                </>
-                                                :
-                                                <span className="px-2">{dayData.day}
+                                                    </>
+                                                    :
+                                                    <span className="px-2">{dayData.day}
                                                     </span>
-                                            }
-                                        </div>
-                                    ))}
+                                                }
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             ))
                         );

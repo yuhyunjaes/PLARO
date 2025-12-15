@@ -7,6 +7,7 @@ import {useCallback, useEffect, useState} from "react";
 import {router} from "@inertiajs/react";
 import CalendarControlSection from "./Sections/Calendar/CalendarSection/CalendarControlSection";
 import WeekCalendarSection from "./Sections/Calendar/WeekCalendarSection";
+
 interface CalendarProps {
     auth: {
         user: AuthUser | null;
@@ -16,6 +17,7 @@ interface CalendarProps {
     month: number | null;
     day:  number | null;
 }
+
 export default function Calendar({ auth, mode, year, month, day } : CalendarProps) {
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
@@ -27,14 +29,22 @@ export default function Calendar({ auth, mode, year, month, day } : CalendarProp
 
     const today = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const At:Date = (year && month) ? new Date(year, month-1, 1) : today;
-    const [activeAt, setActiveAt] = useState<Date>(today);
+    const [activeAt, setActiveAt] = useState<Date>(At);
     const [activeDay, setActiveDay] = useState<number | null>(viewMode !== "month" ? day : null);
 
-    const [months, setMonths] = useState<Date[]>([
-        new Date(At.getFullYear(), At.getMonth() - 1, 1),
-        At,
-        new Date(At.getFullYear(), At.getMonth() + 1, 1),
-    ]);
+    const [months, setMonths] = useState<Date[]>([]);
+
+    useEffect(() => {
+        if (!activeAt) return;
+
+        setMonths([
+            new Date(activeAt.getFullYear(), activeAt.getMonth() - 1, 1),
+            new Date(activeAt.getFullYear(), activeAt.getMonth(), 1),
+            new Date(activeAt.getFullYear(), activeAt.getMonth() + 1, 1),
+        ]);
+    }, [activeAt]);
+
+
     const [isDragging, setIsDragging] = useState<boolean>(false);
 
     const eventAtUpdate = useCallback(() => {
@@ -62,11 +72,6 @@ export default function Calendar({ auth, mode, year, month, day } : CalendarProp
         eventAtUpdate();
     }, [eventAtUpdate]);
 
-    // useEffect(() => {
-    //     if(!startAt || !endAt) return;
-    //     console.log(`startAt: ${startAt.getFullYear()}-${startAt.getMonth()+1}-${startAt.getDate()},  endAt: ${endAt.getFullYear()}-${endAt.getMonth()+1}-${endAt.getDate()}`)
-    // }, [startAt, endAt]);
-
     useEffect(() => {
         if (mode) {
             setViewMode(mode);
@@ -74,13 +79,25 @@ export default function Calendar({ auth, mode, year, month, day } : CalendarProp
     }, [mode]);
 
     useEffect(() => {
-        if(!activeAt) return;
-        router.visit(`/calenote/calendar/${viewMode}/${activeAt.getFullYear()}/${activeAt.getMonth()+1}${(day && viewMode !== 'month') ? ("/"+day) : ""}`, {
+        if(viewMode !== "month") {
+            setActiveDay(day);
+        }
+    }, [viewMode, day]);
+
+    useEffect(() => {
+        if(!mode || mode === "month" || !startAt) return;
+
+        setActiveAt(startAt);
+    }, [mode, startAt]);
+
+    useEffect(() => {
+        if(!activeAt || !viewMode || (viewMode !== "month" && !activeDay)) return;
+        router.visit(`/calenote/calendar/${viewMode}/${activeAt.getFullYear()}/${activeAt.getMonth()+1}${(activeDay && viewMode !== 'month') ? ("/"+activeDay) : ""}`, {
             method: "get",
             preserveState: true,
             preserveScroll: true,
         });
-    }, [activeAt]);
+    }, [activeAt, activeDay, viewMode]);
 
 
     return (
@@ -97,7 +114,7 @@ export default function Calendar({ auth, mode, year, month, day } : CalendarProp
                         }
                         {
                             mode === "week" && (
-                                <WeekCalendarSection activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
+                                <WeekCalendarSection isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
                             )
                         }
                     </div>
