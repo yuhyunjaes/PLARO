@@ -59,16 +59,6 @@ export default function Calendar({ auth, mode, year, month, day } : CalendarProp
 
     const [isDragging, setIsDragging] = useState<boolean>(false);
 
-    const eventAtUpdate = useCallback(() => {
-        if(!startAt || !endAt || isDragging) return;
-
-        if(startAt > endAt) {
-            setStartAt(endAt);
-            setEndAt(startAt)
-        }
-
-    }, [startAt, endAt, isDragging]);
-
     useEffect(() => {
         const handleResize = () => {
             setSideBar(window.innerWidth <= 640 ? 0 : 250);
@@ -79,6 +69,16 @@ export default function Calendar({ auth, mode, year, month, day } : CalendarProp
 
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const eventAtUpdate = useCallback(() => {
+        if(!startAt || !endAt || isDragging) return;
+
+        if(startAt > endAt) {
+            setStartAt(endAt);
+            setEndAt(startAt)
+        }
+
+    }, [startAt, endAt, isDragging]);
 
     useEffect(() => {
         eventAtUpdate();

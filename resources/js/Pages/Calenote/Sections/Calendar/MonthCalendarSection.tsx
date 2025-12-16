@@ -27,6 +27,10 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
     const [isScrolling, setIsScrolling] = useState<boolean>(false);
     const [isMobile, setIsMobile] = useState<boolean>(false);
 
+    useEffect(() => {
+        console.log(`startAt${startAt?.getTime()} --------- endAt${endAt?.getTime()}`)
+    }, [startAt, endAt]);
+
     const handleScroll = useCallback(() => {
         if(!scrollRef.current || isScrolling) return;
 
@@ -55,7 +59,7 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
             });
 
             setTimeout(() => setIsScrolling(false), 300);
-        }else if (scrollTop + clientHeight >= scrollHeight - 0.5) {
+        } else if (scrollTop + clientHeight >= scrollHeight - 0.5) {
             setAllDates([]);
             setIsScrolling(true);
 
@@ -234,6 +238,11 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    const isSameDay = (a: Date, b: Date) =>
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate();
+
     const handleMobileDateClick = useCallback((dayData: CalendarAtData): void => {
         if (!isMobile) return;
 
@@ -243,7 +252,7 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
         if (!startAt) {
             setStartAt(toStartOfDay(dateStr));
             setEndAt(toEndOfDay(dateStr));
-        } else if (!endAt || startAt.getTime() === endAt.getTime()) {
+        } else if (!endAt || isSameDay(startAt, endAt)) {
             setEndAt(toEndOfDay(dateStr));
         } else {
             setStartAt(null);
