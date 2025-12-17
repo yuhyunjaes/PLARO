@@ -70,12 +70,13 @@ export default function Calendar({ auth, mode, year, month, day } : CalendarProp
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+
     const eventAtUpdate = useCallback(() => {
         if(!startAt || !endAt || isDragging) return;
 
         if(startAt > endAt) {
-            setStartAt(endAt);
-            setEndAt(startAt)
+            setStartAt(endAt)
+            setEndAt(startAt);
         }
 
     }, [startAt, endAt, isDragging]);

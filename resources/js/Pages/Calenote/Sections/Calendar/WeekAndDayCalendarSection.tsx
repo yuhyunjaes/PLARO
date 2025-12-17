@@ -47,6 +47,19 @@ export default function WeekAndDayCalendarSection({
         activeDayRef.current = activeDay;
     }, [activeAt, activeDay]);
 
+    const add15Minutes = useCallback((date:Date):Date => {
+        if (startAt && date < startAt) {
+            const d = new Date(startAt.getTime());
+            d.setMinutes(d.getMinutes() + 15);
+            setStartAt(d)
+            return date;
+        }
+        const d = new Date(date.getTime());
+        d.setMinutes(d.getMinutes() + 15);
+        return d;
+    }, [startAt]);
+
+
     const daysCreator = useCallback(() => {
         if(!activeAt || !activeDay || !viewMode) return;
 
@@ -175,17 +188,17 @@ export default function WeekAndDayCalendarSection({
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
         if(dateStr) {
             setStartAt(dateStr);
-            setEndAt(dateStr);
+            setEndAt(add15Minutes(dateStr));
         }
-    }, [startAt, isMobile, setIsDragging, setStartAt, setEndAt]);
+    }, [startAt, isMobile]);
 
     const handleDateMove = useCallback((e: any):void => {
         if (!isDragging || isMobile) return;
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
         if(!dateStr) return;
 
-        setEndAt(dateStr);
-    }, [isDragging, isMobile, setEndAt]);
+        setEndAt(add15Minutes(dateStr));
+    }, [isDragging, isMobile]);
 
     const handleDateEnd = useCallback((e: any) => {
         if (!isDragging || isMobile) return;
@@ -193,9 +206,9 @@ export default function WeekAndDayCalendarSection({
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
         if(!dateStr) return;
 
-        setEndAt(dateStr);
+        setEndAt(add15Minutes(dateStr));
         setIsDragging(false);
-    }, [isDragging, isMobile, setEndAt, setIsDragging]);
+    }, [isDragging, isMobile]);
 
     const handleMobileDateClick = useCallback((e: any) => {
         if (!isMobile) return;
@@ -205,14 +218,14 @@ export default function WeekAndDayCalendarSection({
 
         if (!startAt) {
             setStartAt(dateStr);
-            setEndAt(dateStr);
+            setEndAt(add15Minutes(dateStr));
         } else if (!endAt || startAt.getTime() === endAt.getTime()) {
-            setEndAt(dateStr);
+            setEndAt(add15Minutes(dateStr));
         } else {
             setStartAt(null);
             setEndAt(null);
         }
-    }, [isMobile, startAt, endAt, setStartAt, setEndAt]);
+    }, [isMobile, startAt, endAt]);
 
     useEffect(() => {
         const container = scrollRef.current;
@@ -263,8 +276,8 @@ export default function WeekAndDayCalendarSection({
         const dateStr:Date | undefined = new Date(slot.dataset.date);
         if(!dateStr) return;
 
-        setEndAt(dateStr);
-    }, [isDragging, setEndAt]);
+        setEndAt(add15Minutes(dateStr));
+    }, [isDragging]);
 
     const startInterval = useCallback(() => {
         if (intervalRef.current !== null) return;
@@ -307,7 +320,7 @@ export default function WeekAndDayCalendarSection({
                 }
             }, 300);
         }, 1000);
-    }, [center, handleDateMoveOut, setActiveAt, setActiveDay]);
+    }, [center, handleDateMoveOut]);
 
     const stopInterval = useCallback(() => {
         directionRef.current = 0;
@@ -386,7 +399,7 @@ export default function WeekAndDayCalendarSection({
                                 day.toDateString() === baseDate?.toDateString() ? "active" : ""
                             } ${viewMode === "week" ? (index === 0 ? "first" : "") : index === 1 ? "first" : ""}`}
                         >
-                            <div className="py-2 text-center text-sm dark:bg-gray-800 max-h-[32px] max-h-[36px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
+                            <div className="py-2 text-center text-sm dark:bg-gray-800 max-h-[36px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
                                 <span className="text-xs text-gray-500 space-x-1">
                                     <span>{WEEK_DAYS[day.getDay()]}</span>
                                     <span>{day.getDate()}</span>
@@ -462,7 +475,8 @@ export default function WeekAndDayCalendarSection({
                                                 minTime !== null &&
                                                 maxTime !== null &&
                                                 cellDateTime >= minTime &&
-                                                cellDateTime <= maxTime;
+                                                cellDateTime < maxTime;
+
 
 
                                             return(

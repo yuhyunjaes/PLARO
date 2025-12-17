@@ -147,7 +147,7 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
         new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
 
     const toEndOfDay = (date: Date): Date =>
-        new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+        new Date(date.getFullYear(), date.getMonth(), date.getDate()+1);
 
 
     const handleDateStart = useCallback((dayData: CalendarAtData): void => {
@@ -414,11 +414,21 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
                                                 ? Math.max(startTime, endTime)
                                                 : null;
 
+                                        const isEndAtMidnight =
+                                            endAt &&
+                                            endAt.getHours() === 0 &&
+                                            endAt.getMinutes() === 0;
+
                                         const isSelected =
                                             minTime !== null &&
                                             maxTime !== null &&
                                             cellTime >= minTime &&
-                                            cellTime <= maxTime;
+                                            (
+                                                isEndAtMidnight
+                                                    ? cellTime < maxTime
+                                                    : cellTime <= maxTime
+                                            );
+
 
 
                                         return(
@@ -433,7 +443,7 @@ export default function MonthCalendarSection({ isDragging, setIsDragging, months
                                              ${isSelected ? "bg-blue-500/10" : (
                                                 dayData.isWeekend ? "bg-gray-50 dark:bg-[#0d1117]" : "bg-white dark:bg-gray-950"
                                             ) }
-                                                count-${dayData.count} border-gray-300 dark:border-gray-800 cursor-pointer transition-colors ${dayData.isToday ? "today text-white font-semibold text-sm md:text-base" : (dayData.isActive ? "normal-text text-sm md:text-base font-semibold" : "text-gray-400 text-sm")} user-select-none`}
+                                                count-${dayData.count} border-gray-300 ${maxTime} dark:border-gray-800 cursor-pointer transition-colors ${dayData.isToday ? "today text-white font-semibold text-sm md:text-base" : (dayData.isActive ? "normal-text text-sm md:text-base font-semibold" : "text-gray-400 text-sm")} user-select-none`}
                                             >
                                                 {(dayData.day === 1) ?
                                                     <><span className="px-2 hidden xl:block">
