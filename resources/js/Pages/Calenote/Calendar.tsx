@@ -10,6 +10,7 @@ import WeekAndDayCalendarSection from "./Sections/Calendar/WeekAndDayCalendarSec
 import axios from "axios";
 
 interface CalendarProps {
+    event: string | null;
     auth: {
         user: AuthUser | null;
     };
@@ -22,7 +23,7 @@ interface CalendarProps {
     setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
 }
 
-export default function Calendar({ auth, mode, year, month, day, setAlertSwitch, setAlertMessage, setAlertType } : CalendarProps) {
+export default function Calendar({ event, auth, mode, year, month, day, setAlertSwitch, setAlertMessage, setAlertType } : CalendarProps) {
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
 
@@ -70,6 +71,15 @@ export default function Calendar({ auth, mode, year, month, day, setAlertSwitch,
 
 
     const [eventId, setEventId] = useState<string | null>(null);
+
+    useEffect(() => {
+        setEventId(event ? event : null);
+    }, [event]);
+
+    // useEffect(() => {
+    //     console.log(eventId)
+    // }, [eventId]);
+
     const [events, setEvents] = useState([]);
 
     const saveEvent:()=>Promise<void> = useCallback(async ():Promise<void> => {
@@ -85,8 +95,7 @@ export default function Calendar({ auth, mode, year, month, day, setAlertSwitch,
             });
 
             if(res.data.success) {
-                setEventId(res.data.event.uuid);
-                router.visit(`/calenote/calendar${res.data.event.uuid ? "/"+res.data.event.uuid : ""}`, {
+                router.visit(`/calenote/calendar${res.data.uuid ? "/"+res.data.uuid : ""}`, {
                     method: "get",
                     preserveState: true,
                     preserveScroll: true,
@@ -100,6 +109,55 @@ export default function Calendar({ auth, mode, year, month, day, setAlertSwitch,
             console.log(err);
         }
     }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId]);
+
+    const updateEvent:()=>Promise<void> = useCallback(async ():Promise<void> => {
+        if(!startAt || !endAt || !eventColor || !eventId ) return;
+        try {
+            const res = await axios.put(`/api/events/${eventId}`, {
+                title: eventTitle,
+                start_at: startAt,
+                end_at: endAt,
+                description: eventDescription,
+                color: eventColor,
+            });
+
+            if(res.data.success) {
+                console.log('success')
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId]);
+
+    useEffect(() => {
+        updateEvent();
+    }, [eventColor, startAt, endAt]);
+
+    const getEvent:()=>Promise<void> = useCallback(async ():Promise<void> => {
+        if(!eventId) return;
+        console.log(eventId)
+    }, [eventId]);
+
+    // 여기까지 함.
+
+    useEffect(() => {
+        getEvent();
+    }, [getEvent]);
+
+    useEffect(() => {
+
+    }, []);
+
+    // 이벤트 아이디가 있을시 이벤트 일을 새로 선택하면 초기화 시키고 싶지만 뜻 대로 돼지 않음
+    // useEffect(() => {
+    //     if(!startAt && !endAt && eventId) {
+    //         router.visit(`/calenote/calendar`, {
+    //             method: "get",
+    //             preserveState: true,
+    //             preserveScroll: true,
+    //         });
+    //     }
+    // }, [startAt, endAt, eventId]);
 
     const handleResize = () => {
         setMobileView(window.innerWidth <= 640);
@@ -171,7 +229,7 @@ export default function Calendar({ auth, mode, year, month, day, setAlertSwitch,
                             )
                         }
                     </div>
-                    <SideBarSection eventId={eventId} saveEvent={saveEvent} eventReminder={eventReminder} setEventReminder={setEventReminder} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                    <SideBarSection updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventReminder={eventReminder} setEventReminder={setEventReminder} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
                 </div>
             </div>
         </>

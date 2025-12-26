@@ -11,8 +11,7 @@ use Carbon\Carbon;
 
 class EventController extends Controller
 {
-    public function StoreEvents(Request $request)
-    {
+    public function StoreEvents(Request $request) {
         if ($request->eventSwitch === "normal") {
             $eventSwitch = false;
         } else if ($request->eventSwitch === "chat") {
@@ -48,8 +47,31 @@ class EventController extends Controller
 
         return response()->json([
             'success' => true,
-            'event' => $event
+            'uuid' => $event->uuid
         ]);
+    }
+
+    public function UpdateEvents(Request $request, $uuid) {
+        $event = Event::where('uuid', $uuid)->where('user_id', Auth::id())->first();
+        if (!$event) return response()->json(['success' => false, 'message' => '이벤트가 존재하지 않습니다.', 'type' => 'danger']);
+
+        $startAt = Carbon::parse($request->start_at)
+            ->setTimezone('Asia/Seoul')
+            ->format('Y-m-d H:i:s');
+
+        $endAt = Carbon::parse($request->end_at)
+            ->setTimezone('Asia/Seoul')
+            ->format('Y-m-d H:i:s');
+
+        $event->update([
+            'title' => $request->title,
+            'start_at' => $startAt,
+            'end_at' => $endAt,
+            'description' => $request->description,
+            'color' => $request->color,
+        ]);
+
+        return response()->json(['success' => true]);
     }
 
 }

@@ -27,14 +27,14 @@ export default function EventDateViewAndControl({ startAt, setStartAt, endAt, se
 
     const [startAtDate, setStartAtDate] = useState((startAt && endAt) ? formatDate(new Date(Math.min(startAt.getTime(), endAt.getTime()))) : "");
     const [startAtTime, setStartAtTime] = useState((startAt && endAt) ? formatTime(new Date(Math.min(startAt.getTime(), endAt.getTime()))) : "");
-    const [endAtDate, setEndAtDate] = useState((startAt && endAt) ? formatDate(new Date(endAt.getTime(), Math.max(startAt.getTime()))) : "");
-    const [endAtTime, setEndAtTime] = useState((startAt && endAt) ? formatTime(new Date(endAt.getTime(), Math.max(startAt.getTime()))) : "");
+    const [endAtDate, setEndAtDate] = useState((startAt && endAt) ? formatDate(new Date(Math.max(startAt.getTime(), endAt.getTime()))) : "");
+    const [endAtTime, setEndAtTime] = useState((startAt && endAt) ? formatTime(new Date(Math.max(startAt.getTime(), endAt.getTime()))) : "");
 
     useEffect(() => {
         setStartAtDate((startAt && endAt) ? formatDate(new Date(Math.min(startAt.getTime(), endAt.getTime()))) : "");
         setStartAtTime((startAt && endAt) ? formatTime(new Date(Math.min(startAt.getTime(), endAt.getTime()))) : "");
-        setEndAtDate((startAt && endAt) ? formatDate(new Date(endAt.getTime(), Math.max(startAt.getTime()))) : "");
-        setEndAtTime((startAt && endAt) ? formatTime(new Date(endAt.getTime(), Math.max(startAt.getTime()))) : "");
+        setEndAtDate((startAt && endAt) ? formatDate(new Date(Math.max(startAt.getTime(), endAt.getTime()))) : "");
+        setEndAtTime((startAt && endAt) ? formatTime(new Date(Math.max(startAt.getTime(), endAt.getTime()))) : "");
     }, [startAt, endAt]);
 
     const handleClickOutside = useCallback((e: MouseEvent) => {
@@ -152,8 +152,8 @@ export default function EventDateViewAndControl({ startAt, setStartAt, endAt, se
     const resetDates = useCallback(() => {
         setStartAtDate((startAt && endAt) ? formatDate(new Date(Math.min(startAt.getTime(), endAt.getTime()))) : "");
         setStartAtTime((startAt && endAt) ? formatTime(new Date(Math.min(startAt.getTime(), endAt.getTime()))) : "");
-        setEndAtDate((startAt && endAt) ? formatDate(new Date(endAt.getTime(), Math.max(startAt.getTime()))) : "");
-        setEndAtTime((startAt && endAt) ? formatTime(new Date(endAt.getTime(), Math.max(startAt.getTime()))) : "");
+        setEndAtDate((startAt && endAt) ? formatDate(new Date(Math.max(startAt.getTime(), endAt.getTime()))) : "");
+        setEndAtTime((startAt && endAt) ? formatTime(new Date(Math.max(startAt.getTime(), endAt.getTime()))) : "");
     }, [startAt, endAt]);
 
     return (

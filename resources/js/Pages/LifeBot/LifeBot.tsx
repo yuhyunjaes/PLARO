@@ -86,7 +86,7 @@ export default function LifeBot({ auth, roomId }: LifeBotProps) {
     }, [sideBar]);
 
     useEffect(() => {
-        if (roomId) setChatId(roomId);
+        if (roomId) setChatId(roomId ? roomId : null);
     }, [roomId]);
 
     const getMessages = useCallback(async () => {

@@ -85,7 +85,6 @@ Route::middleware('web')->group(function () {
                 return Inertia::render('Status/Status', ['status' => 404]);
             }
 
-            // day 기본값 및 유효성 검사
             if (in_array($mode, ['week', 'day'])) {
                 if ($day === null) {
                     $day = 1;
@@ -105,11 +104,9 @@ Route::middleware('web')->group(function () {
             ]);
         })->name('calendar');
 
-        Route::get('/calenote/calendar/{uuid}', function () {
-            return Inertia::render('Calenote/Calendar');
+        Route::get('/calenote/calendar/{uuid}', function ($uuid) {
+            return Inertia::render('Calenote/Calendar', ['event' => $uuid]);
         })->name('calendar');
-
-//        여기까지
 
         Route::get('/calenote/notepad', function () {
             return Inertia::render('Calenote/Notepad');
@@ -172,6 +169,7 @@ Route::middleware('web')->group(function () {
         // Event Api
         // --------------------
         Route::post('/api/events', [EventController::class, 'StoreEvents'])->name('event.store');
+        Route::put('/api/events/{uuid}', [EventController::class, 'UpdateEvents'])->name('event.update');
 
         // --------------------
         // Gemini API

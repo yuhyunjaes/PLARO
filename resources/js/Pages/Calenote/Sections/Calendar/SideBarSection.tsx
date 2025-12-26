@@ -4,9 +4,12 @@ import EventTitleControl from "./SideBarSection/EventTitleControl";
 import EventDescriptionControl from "./SideBarSection/EventDescriptionControl";
 import EventColorControl from "./SideBarSection/EventColorControl";
 import ReminderControl from "./SideBarSection/ReminderControl";
+import {router} from "@inertiajs/react";
 
 interface SideBarSectionProps {
+    updateEvent: () => Promise<void>;
     eventId: string | null;
+    setEventId: Dispatch<SetStateAction<string | null>>;
     saveEvent: ()=> Promise<void>;
     eventReminder: "5min" | "10min" | "15min" | "30min" | "1day" | "2day" | "3day" | "start";
     setEventReminder: Dispatch<SetStateAction<"5min" | "10min" | "15min" | "30min" | "1day" | "2day" | "3day" | "start">>;
@@ -24,8 +27,13 @@ interface SideBarSectionProps {
     setEndAt: Dispatch<SetStateAction<Date | null>>;
 }
 
-export default function SideBarSection({ eventId, saveEvent, eventReminder, setEventReminder, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
+export default function SideBarSection({ updateEvent, eventId, setEventId, saveEvent, eventReminder, setEventReminder, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
     const [onlyOneClick, setOnlyOneClick] = useState(false);
+    useEffect(() => {
+        if(eventId && onlyOneClick) {
+            setOnlyOneClick(false);
+        }
+    }, [eventId]);
 
     return (
         <div
@@ -35,9 +43,9 @@ export default function SideBarSection({ eventId, saveEvent, eventReminder, setE
             {
                 (startAt && endAt) ? (
                     <>
-                        <EventTitleControl eventTitle={eventTitle} setEventTitle={setEventTitle} />
+                        <EventTitleControl updateEvent={updateEvent} eventTitle={eventTitle} setEventTitle={setEventTitle} />
                         <EventDateViewAndControl startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
-                        <EventDescriptionControl eventDescription={eventDescription} setEventDescription={setEventDescription} />
+                        <EventDescriptionControl updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
                         <EventColorControl eventColor={eventColor} setEventColor={setEventColor} />
                         <ReminderControl eventReminder={eventReminder} setEventReminder={setEventReminder} />
                         <div className="px-5">
