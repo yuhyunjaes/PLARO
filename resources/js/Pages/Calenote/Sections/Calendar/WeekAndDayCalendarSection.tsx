@@ -1,6 +1,7 @@
 import {Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
 
 interface WeekCalendarSectionProps {
+    eventId: string | null;
     setEventReminder: Dispatch<SetStateAction<"5min" | "10min" | "15min" | "30min" | "1day" | "2day" | "3day" | "start">>;
     setEventDescription: Dispatch<SetStateAction<string>>;
     setEventColor: Dispatch<SetStateAction<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">>;
@@ -20,6 +21,7 @@ interface WeekCalendarSectionProps {
 }
 
 export default function WeekAndDayCalendarSection({
+    eventId,
     setEventReminder,
     setEventDescription,
     setEventColor,
@@ -185,9 +187,13 @@ export default function WeekAndDayCalendarSection({
     }, []);
 
     const handleDateStart = useCallback((e: any):void => {
-        if(isMobile) return;
+        if (isMobile) return;
 
-        if(startAt) {
+        if(eventId && startAt) {
+            setStartAt(null);
+            setEndAt(null);
+            return;
+        } else if (startAt && !eventId) {
             setStartAt(null);
             setEndAt(null);
             setEventTitle("");
@@ -196,13 +202,14 @@ export default function WeekAndDayCalendarSection({
             setEventColor("bg-blue-500");
             return;
         }
+
         setIsDragging(true);
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
         if(dateStr) {
             setStartAt(dateStr);
             setEndAt(add15Minutes(dateStr));
         }
-    }, [startAt, isMobile]);
+    }, [startAt, isMobile, eventId]);
 
     const handleDateMove = useCallback((e: any):void => {
         if (!isDragging || isMobile) return;
@@ -242,13 +249,18 @@ export default function WeekAndDayCalendarSection({
             return;
         }
 
-        setStartAt(null);
-        setEndAt(null);
-        setEventTitle("");
-        setEventReminder("30min");
-        setEventDescription("");
-        setEventColor("bg-blue-500");
-    }, [isMobile, startAt, endAt]);
+        if(eventId) {
+            setStartAt(null);
+            setEndAt(null);
+        } else {
+            setStartAt(null);
+            setEndAt(null);
+            setEventTitle("");
+            setEventReminder("30min");
+            setEventDescription("");
+            setEventColor("bg-blue-500");
+        }
+    }, [isMobile, startAt, endAt, eventId]);
 
 
     useEffect(() => {

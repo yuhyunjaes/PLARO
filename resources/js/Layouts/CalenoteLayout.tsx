@@ -12,6 +12,7 @@ import {
 import Header from "../Components/Header/Header";
 import SideBarSection from "../Pages/Calenote/Sections/SideBarSection";
 import Alert from "../Components/Elements/Alert";
+import Loading from "../Components/Elements/Loading";
 
 // Props 타입 정의
 export interface AuthUser {
@@ -34,10 +35,16 @@ interface AlertProps {
     setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
 }
 
+interface LoadingProps {
+    setLoading: Dispatch<SetStateAction<boolean>>;
+}
+
 export default function CalenoteLayout({ children, auth }: CalenoteLayoutProps) {
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
     const [saveWidth, setSaveWidth] = useState<number>(250);
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
+
+    const [loadingToggle, setLoading] = useState<boolean>(false);
 
     const [alertSwitch, setAlertSwitch] = useState<boolean>(false);
     const [alertMessage, setAlertMessage] = useState<any>("");
@@ -66,11 +73,14 @@ export default function CalenoteLayout({ children, auth }: CalenoteLayoutProps) 
         }
     }, [sideBar]);
 
-    const childrenWithProps = isValidElement<AlertProps>(children)
-        ? cloneElement<AlertProps>(children, {
+    interface LayoutChildProps extends AlertProps, LoadingProps {}
+
+    const childrenWithProps = isValidElement<LayoutChildProps>(children)
+        ? cloneElement<LayoutChildProps>(children, {
             setAlertSwitch,
             setAlertMessage,
             setAlertType,
+            setLoading,
         })
         : children;
 
@@ -94,6 +104,7 @@ export default function CalenoteLayout({ children, auth }: CalenoteLayoutProps) 
                     {childrenWithProps}
                 </main>
             </div>
+            <Loading Toggle={loadingToggle} />
         </>
     );
 }

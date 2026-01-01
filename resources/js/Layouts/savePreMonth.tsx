@@ -1,8 +1,8 @@
 import {useState, useRef, useEffect, RefObject, useCallback} from "react";
-import MonthCreator from "./MonthCalendarSection/MonthCreator";
+import MonthCreator from "../Pages/Calenote/Sections/Calendar/MonthCalendarSection/MonthCreator";
 import { Dispatch, SetStateAction } from "react";
-import {CalendarAtData} from "../CalenoteSectionsData";
-import {EventsData} from "../CalenoteSectionsData";
+import {CalendarAtData} from "../Pages/Calenote/Sections/CalenoteSectionsData";
+import {EventsData} from "../Pages/Calenote/Sections/CalenoteSectionsData";
 import {router} from "@inertiajs/react";
 
 interface SideBarSectionProps {
@@ -31,13 +31,6 @@ interface SideBarSectionProps {
     today: Date;
     activeAt: Date;
     setActiveAt: Dispatch<SetStateAction<Date>>;
-}
-
-interface EventWithLayout extends EventsData {
-    start_area: number;
-    end_area: number;
-    row: number;
-    column: number;
 }
 
 export default function MonthCalendarSection({ setEventIdChangeDone, setLoading, setIsHaveEvent, events, IsHaveEvent, firstCenter, eventId, setEventReminder, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, today, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
@@ -108,6 +101,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
         const rect = firstEl.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
 
+
         container.scrollTop = rect.top - containerRect.top;
     };
 
@@ -152,12 +146,15 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                 if (map.has(key)) {
                     const existing = map.get(key)!;
 
+                    // isToday 우선순위 (가장 높음)
                     if (item.isToday) {
                         map.set(key, item);
                     }
+                    // 기존 데이터가 isToday면 유지
                     else if (existing.isToday) {
                         // 유지
                     }
+                    // isActive 우선순위
                     else if (!existing.isActive && item.isActive) {
                         map.set(key, item);
                     }
@@ -173,6 +170,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
     const formatDate:(dayData: CalendarAtData) => Date | undefined = (dayData: CalendarAtData):Date | undefined => {
         if(!dayData.year || !dayData.day) return;
 
+
         return new Date(dayData.year, dayData.month, dayData.day);
     }
 
@@ -186,6 +184,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
 
         return new Date(date.getFullYear(), date.getMonth(), date.getDate()+1);
     }, [startAt]);
+
 
     const handleDateStart = useCallback((dayData: CalendarAtData): void => {
         if (isMobile) return;
@@ -222,6 +221,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
         setEndAt(eventAtSetting(date));
     }, [isDragging, isMobile]);
 
+
     const handleDateEnd = useCallback((dayData: CalendarAtData): void => {
         if (!isDragging || isMobile) return;
 
@@ -231,6 +231,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
         setEndAt(eventAtSetting(date));
         setIsDragging(false);
     }, [isDragging, isMobile]);
+
 
     const handleDateMoveOut = useCallback((e: MouseEvent) => {
         if(!isDragging || !scrollRef.current || scrollRef.current.contains(e.target as Node)) return;
@@ -401,6 +402,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
         lastMouseEvent.current = null;
     }, []);
 
+
     useEffect(() => {
         document.addEventListener("mousemove", handleMouseMove);
         document.addEventListener("mouseup", handleMouseUp);
@@ -421,6 +423,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
         lastDate: Date,
         events: EventsData[]
     ): (EventsData & { start_area: number; end_area: number })[] => {
+        // 주 시작 (포함)
         const weekStartDate = new Date(
             firstDate.getFullYear(),
             firstDate.getMonth(),
@@ -428,6 +431,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
             0, 0, 0, 0
         );
 
+        // 주 끝 (다음 주 일요일 00:00)
         const weekEndDate = new Date(
             lastDate.getFullYear(),
             lastDate.getMonth(),
@@ -447,11 +451,14 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
             const eventStart = eventStartDate.getTime();
             const eventEnd = eventEndDate.getTime();
 
+            // 겹침 판정: 이벤트가 이 주와 겹치는가?
+            // 이벤트가 주 시작 전에 끝나거나, 주 끝 후에 시작하면 겹치지 않음
             const isOverlap =
                 eventStart < weekEnd && eventEnd > weekStart;
 
             if (!isOverlap) continue;
 
+            // start_area 계산: 이벤트가 주의 몇 번째 칸부터 시작하는가? (0~6)
             const eventStartDay = new Date(
                 eventStartDate.getFullYear(),
                 eventStartDate.getMonth(),
@@ -478,6 +485,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                 0, 0, 0, 0
             ).getTime();
 
+            // 주의 마지막 날 (토요일)
             const weekLastDay = new Date(
                 lastDate.getFullYear(),
                 lastDate.getMonth(),
@@ -496,82 +504,12 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                 start_area,
                 end_area
             });
+
+            if (result.length >= 5) break;
         }
 
         return result;
     };
-
-    const calculateEventLayout = (
-        events: (EventsData & { start_area: number; end_area: number })[]
-    ): EventWithLayout[] => {
-        if (events.length === 0) return [];
-
-        const MAX_ROWS = 5;
-
-        const rowOccupancy: boolean[][] = Array.from(
-            { length: MAX_ROWS },
-            () => Array(7).fill(false)
-        );
-
-        const layoutEvents: EventWithLayout[] = [];
-
-        const sortedEvents = [...events].sort((a, b) => {
-            if (a.start_area !== b.start_area) {
-                return a.start_area - b.start_area;
-            }
-            return (
-                (7 - b.start_area - b.end_area) -
-                (7 - a.start_area - a.end_area)
-            );
-        });
-
-        for (const event of sortedEvents) {
-            const eventWidth = 7 - event.start_area - event.end_area;
-            let placed = false;
-
-            for (let row = 0; row < MAX_ROWS; row++) {
-                const rowData = rowOccupancy[row];
-                if (!rowData) continue;
-
-                let canPlace = true;
-
-                for (
-                    let col = event.start_area;
-                    col < event.start_area + eventWidth;
-                    col++
-                ) {
-                    if (rowData[col]) {
-                        canPlace = false;
-                        break;
-                    }
-                }
-
-                if (canPlace) {
-                    for (
-                        let col = event.start_area;
-                        col < event.start_area + eventWidth;
-                        col++
-                    ) {
-                        rowData[col] = true;
-                    }
-
-                    layoutEvents.push({
-                        ...event,
-                        row,
-                        column: event.start_area
-                    });
-
-                    placed = true;
-                    break;
-                }
-            }
-
-            if (!placed) continue;
-        }
-
-        return layoutEvents;
-    };
-
 
     return (
         <div className="border border-gray-300 dark:border-gray-800 rounded-xl flex-1 flex flex-col overflow-hidden">
@@ -615,25 +553,16 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                                 const firstDate = new Date(first.year, first.month, first.day);
                                 const lastDate = new Date(last.year, last.month, last.day);
 
-                                const rawIncludeEvents = findIncludeDate(firstDate, lastDate, events);
-                                const includeEvents: EventWithLayout[] = calculateEventLayout(rawIncludeEvents);
-
-                                const cellHeight = scrollRef.current ? (scrollRef.current.clientHeight/6) : 0;
-                                const paddingVertical = 20; // 상하 각 20px
-                                const availableHeight = cellHeight - (paddingVertical * 2); // 40px 빼기
-                                const eventRowHeight = (availableHeight / 5);
+                                const includeEvents:EventsData[] | undefined = findIncludeDate(firstDate, lastDate, events);
 
                                 return (
                                     <div key={index} className="grid grid-cols-7 text-right flex-1 snap-start week relative">
-                                        <div className="absolute w-full left-0 grid pointer-events-none"
-                                             style={{
-                                                 gridTemplateColumns: 'repeat(7, 1fr)',
-                                                 gridTemplateRows: `repeat(5, ${eventRowHeight}px)`,
-                                                 height: `${availableHeight}px`,
-                                                 top: `${paddingVertical}px` // 이 줄 추가
-                                             }}>
+                                        <div className="absolute w-full h-[calc(20px*5)] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 grid grid-rows-5 gap-1 pointer-events-none">
                                             {includeEvents.map((includeEvent) => {
-                                                const span = Math.max(1, 7 - includeEvent.start_area - includeEvent.end_area);
+                                                const start = includeEvent.start_area ?? 0;
+                                                const end = includeEvent.end_area ?? 0;
+
+                                                const span = Math.max(1, 7 - start - end);
 
                                                 let bodyColor = null;
 
@@ -664,12 +593,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                                                 return (
                                                     <div
                                                         key={includeEvent.uuid}
-                                                        className="pointer-events-auto relative"
-                                                        style={{
-                                                            gridRow: includeEvent.row + 1,
-                                                            gridColumn: `${includeEvent.start_area + 1} / span ${span}`,
-                                                            margin: '1px'
-                                                        }}
+                                                        className="relative w-full"
                                                     >
                                                         <div
                                                             onClick={() => {
@@ -690,11 +614,15 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                                                                     setEndAt(new Date(includeEvent.end_at));
                                                                 }
                                                             }}
-                                                            className={`h-full rounded overflow-hidden flex cursor-pointer transition-opacity hover:opacity-80`}
+                                                            className={`h-full absolute rounded overflow-hidden flex pointer-events-auto ml-2`}
+                                                            style={{
+                                                                width: `calc((100% / 7) * ${span} - 1rem)`,
+                                                                left: `calc((100% / 7) * ${start})`
+                                                            }}
                                                         >
-                                                            <div className={`w-[4px] ${includeEvent.color}`}></div>
+                                                            <div className={`w-[5px] ${includeEvent.color}`}></div>
                                                             <div className={`${eventId === includeEvent.uuid ? includeEvent.color : bodyColor} flex-1 flex justify-start items-center`}>
-                                                                <p className={`text-xs pl-1 truncate ${eventId === includeEvent.uuid ? "text-white" : "text-gray-950"}`}>{includeEvent.title}</p>
+                                                                <p className={`text-xs pl-1 ${eventId === includeEvent.uuid ? "text-white" : "text-gray-950"}`}>{includeEvent.title}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -740,6 +668,8 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                                                         : cellTime <= maxTime
                                                 );
 
+
+
                                             return(
                                                 <div
                                                     data-date={`${dayData.year}-${dayData.month}-${dayData.day}`}
@@ -752,11 +682,11 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                                              ${isSelected ? "bg-blue-500/10" : (
                                                     dayData.isWeekend ? "bg-gray-50 dark:bg-[#0d1117]" : "bg-white dark:bg-gray-950"
                                                 ) }
-                                                count-${dayData.count} text-xs md:text-sm border-gray-100 dark:border-gray-800 cursor-pointer transition-colors ${dayData.isToday ? "today text-white font-semibold" : (dayData.isActive ? "normal-text font-semibold" : "text-gray-400 text-sm")} user-select-none`}
+                                                count-${dayData.count} border-gray-100 ${maxTime} dark:border-gray-800 cursor-pointer transition-colors ${dayData.isToday ? "today text-white font-semibold text-sm md:text-base" : (dayData.isActive ? "normal-text text-xs md:text-sm font-semibold" : "text-gray-400 text-sm")} user-select-none`}
                                                 >
                                                     {(dayData.day === 1) ?
                                                         <div className="flex justify-end">
-                                                            <span className="px-2 hidden xl:block max-w-4/6">
+                                                            <span className="px-2 hidden xl:block max-w-4/12">
                                                                 {dayData.month+1}월 {dayData.day}
                                                             </span>
                                                             <span className="px-2 block xl:hidden">
@@ -764,7 +694,8 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                                                             </span>
                                                         </div>
                                                         :
-                                                        <span className="px-2">{dayData.day}</span>
+                                                        <span className="px-2">{dayData.day}
+                                                    </span>
                                                     }
                                                 </div>
                                             );

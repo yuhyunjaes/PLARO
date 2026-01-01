@@ -7,6 +7,7 @@ import ReminderControl from "./SideBarSection/ReminderControl";
 import {router} from "@inertiajs/react";
 
 interface SideBarSectionProps {
+    deleteEvent: () => Promise<void>;
     updateEvent: () => Promise<void>;
     eventId: string | null;
     setEventId: Dispatch<SetStateAction<string | null>>;
@@ -27,7 +28,7 @@ interface SideBarSectionProps {
     setEndAt: Dispatch<SetStateAction<Date | null>>;
 }
 
-export default function SideBarSection({ updateEvent, eventId, setEventId, saveEvent, eventReminder, setEventReminder, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
+export default function SideBarSection({ deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventReminder, setEventReminder, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
     const [onlyOneClick, setOnlyOneClick] = useState(false);
     useEffect(() => {
         if(eventId && onlyOneClick) {
@@ -41,7 +42,7 @@ export default function SideBarSection({ updateEvent, eventId, setEventId, saveE
             style={{ width: `${sideBar}px` }}
         >
             {
-                (startAt && endAt) ? (
+                (eventId || (startAt && endAt)) ? (
                     <>
                         <EventTitleControl updateEvent={updateEvent} eventTitle={eventTitle} setEventTitle={setEventTitle} />
                         <EventDateViewAndControl startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
@@ -57,7 +58,11 @@ export default function SideBarSection({ updateEvent, eventId, setEventId, saveE
                                 }} className="btn text-xs bg-blue-500 text-white w-full">
                                     생성
                                 </button>
-                            ) : ""
+                            ) : <button onClick={() => {
+                                deleteEvent();
+                            }} className="btn text-xs bg-red-500 text-white w-full">
+                                삭제
+                            </button>
                         }
                         </div>
                     </>

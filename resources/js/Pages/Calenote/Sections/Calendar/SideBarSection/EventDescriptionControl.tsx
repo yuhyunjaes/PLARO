@@ -37,7 +37,7 @@ export default function EventDescriptionControl({
                 id="eventDescription"
                 className="border bg-transparent rounded outline-none border-gray-300 w-full dark:border-gray-800 font-semibold text-xs min-h-[70px] max-h-[150px] p-1"
                 placeholder="설명"
-                value={eventDescription}
+                value={eventDescription ? eventDescription : ""}
                 onChange={(e) => setEventDescription(e.target.value)}
             />
         </div>

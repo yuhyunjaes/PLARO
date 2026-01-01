@@ -227,7 +227,9 @@ export default function EventDateViewAndControl({ startAt, setStartAt, endAt, se
                             </div>
                         </div>
                     </div>
-                ) : ""
+                ) : (
+                    <p className="ps-5 text-xs font-semibold">이벤트 날짜를 선택 해 주세요.</p>
+                )
             }
         </>
     );

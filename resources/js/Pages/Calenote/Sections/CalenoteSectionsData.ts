@@ -37,3 +37,14 @@ export interface CalendarAtData {
     count?: number;
     isToday?: boolean;
 }
+
+export interface EventsData {
+    uuid: string;
+    title: string;
+    description: string;
+    start_at: Date;
+    end_at: Date;
+    color: "bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500";
+    start_area? : number;
+    end_area? : number;
+}

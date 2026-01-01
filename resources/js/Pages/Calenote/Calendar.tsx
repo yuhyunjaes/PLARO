@@ -8,8 +8,10 @@ import {router} from "@inertiajs/react";
 import CalendarControlSection from "./Sections/Calendar/CalendarControlSection";
 import WeekAndDayCalendarSection from "./Sections/Calendar/WeekAndDayCalendarSection";
 import axios from "axios";
+import {EventsData} from "./Sections/CalenoteSectionsData";
 
 interface CalendarProps {
+    setLoading: Dispatch<SetStateAction<boolean>>;
     event: string | null;
     auth: {
         user: AuthUser | null;
@@ -23,7 +25,7 @@ interface CalendarProps {
     setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
 }
 
-export default function Calendar({ event, auth, mode, year, month, day, setAlertSwitch, setAlertMessage, setAlertType } : CalendarProps) {
+export default function Calendar({ setLoading, event, auth, mode, year, month, day, setAlertSwitch, setAlertMessage, setAlertType } : CalendarProps) {
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
 
@@ -42,9 +44,9 @@ export default function Calendar({ event, auth, mode, year, month, day, setAlert
     const At:Date = (temporaryYear && temporaryMonth) ? new Date(temporaryYear, temporaryMonth-1, 1) : today;
     const [activeAt, setActiveAt] = useState<Date>(At);
 
-    useEffect(() => {
-        setActiveAt((temporaryYear && temporaryMonth) ? new Date(temporaryYear, temporaryMonth-1, 1) : new Date(today.getFullYear(), today.getMonth(), 1));
-    }, [temporaryYear, temporaryMonth]);
+    // useEffect(() => {
+    //     setActiveAt((temporaryYear && temporaryMonth) ? new Date(temporaryYear, temporaryMonth-1, 1) : new Date(today.getFullYear(), today.getMonth(), 1));
+    // }, [temporaryYear, temporaryMonth]);
 
     const [activeDay, setActiveDay] = useState<number | null>(viewMode !== "month" ? temporaryDay : null);
 
@@ -72,15 +74,24 @@ export default function Calendar({ event, auth, mode, year, month, day, setAlert
 
     const [eventId, setEventId] = useState<string | null>(null);
 
+    const [eventIdChangeDone, setEventIdChangeDone] = useState<boolean>(true);
+
     useEffect(() => {
-        setEventId(event ? event : null);
+        if (!event) {
+            setEventId(null);
+        } else {
+            setEventId(event);
+        }
+        setLoading(false);
     }, [event]);
 
-    // useEffect(() => {
-    //     console.log(eventId)
-    // }, [eventId]);
+    useEffect(() => {
+        if (eventId !== null) {
+            setEventIdChangeDone(true);
+        }
+    }, [eventId]);
 
-    const [events, setEvents] = useState([]);
+    const [events, setEvents] = useState<EventsData[]>([]);
 
     const saveEvent:()=>Promise<void> = useCallback(async ():Promise<void> => {
         if(!startAt || !endAt || !eventColor || eventId) return;
@@ -95,7 +106,11 @@ export default function Calendar({ event, auth, mode, year, month, day, setAlert
             });
 
             if(res.data.success) {
-                router.visit(`/calenote/calendar${res.data.uuid ? "/"+res.data.uuid : ""}`, {
+                const event = res.data.event;
+
+                setEvents(pre => [...pre, event]);
+
+                router.visit(`/calenote/calendar${event.uuid ? "/"+event.uuid : ""}`, {
                     method: "get",
                     preserveState: true,
                     preserveScroll: true,
@@ -106,12 +121,18 @@ export default function Calendar({ event, auth, mode, year, month, day, setAlert
                 setAlertMessage(res.data.message);
             }
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId]);
 
     const updateEvent:()=>Promise<void> = useCallback(async ():Promise<void> => {
         if(!startAt || !endAt || !eventColor || !eventId ) return;
+
+        if(!eventIdChangeDone) {
+            setEventIdChangeDone(true);
+            return;
+        }
+
         try {
             const res = await axios.put(`/api/events/${eventId}`, {
                 title: eventTitle,
@@ -121,43 +142,154 @@ export default function Calendar({ event, auth, mode, year, month, day, setAlert
                 color: eventColor,
             });
 
-            if(res.data.success) {
-                console.log('success')
+            if (res.data.success) {
+                setEvents(pre =>
+                    pre.map(event =>
+                        event.uuid === eventId
+                            ? {
+                                ...event,
+                                title: eventTitle,
+                                start_at: startAt,
+                                end_at: endAt,
+                                description: eventDescription,
+                                color: eventColor
+                            }
+                            : event
+                    )
+                );
             }
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
-    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId]);
+    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone]);
 
-    useEffect(() => {
-        updateEvent();
-    }, [eventColor, startAt, endAt]);
-
-    const getEvent:()=>Promise<void> = useCallback(async ():Promise<void> => {
+    const deleteEvent = useCallback(async ():Promise<void> => {
         if(!eventId) return;
-        console.log(eventId)
+
+        try {
+            const res = await axios.delete(`/api/events/${eventId}`);
+            if(res.data.success) {
+                setEvents(pre => pre.filter(item => item.uuid !== eventId));
+                setEventId(null);
+                setEventTitle("");
+                setEventDescription("");
+                setEventColor("bg-blue-500");
+                setEventReminder("30min");
+                setStartAt(null);
+                setEndAt(null);
+
+                router.visit(`/calenote/calendar`, {
+                    method: "get",
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+
+            } else {
+                setAlertSwitch(true);
+                setAlertType(res.data.type);
+                setAlertMessage(res.data.message);
+            }
+        } catch (err) {
+            console.error(err);
+        }
     }, [eventId]);
 
-    // 여기까지 함.
+    useEffect(() => {
+        if (!isDragging) {
+            updateEvent();
+        }
+    }, [eventColor, startAt, endAt, isDragging]);
+
+    const [firstCenter, setFirstCenter] = useState<boolean>(false);
+    const [IsHaveEvent, setIsHaveEvent] = useState<boolean>(false);
+    const [getDone, setGetDone] = useState<boolean>(false);
+
+    // Calendar 컴포넌트에서 getEvent 함수 수정
+
+    const getActiveEvent:()=>Promise<void> = async ():Promise<void> => {
+        if(!event) {
+            setGetDone(true);
+            return;
+        }
+
+        try {
+            const res = await axios.get(`/api/events/${event}`);
+            if(res.data.success) {
+                const events = res.data.events;
+                if(!events) return;
+
+                setEventTitle(events.title);
+                const resStartAt = new Date(events.start_at);
+
+                // startAt의 달을 기준으로 activeAt을 설정
+                const newActiveAt = new Date(resStartAt.getFullYear(), resStartAt.getMonth(), 1);
+
+                const IsSameActiveAt:boolean = newActiveAt.toString() !== At.toString();
+
+                if(IsSameActiveAt) {
+                    setIsHaveEvent(true);
+                    setActiveAt(newActiveAt);
+                }
+
+                setStartAt(resStartAt);
+                setEndAt(new Date(events.end_at));
+                setEventDescription(events.description);
+                setEventColor(events.color);
+
+                // firstCenter를 true로 설정하여 MonthCalendarSection에서 center() 호출
+                if(IsSameActiveAt) {
+                    setFirstCenter(true);
+                }
+            } else {
+                setAlertSwitch(true);
+                setAlertType(res.data.type);
+                setAlertMessage(res.data.message);
+                router.visit(`/calenote/calendar`, {
+                    method: "get",
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setGetDone(true);
+        }
+    }
+
+    const getEvents:()=>Promise<void> = async ():Promise<void> => {
+        try {
+            const res = await axios.get("/api/events");
+            if(res.data.success) {
+                const currentEvents = res.data.events;
+                if(currentEvents.length <= 0) return;
+                setEvents(currentEvents);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     useEffect(() => {
-        getEvent();
-    }, [getEvent]);
-
-    useEffect(() => {
-
+        getEvents();
+        getActiveEvent();
     }, []);
 
-    // 이벤트 아이디가 있을시 이벤트 일을 새로 선택하면 초기화 시키고 싶지만 뜻 대로 돼지 않음
-    // useEffect(() => {
-    //     if(!startAt && !endAt && eventId) {
-    //         router.visit(`/calenote/calendar`, {
-    //             method: "get",
-    //             preserveState: true,
-    //             preserveScroll: true,
-    //         });
-    //     }
-    // }, [startAt, endAt, eventId]);
+    useEffect(() => {
+        if (!eventId || !getDone) return;
+
+        if (!startAt && !endAt) {
+            router.visit(`/calenote/calendar`, {
+                method: "get",
+                preserveState: true,
+                preserveScroll: true,
+            });
+            setEventId(null);
+            setEventTitle("");
+            setEventDescription("");
+            setEventColor("bg-blue-500");
+        }
+    }, [eventId, startAt, endAt, getDone]);
 
     const handleResize = () => {
         setMobileView(window.innerWidth <= 640);
@@ -171,7 +303,6 @@ export default function Calendar({ event, auth, mode, year, month, day, setAlert
 
     useEffect(() => {
         if (!activeAt) return;
-
         setMonths([
             new Date(activeAt.getFullYear(), activeAt.getMonth() - 1, 1),
             new Date(activeAt.getFullYear(), activeAt.getMonth(), 1),
@@ -217,19 +348,19 @@ export default function Calendar({ event, auth, mode, year, month, day, setAlert
             <div className="min-h-full bg-gray-100 dark:bg-gray-950 relative flex flex-col">
                 <div className="flex-1 flex px-5 gap-5 flex-row py-5">
                     <div className="flex-1 flex flex-col gap-5">
-                        <CalendarControlSection setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay}/>
+                        <CalendarControlSection setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay}/>
                         {
                             viewMode === "month" && (
-                                <MonthCalendarSection setEventReminder={setEventReminder} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} today={today} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                                <MonthCalendarSection setEventIdChangeDone={setEventIdChangeDone} setLoading={setLoading} setIsHaveEvent={setIsHaveEvent} events={events} IsHaveEvent={IsHaveEvent} firstCenter={firstCenter} eventId={eventId} setEventReminder={setEventReminder} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} today={today} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
                             )
                         }
                         {
                             (viewMode === "week" || viewMode === "day") && (
-                                <WeekAndDayCalendarSection setEventReminder={setEventReminder} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} mobileView={mobileView} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
+                                <WeekAndDayCalendarSection eventId={eventId} setEventReminder={setEventReminder} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} mobileView={mobileView} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
                             )
                         }
                     </div>
-                    <SideBarSection updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventReminder={eventReminder} setEventReminder={setEventReminder} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                    <SideBarSection deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventReminder={eventReminder} setEventReminder={setEventReminder} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
                 </div>
             </div>
         </>

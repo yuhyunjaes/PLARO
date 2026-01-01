@@ -9,6 +9,7 @@ interface Mode {
 }
 
 interface CalendarControlSectionProps {
+    setMonths: Dispatch<SetStateAction<Date[]>>;
     setTemporaryYear: Dispatch<SetStateAction<number | null>>;
     setTemporaryMonth: Dispatch<SetStateAction<number | null>>;
     setTemporaryDay: Dispatch<SetStateAction<number | null>>;
@@ -21,7 +22,7 @@ interface CalendarControlSectionProps {
     activeDay: number | null;
 }
 
-export default function CalendarControlSection({ setTemporaryYear, setTemporaryMonth, setTemporaryDay, setIsDragging, startAt, viewMode, setViewMode, activeAt, setActiveAt, activeDay}: CalendarControlSectionProps) {
+export default function CalendarControlSection({ setMonths, setTemporaryYear, setTemporaryMonth, setTemporaryDay, setIsDragging, startAt, viewMode, setViewMode, activeAt, setActiveAt, activeDay}: CalendarControlSectionProps) {
     const modes:Mode[] = [
         {
             title: "월",

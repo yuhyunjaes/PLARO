@@ -40,14 +40,14 @@ class EventController extends Controller
         if (!$event) {
             return response()->json([
                 'success' => false,
-                'message' => '이벤트 생성중 문제가 발생했다',
+                'message' => '이벤트 생성중 문제가 발생하였습니다.',
                 'type' => 'danger'
             ]);
         }
 
         return response()->json([
             'success' => true,
-            'uuid' => $event->uuid
+            'event' => $event,
         ]);
     }
 
@@ -71,6 +71,24 @@ class EventController extends Controller
             'color' => $request->color,
         ]);
 
+        return response()->json(['success' => true, 'event' => $event]);
+    }
+
+    public function GetActiveEvents($uuid) {
+        $event = Event::where('uuid', $uuid)->where('user_id', Auth::id())->first();
+        if (!$event) return response()->json(['success' => false, 'message' => '이벤트가 존재하지 않습니다.', 'type' => 'danger']);
+        return response()->json(['success' => true, 'events' => $event]);
+    }
+
+    public function GetEvents() {
+        $event = Event::where('user_id', Auth::id())->get();
+        return response()->json(['success' => true, 'events' => $event]);
+    }
+
+    public function DeleteEvents($uuid) {
+        $event = Event::where('uuid', $uuid)->where('user_id', Auth::id())->first();
+        if (!$event) return response()->json(['success' => false, 'message' => '이벤트가 존재하지 않습니다.', 'type' => 'danger']);
+        $event->delete();
         return response()->json(['success' => true]);
     }
 

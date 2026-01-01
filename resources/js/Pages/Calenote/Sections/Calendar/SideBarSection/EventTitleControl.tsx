@@ -39,7 +39,7 @@ export default function EventTitleControl({
                 id="eventTitle"
                 className="border w-full border-gray-300 dark:border-gray-800 px-1 py-2 rounded bg-transparent text-xs font-semibold outline-none"
                 placeholder="제목"
-                value={eventTitle}
+                value={eventTitle ? eventTitle : ""}
                 onChange={(e) => setEventTitle(e.target.value)}
             />
         </div>

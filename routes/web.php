@@ -170,6 +170,9 @@ Route::middleware('web')->group(function () {
         // --------------------
         Route::post('/api/events', [EventController::class, 'StoreEvents'])->name('event.store');
         Route::put('/api/events/{uuid}', [EventController::class, 'UpdateEvents'])->name('event.update');
+        Route::get('/api/events/{uuid}', [EventController::class, 'GetActiveEvents'])->name('event.active.get');
+        Route::delete('/api/events/{uuid}', [EventController::class, 'DeleteEvents'])->name('event.delete');
+        Route::get('/api/events', [EventController::class, 'GetEvents'])->name('event.get');
 
         // --------------------
         // Gemini API
