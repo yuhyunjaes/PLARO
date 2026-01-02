@@ -25,6 +25,10 @@ interface CalendarProps {
     setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
 }
 
+interface TemporarySaveEvent extends EventsData {
+    index: number;
+}
+
 export default function Calendar({ setLoading, event, auth, mode, year, month, day, setAlertSwitch, setAlertMessage, setAlertType } : CalendarProps) {
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
@@ -47,6 +51,7 @@ export default function Calendar({ setLoading, event, auth, mode, year, month, d
     // useEffect(() => {
     //     setActiveAt((temporaryYear && temporaryMonth) ? new Date(temporaryYear, temporaryMonth-1, 1) : new Date(today.getFullYear(), today.getMonth(), 1));
     // }, [temporaryYear, temporaryMonth]);
+
 
     const [activeDay, setActiveDay] = useState<number | null>(viewMode !== "month" ? temporaryDay : null);
 
@@ -77,12 +82,7 @@ export default function Calendar({ setLoading, event, auth, mode, year, month, d
     const [eventIdChangeDone, setEventIdChangeDone] = useState<boolean>(true);
 
     useEffect(() => {
-        if (!event) {
-            setEventId(null);
-        } else {
-            setEventId(event);
-        }
-        setLoading(false);
+        setEventId(event ? event : null);
     }, [event]);
 
     useEffect(() => {
@@ -92,6 +92,64 @@ export default function Calendar({ setLoading, event, auth, mode, year, month, d
     }, [eventId]);
 
     const [events, setEvents] = useState<EventsData[]>([]);
+
+    const [temporarySaveEvent, setTemporarySaveEvent] = useState<TemporarySaveEvent[]>([]);
+
+    const [getEventDone, setGetEventDone] = useState<boolean>(false);
+
+    const activeEventFirstChange = useCallback(() => {
+        if(temporarySaveEvent[0]) {
+            const saved = temporarySaveEvent[0];
+
+            setEvents(prev => {
+                const filtered = prev.filter(item => item.uuid !== saved.uuid);
+
+                const insertIndex = Math.min(
+                    Math.max(saved.index, 0),
+                    filtered.length
+                );
+
+                const next = [...filtered];
+                next.splice(insertIndex, 0, saved);
+
+                return next;
+            });
+
+            setTemporarySaveEvent([]);
+        }
+
+        if (!event || !getEventDone) return;
+
+        let nextCurrent: TemporarySaveEvent | null = null;
+
+        setEvents(prev => {
+            const index = prev.findIndex(item => item.uuid === event);
+            if (index === -1) {
+                return prev;
+            }
+
+            const current = prev[index];
+            if (!current) {
+                return prev;
+            }
+
+            nextCurrent = {
+                ...current,
+                index,
+            };
+
+            setTemporarySaveEvent([nextCurrent]);
+
+            return [
+                current,
+                ...prev.filter(item => item.uuid !== current.uuid)
+            ];
+        });
+    }, [event, temporarySaveEvent, getEventDone]);
+
+    useEffect(() => {
+        activeEventFirstChange();
+    }, [event, getEventDone]);
 
     const saveEvent:()=>Promise<void> = useCallback(async ():Promise<void> => {
         if(!startAt || !endAt || !eventColor || eventId) return;
@@ -157,11 +215,24 @@ export default function Calendar({ setLoading, event, auth, mode, year, month, d
                             : event
                     )
                 );
+
+                if(temporarySaveEvent[0] && temporarySaveEvent[0].uuid === eventId) {
+                    const currentTemporarySaveEvent: TemporarySaveEvent = {
+                        ...temporarySaveEvent[0],
+                        title: eventTitle,
+                        start_at: startAt,
+                        end_at: endAt,
+                        description: eventDescription,
+                        color: eventColor,
+                    };
+
+                    setTemporarySaveEvent([currentTemporarySaveEvent])
+                }
             }
         } catch (err) {
             console.error(err);
         }
-    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone]);
+    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone, temporarySaveEvent]);
 
     const deleteEvent = useCallback(async ():Promise<void> => {
         if(!eventId) return;
@@ -169,6 +240,10 @@ export default function Calendar({ setLoading, event, auth, mode, year, month, d
         try {
             const res = await axios.delete(`/api/events/${eventId}`);
             if(res.data.success) {
+                if(temporarySaveEvent[0] && temporarySaveEvent[0].uuid === eventId) {
+                    setTemporarySaveEvent([]);
+                }
+
                 setEvents(pre => pre.filter(item => item.uuid !== eventId));
                 setEventId(null);
                 setEventTitle("");
@@ -192,7 +267,7 @@ export default function Calendar({ setLoading, event, auth, mode, year, month, d
         } catch (err) {
             console.error(err);
         }
-    }, [eventId]);
+    }, [eventId, temporarySaveEvent]);
 
     useEffect(() => {
         if (!isDragging) {
@@ -267,6 +342,8 @@ export default function Calendar({ setLoading, event, auth, mode, year, month, d
             }
         } catch (err) {
             console.error(err);
+        } finally {
+            setGetEventDone(true);
         }
     }
 
@@ -351,7 +428,7 @@ export default function Calendar({ setLoading, event, auth, mode, year, month, d
                         <CalendarControlSection setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay}/>
                         {
                             viewMode === "month" && (
-                                <MonthCalendarSection setEventIdChangeDone={setEventIdChangeDone} setLoading={setLoading} setIsHaveEvent={setIsHaveEvent} events={events} IsHaveEvent={IsHaveEvent} firstCenter={firstCenter} eventId={eventId} setEventReminder={setEventReminder} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} today={today} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                                <MonthCalendarSection setEventIdChangeDone={setEventIdChangeDone} setLoading={setLoading} setIsHaveEvent={setIsHaveEvent} events={events} IsHaveEvent={IsHaveEvent} firstCenter={firstCenter} eventId={eventId} setEventId={setEventId} setEventReminder={setEventReminder} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} today={today} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
                             )
                         }
                         {

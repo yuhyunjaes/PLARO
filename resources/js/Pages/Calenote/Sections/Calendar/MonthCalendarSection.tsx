@@ -13,6 +13,7 @@ interface SideBarSectionProps {
     IsHaveEvent: boolean;
     firstCenter: boolean;
     eventId: string | null;
+    setEventId: Dispatch<SetStateAction<string | null>>;
     setEventReminder: Dispatch<SetStateAction<"5min" | "10min" | "15min" | "30min" | "1day" | "2day" | "3day" | "start">>;
     setEventDescription: Dispatch<SetStateAction<string>>;
     setEventColor: Dispatch<SetStateAction<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">>;
@@ -40,7 +41,7 @@ interface EventWithLayout extends EventsData {
     column: number;
 }
 
-export default function MonthCalendarSection({ setEventIdChangeDone, setLoading, setIsHaveEvent, events, IsHaveEvent, firstCenter, eventId, setEventReminder, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, today, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
+export default function MonthCalendarSection({ setEventIdChangeDone, setLoading, setIsHaveEvent, events, IsHaveEvent, firstCenter, eventId, setEventId, setEventReminder, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, today, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
     const [allDates, setAllDates] = useState<CalendarAtData[]>([]);
 
     const scrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
@@ -674,8 +675,8 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                                                         <div
                                                             onClick={() => {
                                                                 if(includeEvent.uuid !== eventId) {
-                                                                    setLoading(true);
                                                                     setEventIdChangeDone(false);
+                                                                    setEventId(includeEvent.uuid);
 
                                                                     router.visit(`/calenote/calendar/${includeEvent.uuid}`, {
                                                                         method: "get",
