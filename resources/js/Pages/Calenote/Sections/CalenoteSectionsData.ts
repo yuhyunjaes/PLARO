@@ -49,12 +49,9 @@ export interface EventsData {
     end_area? : number;
 }
 
-export type ReminderType =
-    | "5min"
-    | "10min"
-    | "15min"
-    | "30min"
-    | "1day"
-    | "2day"
-    | "3day"
-    | "start";
+export interface ReminderData {
+    id: number;
+    user_id: number;
+    event_id: string;
+    seconds: number;
+}

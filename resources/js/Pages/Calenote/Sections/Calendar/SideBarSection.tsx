@@ -7,8 +7,8 @@ import ReminderControl from "./SideBarSection/ReminderControl";
 import {router} from "@inertiajs/react";
 
 interface SideBarSectionProps {
-    eventReminder: string[];
-    setEventReminder: Dispatch<SetStateAction<string[]>>;
+    eventReminder: number[];
+    setEventReminder: Dispatch<SetStateAction<number[]>>;
     deleteEvent: () => Promise<void>;
     updateEvent: () => Promise<void>;
     eventId: string | null;

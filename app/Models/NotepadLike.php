@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class NotepadLikes extends Model
+class NotepadLike extends Model
 {
     use HasFactory;
 

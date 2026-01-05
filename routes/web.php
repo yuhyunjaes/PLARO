@@ -12,6 +12,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotepadLikeController;
 use App\Http\Controllers\ChatCategoryController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventReminderController;
 use App\Models\Notepad;
 
 /*
@@ -173,6 +174,9 @@ Route::middleware('web')->group(function () {
         Route::get('/api/events/{uuid}', [EventController::class, 'GetActiveEvents'])->name('event.active.get');
         Route::delete('/api/events/{uuid}', [EventController::class, 'DeleteEvents'])->name('event.delete');
         Route::get('/api/events', [EventController::class, 'GetEvents'])->name('event.get');
+        Route::post('/api/event/{uuid}/reminders', [EventReminderController::class, 'StoreEventReminder'])->name('event.reminder.store');
+        Route::get('/api/event/{uuid}/reminders', [EventReminderController::class, 'getActiveEventReminder'])->name('event.active.reminder.get');
+        Route::get('/api/event/reminders', [EventReminderController::class, 'getEventReminders'])->name('event.reminder.get');
 
         // --------------------
         // Gemini API

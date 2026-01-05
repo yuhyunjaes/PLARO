@@ -17,6 +17,10 @@ class Event extends Model
         return $this->belongsTo(ChatMessage::class, 'chat_id', 'id');
     }
 
+    public function reminders() {
+        return $this->hasMany(EventReminder::class, 'event_id', 'uuid');
+    }
+
     protected $fillable = [
         'uuid',
         'chat_id',

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Notepad;
-use App\Models\NotepadLikes;
+use App\Models\NotepadLike;
 
 class NotepadLikeController extends Controller
 {
@@ -15,7 +15,7 @@ class NotepadLikeController extends Controller
 
         $notepad = Notepad::where('uuid', $uuid)->firstOrFail();
 
-        $exists = NotepadLikes::where('user_id', $user->id)
+        $exists = NotepadLike::where('user_id', $user->id)
             ->where('notepad_id', $notepad->uuid)
             ->exists();
 
@@ -23,7 +23,7 @@ class NotepadLikeController extends Controller
             return response()->json(['success' => false, 'message' => '이미 찜한 노트입니다.']);
         }
 
-        NotepadLikes::create([
+        NotepadLike::create([
             'user_id' => $user->id,
             'notepad_id' => $notepad->uuid,
         ]);
@@ -37,7 +37,7 @@ class NotepadLikeController extends Controller
 
         $notepad = Notepad::where('uuid', $uuid)->firstOrFail();
 
-        NotepadLikes::where('user_id', $user->id)
+        NotepadLike::where('user_id', $user->id)
             ->where('notepad_id', $notepad->uuid)
             ->delete();
 
@@ -48,7 +48,7 @@ class NotepadLikeController extends Controller
     public function GetNotepadsLike() {
         $user = auth()->user();
 
-        $likes = NotepadLikes::where('user_id', $user->id)->get('notepad_id');
+        $likes = NotepadLike::where('user_id', $user->id)->get('notepad_id');
 
         return response()->json(['success' => true, 'likes' => $likes]);
     }

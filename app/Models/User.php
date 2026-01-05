@@ -34,7 +34,7 @@ class User extends Authenticatable
     }
 
     public function likedNotepads() {
-        return $this->hasMany(NotepadLikes::class);
+        return $this->hasMany(NotepadLike::class);
     }
 
     protected $fillable = [

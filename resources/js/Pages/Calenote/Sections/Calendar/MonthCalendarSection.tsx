@@ -6,6 +6,8 @@ import {EventsData} from "../CalenoteSectionsData";
 import {router} from "@inertiajs/react";
 
 interface SideBarSectionProps {
+    getActiveEventReminder: (eventUuid:string) => Promise<void>;
+    setEventReminder: Dispatch<SetStateAction<number[]>>;
     setEventIdChangeDone: Dispatch<SetStateAction<boolean>>;
     setLoading: Dispatch<SetStateAction<boolean>>;
     setIsHaveEvent: Dispatch<SetStateAction<boolean>>;
@@ -40,7 +42,7 @@ interface EventWithLayout extends EventsData {
     column: number;
 }
 
-export default function MonthCalendarSection({ setEventIdChangeDone, setLoading, setIsHaveEvent, events, IsHaveEvent, firstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
+export default function MonthCalendarSection({ getActiveEventReminder, setEventReminder, setEventIdChangeDone, setLoading, setIsHaveEvent, events, IsHaveEvent, firstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
     const [allDates, setAllDates] = useState<CalendarAtData[]>([]);
 
     const scrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
@@ -218,6 +220,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
             setStartAt(null);
             setEndAt(null);
             setEventTitle("");
+            setEventReminder([]);
             setEventDescription("");
             setEventColor("bg-blue-500");
             return;
@@ -335,6 +338,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                 setStartAt(null);
                 setEndAt(null);
                 setEventTitle("");
+                setEventReminder([]);
                 setEventDescription("");
                 setEventColor("bg-blue-500");
             }
@@ -694,6 +698,7 @@ export default function MonthCalendarSection({ setEventIdChangeDone, setLoading,
                                                             onClick={() => {
                                                                 if(includeEvent.uuid !== eventId) {
                                                                     setEventIdChangeDone(false);
+                                                                    getActiveEventReminder(includeEvent.uuid);
                                                                     setEventId(includeEvent.uuid);
 
                                                                     router.visit(`/calenote/calendar/${includeEvent.uuid}`, {

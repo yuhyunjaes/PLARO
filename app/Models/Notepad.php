@@ -20,7 +20,7 @@ class Notepad extends Model
     }
 
     public function likes() {
-        return $this->hasMany(NotepadLikes::class, 'notepad_id', 'uuid');
+        return $this->hasMany(NotepadLike::class, 'notepad_id', 'uuid');
     }
 
     protected $fillable = [

@@ -1,6 +1,7 @@
 import {Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
 
 interface WeekCalendarSectionProps {
+    setEventReminder: Dispatch<SetStateAction<number[]>>;
     eventId: string | null;
     setEventDescription: Dispatch<SetStateAction<string>>;
     setEventColor: Dispatch<SetStateAction<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">>;
@@ -20,6 +21,7 @@ interface WeekCalendarSectionProps {
 }
 
 export default function WeekAndDayCalendarSection({
+    setEventReminder,
     eventId,
     setEventDescription,
     setEventColor,
@@ -195,6 +197,7 @@ export default function WeekAndDayCalendarSection({
             setStartAt(null);
             setEndAt(null);
             setEventTitle("");
+            setEventReminder([]);
             setEventDescription("");
             setEventColor("bg-blue-500");
             return;
@@ -253,6 +256,7 @@ export default function WeekAndDayCalendarSection({
             setStartAt(null);
             setEndAt(null);
             setEventTitle("");
+            setEventReminder([]);
             setEventDescription("");
             setEventColor("bg-blue-500");
         }
