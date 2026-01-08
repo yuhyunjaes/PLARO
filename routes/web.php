@@ -176,7 +176,9 @@ Route::middleware('web')->group(function () {
         Route::get('/api/events', [EventController::class, 'GetEvents'])->name('event.get');
         Route::post('/api/event/{uuid}/reminders', [EventReminderController::class, 'StoreEventReminder'])->name('event.reminder.store');
         Route::get('/api/event/{uuid}/reminders', [EventReminderController::class, 'getActiveEventReminder'])->name('event.active.reminder.get');
+        Route::put('/api/event/{uuid}/reminders', [EventReminderController::class, 'updateEventRemindersRead'])->name('event.reminders.read.update');
         Route::get('/api/event/reminders', [EventReminderController::class, 'getEventReminders'])->name('event.reminder.get');
+        Route::put('/api/event/{uuid}/reminders/{id}', [EventReminderController::class, 'updateEventReminderRead'])->name('event.reminder.read.update');
 
         // --------------------
         // Gemini API

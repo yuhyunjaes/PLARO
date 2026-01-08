@@ -604,6 +604,36 @@ export default function MonthCalendarSection({ getActiveEventReminder, setEventR
         return layoutEvents;
     };
 
+    const handleEventClick = async (includeEvent: EventsData) => {
+        if (includeEvent.uuid === eventId) return;
+
+        setLoading(true);
+        setEventIdChangeDone(false);
+
+        try {
+            await getActiveEventReminder(includeEvent.uuid);
+            setEventId(includeEvent.uuid);
+            setEventTitle(includeEvent.title);
+            setEventDescription(includeEvent.description);
+            setEventColor(includeEvent.color);
+            setStartAt(new Date(includeEvent.start_at));
+            setEndAt(new Date(includeEvent.end_at));
+
+            return new Promise<void>((resolve) => {
+                router.visit(`/calenote/calendar/${includeEvent.uuid}`, {
+                    method: "get",
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => resolve(),
+                });
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     return (
         <div className="border border-gray-300 dark:border-gray-800 rounded-xl flex-1 flex flex-col overflow-hidden">
@@ -706,30 +736,7 @@ export default function MonthCalendarSection({ getActiveEventReminder, setEventR
                                                     >
                                                         <div
                                                             onClick={async () => {
-                                                                if(includeEvent.uuid !== eventId) {
-                                                                    setLoading(true);
-                                                                    try {
-                                                                        setEventIdChangeDone(false);
-                                                                        await getActiveEventReminder(includeEvent.uuid);
-                                                                        setEventId(includeEvent.uuid);
-
-                                                                        router.visit(`/calenote/calendar/${includeEvent.uuid}`, {
-                                                                            method: "get",
-                                                                            preserveState: true,
-                                                                            preserveScroll: true,
-                                                                        });
-
-                                                                        setEventTitle(includeEvent.title);
-                                                                        setEventDescription(includeEvent.description);
-                                                                        setEventColor(includeEvent.color);
-                                                                        setStartAt(new Date(includeEvent.start_at));
-                                                                        setEndAt(new Date(includeEvent.end_at));
-                                                                    } catch (err) {
-
-                                                                    } finally {
-                                                                        setLoading(false);
-                                                                    }
-                                                                }
+                                                                await handleEventClick(includeEvent);
                                                             }}
                                                             className={`h-full rounded overflow-hidden flex cursor-pointer transition-opacity hover:opacity-80`}
                                                         >

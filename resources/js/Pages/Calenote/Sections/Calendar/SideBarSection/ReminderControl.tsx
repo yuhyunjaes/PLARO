@@ -155,6 +155,7 @@ export default function ReminderControl({ eventReminder, setEventReminder }:Remi
                                     <button onMouseDown={() => {
                                         if(!eventReminder.includes(reminder)) {
                                             setEventReminder(pre => [...pre, reminder]);
+                                            setReminderControl("");
                                         }
                                     }} key={reminder} className="p-2 w-full text-xs text-left hover:bg-gray-950/10 dark:hover:bg-gray-600 rounded">
                                         {reminderChangeKorean(reminder)}

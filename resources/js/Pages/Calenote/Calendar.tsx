@@ -32,10 +32,6 @@ interface CalendarProps {
     setNow: Dispatch<SetStateAction<Date>>;
 }
 
-interface TemporarySaveEvent extends EventsData {
-    index: number;
-}
-
 export default function Calendar({ event, auth, mode, year, month, day, events, setEvents, reminders, setReminders, now, setNow, getEventDone, setGetEventDone } : CalendarProps) {
     const ui = useContext(GlobalUIContext);
 
@@ -103,62 +99,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         }
     }, [event]);
 
-    const [temporarySaveEvent, setTemporarySaveEvent] = useState<TemporarySaveEvent[]>([]);
-
-    const activeEventFirstChange = useCallback(() => {
-        if(temporarySaveEvent[0]) {
-            const saved = temporarySaveEvent[0];
-
-            setEvents(prev => {
-                const filtered = prev.filter(item => item.uuid !== saved.uuid);
-
-                const insertIndex = Math.min(
-                    Math.max(saved.index, 0),
-                    filtered.length
-                );
-
-                const next = [...filtered];
-                next.splice(insertIndex, 0, saved);
-
-                return next;
-            });
-
-            setTemporarySaveEvent([]);
-        }
-
-        if (!event || !getEventDone) return;
-
-        let nextCurrent: TemporarySaveEvent | null = null;
-
-        setEvents(prev => {
-            const index = prev.findIndex(item => item.uuid === event);
-            if (index === -1) {
-                return prev;
-            }
-
-            const current = prev[index];
-            if (!current) {
-                return prev;
-            }
-
-            nextCurrent = {
-                ...current,
-                index,
-            };
-
-            setTemporarySaveEvent([nextCurrent]);
-
-            return [
-                current,
-                ...prev.filter(item => item.uuid !== current.uuid)
-            ];
-        });
-    }, [event, temporarySaveEvent, getEventDone]);
-
-    useEffect(() => {
-        activeEventFirstChange();
-    }, [event, getEventDone]);
-
     const saveEvent:()=>Promise<void> = useCallback(async ():Promise<void> => {
         if(!startAt || !endAt || !eventColor || eventId) return;
         try {
@@ -197,7 +137,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
     const saveEventReminder = useCallback(async (eventUuid: string): Promise<void> => {
         if(!eventUuid) return;
-
         try {
             const res = await axios.post(`/api/event/${eventUuid}/reminders`, {
                 seconds: eventReminder,
@@ -251,24 +190,11 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                             : event
                     )
                 );
-
-                if(temporarySaveEvent[0] && temporarySaveEvent[0].uuid === eventId) {
-                    const currentTemporarySaveEvent: TemporarySaveEvent = {
-                        ...temporarySaveEvent[0],
-                        title: eventTitle,
-                        start_at: startAt,
-                        end_at: endAt,
-                        description: eventDescription,
-                        color: eventColor,
-                    };
-
-                    setTemporarySaveEvent([currentTemporarySaveEvent])
-                }
             }
         } catch (err) {
             console.error(err);
         }
-    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone, temporarySaveEvent]);
+    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone]);
 
     useEffect(() => {
         if (!isDragging) {
@@ -299,9 +225,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         try {
             const res = await axios.delete(`/api/events/${eventId}`);
             if(res.data.success) {
-                if(temporarySaveEvent[0] && temporarySaveEvent[0].uuid === eventId) {
-                    setTemporarySaveEvent([]);
-                }
 
                 setReminders(pre => pre.filter(item => item.event_id !== eventId));
 
@@ -328,7 +251,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         } catch (err) {
             console.error(err);
         }
-    }, [eventId, temporarySaveEvent]);
+    }, [eventId]);
 
     const [firstCenter, setFirstCenter] = useState<boolean>(false);
     const [IsHaveEvent, setIsHaveEvent] = useState<boolean>(false);
@@ -387,7 +310,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         } catch (err) {
             console.error(err);
         } finally {
-            setGetDone(true);
+            setTimeout(() => {setGetDone(true);}, 1);
             setLoading(false);
         }
     }
@@ -411,6 +334,34 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     useEffect(() => {
         getActiveEvent();
     }, []);
+
+    const updateEventReminderReadReset = useCallback(async () => {
+        if(!eventId || !eventIdChangeDone || !getEventDone || !getDone) return;
+
+        try {
+            const res = await axios.put(`/api/event/${eventId}/reminders`);
+            if(res.data.success) {
+                console.log('update');
+                setReminders(prev =>
+                        prev.map(pre => pre.event_id === eventId
+                                ? { ...pre, read: 0 }
+                                : pre
+                        )
+                );
+            } else {
+                setAlertSwitch(true);
+                setAlertType(res.data.type);
+                setAlertMessage(res.data.message);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }, [eventId, eventIdChangeDone, getEventDone, getDone]);
+
+    useEffect(() => {
+        if(!startAt || !endAt) return;
+        updateEventReminderReadReset();
+    }, [startAt, endAt]);
 
     useEffect(() => {
         if (!eventId || !getDone) return;

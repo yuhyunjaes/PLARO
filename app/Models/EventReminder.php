@@ -17,5 +17,6 @@ class EventReminder extends Model
         'user_id',
         'event_id',
         'seconds',
+        'read'
     ];
 }

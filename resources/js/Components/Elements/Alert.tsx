@@ -1,4 +1,6 @@
 import {Dispatch, SetStateAction, useEffect, useState} from "react";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faX} from "@fortawesome/free-solid-svg-icons";
 
 interface AlertProps {
     close: Dispatch<SetStateAction<boolean>>;
@@ -42,7 +44,7 @@ export default function Alert({ close, type, message, width = 0 }: AlertProps) {
     }, []);
 
     useEffect(() => {
-        if(!timer || timer < 100) return;
+        if (timer < 100) return;
         setTimeout(() => {
             close(false);
         }, 500);
@@ -50,10 +52,14 @@ export default function Alert({ close, type, message, width = 0 }: AlertProps) {
 
     return (
         <div
-            className={`fixed z-[5] right-0 ${style.background} ${style.color} p-5 shadow-lg ${(timer >= 100) ? "animate-out-modal" : "animate-in-modal"}`}
+            className={`fixed flex justify-between items-center z-[5] right-0 ${style.background} ${style.color} p-5 shadow-lg ${(timer >= 100) ? "animate-out-modal" : "animate-in-modal"}`}
             style={{width: `calc(100% - ${width}px`}}
         >
             {message}
+
+            <button className="cursor-pointer" onClick={() => {setTimer(100)}}>
+                <FontAwesomeIcon icon={faX} />
+            </button>
             <div className="absolute left-0 bottom-0 h-[5px] bg-white" style={{width: `${timer}%`}}></div>
         </div>
     );

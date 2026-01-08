@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->uuid('event_id');
             $table->integer('seconds');
+            $table->boolean('read')->default(false);
             $table->timestamps();
 
             $table->foreign('event_id')->references('uuid')->on('events')->onDelete('cascade');

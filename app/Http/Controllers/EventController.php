@@ -51,9 +51,19 @@ class EventController extends Controller
         ]);
     }
 
-    public function UpdateEvents(Request $request, $uuid) {
-        $event = Event::where('uuid', $uuid)->where('user_id', Auth::id())->first();
-        if (!$event) return response()->json(['success' => false, 'message' => '이벤트가 존재하지 않습니다.', 'type' => 'danger']);
+    public function UpdateEvents(Request $request, $uuid)
+    {
+        $event = Event::where('uuid', $uuid)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$event) {
+            return response()->json([
+                'success' => false,
+                'message' => '이벤트가 존재하지 않습니다.',
+                'type' => 'danger'
+            ]);
+        }
 
         $startAt = Carbon::parse($request->start_at)
             ->setTimezone('Asia/Seoul')
@@ -71,7 +81,10 @@ class EventController extends Controller
             'color' => $request->color,
         ]);
 
-        return response()->json(['success' => true, 'event' => $event]);
+        return response()->json([
+            'success' => true,
+            'event' => $event,
+        ]);
     }
 
     public function GetActiveEvents($uuid) {
