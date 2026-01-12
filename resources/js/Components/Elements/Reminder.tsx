@@ -111,7 +111,7 @@ export default function Reminder({ title, message, color, uuid, type, url, arr, 
                     </div>
                 </div>
             </div>
-            <div className="absolute left-0 bottom-0 h-[5px] bg-white" style={{width: `${timer}%`}}></div>
+            <div className="absolute w-[calc(100%-7px)] left-[7px] bottom-0 h-[5px] bg-white" style={{width: `${timer}%`}}></div>
         </div>
     );
 }

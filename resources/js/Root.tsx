@@ -160,7 +160,8 @@ export default function Root({ auth, children, ...props }: RootProps) {
                             excludedReminders.push(cur);
                         }
                         return acc;
-                    }, []);
+                    }, [])
+                    .slice(0, 5); // 최대 5개
 
                 if (excludedReminders.length > 0) {
                     excludedReminders.forEach(r => updateReminder(r));

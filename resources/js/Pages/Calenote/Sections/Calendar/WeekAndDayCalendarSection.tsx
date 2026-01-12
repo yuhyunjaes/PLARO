@@ -1,12 +1,14 @@
 import {Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
+import {CalendarAtData, EventsData} from "../CalenoteSectionsData";
 
 interface WeekCalendarSectionProps {
+    handleEventClick: (Event:EventsData) => Promise<void>;
+    events: EventsData[];
     setEventReminder: Dispatch<SetStateAction<number[]>>;
     eventId: string | null;
     setEventDescription: Dispatch<SetStateAction<string>>;
     setEventColor: Dispatch<SetStateAction<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">>;
     setEventTitle: Dispatch<SetStateAction<string>>;
-    mobileView: boolean;
     viewMode: "month" | "week" | "day";
     isDragging: boolean;
     setIsDragging: Dispatch<SetStateAction<boolean>>;
@@ -20,25 +22,33 @@ interface WeekCalendarSectionProps {
     setActiveDay: Dispatch<SetStateAction<number | null>>;
 }
 
+interface EventWithLayout extends EventsData {
+    start_area: number;
+    end_area: number;
+    row: number;
+    column: number;
+}
+
 export default function WeekAndDayCalendarSection({
-                                                      setEventReminder,
-                                                      eventId,
-                                                      setEventDescription,
-                                                      setEventColor,
-                                                      setEventTitle,
-                                                      mobileView,
-                                                      viewMode,
-                                                      isDragging,
-                                                      setIsDragging,
-                                                      startAt,
-                                                      setStartAt,
-                                                      endAt,
-                                                      setEndAt,
-                                                      activeAt,
-                                                      setActiveAt,
-                                                      activeDay,
-                                                      setActiveDay
-                                                  }: WeekCalendarSectionProps) {
+    handleEventClick,
+    events,
+    setEventReminder,
+    eventId,
+    setEventDescription,
+    setEventColor,
+    setEventTitle,
+    viewMode,
+    isDragging,
+    setIsDragging,
+    startAt,
+    setStartAt,
+    endAt,
+    setEndAt,
+    activeAt,
+    setActiveAt,
+    activeDay,
+    setActiveDay
+}: WeekCalendarSectionProps) {
     const [days, setDays] = useState<Date[]>([]);
     const [isMobile, setIsMobile] = useState<boolean>(false);
     const [baseDate, setBaseDate] = useState<null | Date>(null);
@@ -69,16 +79,15 @@ export default function WeekAndDayCalendarSection({
         return d;
     }, [startAt]);
 
-
     const daysCreator = useCallback(() => {
-        if(!activeAt || !activeDay || !viewMode) return;
+        if(!activeAtRef.current || !activeDayRef.current || !viewMode) return;
 
-        const currentBaseDate = new Date(activeAt.getFullYear(), activeAt.getMonth(), activeDay);
+        const currentBaseDate = new Date(activeAtRef.current.getFullYear(), activeAtRef.current.getMonth(), activeDayRef.current);
         setBaseDate(currentBaseDate);
 
         const newDays: Date[] = [];
 
-        const frontAndBack:1 | 2 | 4 = mobileView && viewMode === "week" ? 2 : viewMode === "week" ? 4 : 1;
+        const frontAndBack:1 | 4 = viewMode === "week" ? 4 : 1;
 
         for(let i = -frontAndBack; i <= frontAndBack; i++) {
             const day = new Date(currentBaseDate);
@@ -87,21 +96,26 @@ export default function WeekAndDayCalendarSection({
         }
 
         setDays(newDays);
-    }, [activeAt, activeDay, viewMode]);
+    }, [viewMode]);
 
     useEffect(() => {
         daysCreator();
-    }, [daysCreator]);
+    }, [activeAt, activeDay, viewMode]);
 
-    const center = useCallback(() => {
+    const center = () => {
         const container = scrollRef.current;
         if (!container) return;
 
-        const firstEl = container.querySelector(".first") as HTMLElement | null;
-        if (!firstEl) return;
+        const activeEl = container.querySelector(".first") as HTMLElement | null;
+        if (!activeEl) return;
 
-        container.scrollLeft = firstEl.offsetLeft;
-    }, []);
+        activeEl.scrollIntoView({
+            behavior: "auto",
+            inline: "start",
+            block: "nearest"
+        });
+    };
+
 
     useEffect(() => {
         setTimeout(() => {
@@ -122,6 +136,7 @@ export default function WeekAndDayCalendarSection({
     const scrollTimeoutRef = useRef<number | null>(null);
 
     const handleScroll = useCallback(() => {
+        // week 모드에서는 자동 스크롤 비활성화
         if(!scrollRef.current || !activeAtRef.current || !activeDayRef.current || isScrolling) return;
 
         if (scrollTimeoutRef.current) {
@@ -159,7 +174,7 @@ export default function WeekAndDayCalendarSection({
                 setTimeout(() => setIsScrolling(false), 300);
             } else if (scrollLeft + clientWidth > scrollWidth - threshold) {
                 setIsScrolling(true);
-                const newDay = currentActiveDay + 1; // ref 대신 변수 사용
+                const newDay = currentActiveDay + 1;
                 const daysInCurrentMonth = new Date(currentActiveAt.getFullYear(), currentActiveAt.getMonth() + 1, 0).getDate();
 
                 if (newDay > daysInCurrentMonth) {
@@ -274,6 +289,12 @@ export default function WeekAndDayCalendarSection({
         }
     }, [isDragging]);
 
+    const subtractDay:(date:Date) => void = (date:Date):Date => {
+        const d = new Date(date.getTime());
+        d.setDate(d.getDate() - 1);
+        return d;
+    }
+
     const handleDateMoveOut = useCallback((e: MouseEvent) => {
         if (!isDragging || !scrollRef.current || isMobile) return;
 
@@ -286,10 +307,13 @@ export default function WeekAndDayCalendarSection({
         ) return;
 
         let weekX: number;
+        let XSwitch: string;
         if (e.clientX < rect.left) {
-            weekX = viewMode === "week" ? 1 : 0;
+            weekX = viewMode === "week" ? 1 : 1;
+            XSwitch = "left";
         } else if (e.clientX > rect.right) {
             weekX = viewMode === "week" ? 7 : 2;
+            XSwitch = "right";
         } else {
             return;
         }
@@ -309,11 +333,11 @@ export default function WeekAndDayCalendarSection({
         const slot = weekX === 1 ? slotParent[0] : slotParent[slotParent.length - 1];
         if(!slot?.dataset.date) return;
 
-        const dateStr:Date | undefined = new Date(slot.dataset.date);
+        const dateStr:Date | void = (XSwitch === "right" && viewMode === "day") ? subtractDay(new Date(slot.dataset.date)) :new Date(slot.dataset.date);
         if(!dateStr) return;
 
         setEndAt(add15Minutes(dateStr));
-    }, [isDragging, isMobile, viewMode]);
+    }, [isDragging, viewMode]);
 
     const startInterval = useCallback(() => {
         if (intervalRef.current !== null) return;
@@ -407,10 +431,179 @@ export default function WeekAndDayCalendarSection({
         }
     }, [handleMouseMove, handleMouseUp]);
 
+    const findIncludeDate = useCallback(( firstDate: Date, lastDate: Date, events: EventsData[] ): (EventsData & { start_area: number; end_area: number })[] => {
+        const GRID_COLS = viewMode === "week" ? 9 : 3;
+
+        const weekStartDate = new Date(
+            firstDate.getFullYear(),
+            firstDate.getMonth(),
+            firstDate.getDate(),
+            0, 0, 0, 0
+        );
+
+        const weekEndDate = new Date(
+            lastDate.getFullYear(),
+            lastDate.getMonth(),
+            lastDate.getDate() + 1,
+            0, 0, 0, 0
+        );
+
+        const weekStart = weekStartDate.getTime();
+        const weekEnd = weekEndDate.getTime();
+
+        const result: (EventsData & { start_area: number; end_area: number })[] = [];
+
+        for (const event of events) {
+            const eventStartDate = new Date(event.start_at);
+            const eventEndDate = new Date(event.end_at);
+
+            const eventStart = eventStartDate.getTime();
+            const eventEnd = eventEndDate.getTime();
+
+            const isOverlap =
+                eventStart < weekEnd && eventEnd > weekStart;
+
+            if (!isOverlap) continue;
+
+            const eventStartDay = new Date(
+                eventStartDate.getFullYear(),
+                eventStartDate.getMonth(),
+                eventStartDate.getDate(),
+                0, 0, 0, 0
+            ).getTime();
+
+            const rawStartArea = Math.floor(
+                (eventStartDay - weekStart) / 86400000
+            );
+
+            const start_area = Math.min(GRID_COLS - 1, Math.max(0, rawStartArea));
+
+            const isEventEndMidnight =
+                eventEndDate.getHours() === 0 &&
+                eventEndDate.getMinutes() === 0 &&
+                eventEndDate.getSeconds() === 0 &&
+                eventEndDate.getMilliseconds() === 0;
+
+            const eventLastDay = new Date(
+                eventEndDate.getFullYear(),
+                eventEndDate.getMonth(),
+                eventEndDate.getDate() - (isEventEndMidnight ? 1 : 0),
+                0, 0, 0, 0
+            ).getTime();
+
+            const weekLastDay = new Date(
+                lastDate.getFullYear(),
+                lastDate.getMonth(),
+                lastDate.getDate(),
+                0, 0, 0, 0
+            ).getTime();
+
+            const rawEndArea = Math.floor(
+                (weekLastDay - eventLastDay) / 86400000
+            );
+
+            const end_area = Math.min(GRID_COLS - 1, Math.max(0, rawEndArea));
+
+            result.push({
+                ...event,
+                start_area,
+                end_area
+            });
+        }
+
+        return result;
+    }, [ viewMode]);
+
+    const calculateEventLayout = useCallback((events: (EventsData & { start_area: number; end_area: number })[]): EventWithLayout[] => {
+        if (events.length === 0) return [];
+
+        const GRID_COLS = viewMode === "week" ? 9 : 3;
+
+        const rowOccupancy: boolean[][] = [];
+
+        const layoutEvents: EventWithLayout[] = [];
+
+        const sortedEvents = [...events].sort((a, b) => {
+            if (a.start_area !== b.start_area) {
+                return a.start_area - b.start_area;
+            }
+            return (
+                (GRID_COLS - b.start_area - b.end_area) -
+                (GRID_COLS - a.start_area - a.end_area)
+            );
+        });
+
+        for (const event of sortedEvents) {
+            const eventWidth = GRID_COLS - event.start_area - event.end_area;
+            let placed = false;
+
+            for (let row = 0; row < rowOccupancy.length; row++) {
+                const rowData = rowOccupancy[row];
+                if (!rowData) continue;
+
+                let canPlace = true;
+
+                for (
+                    let col = event.start_area;
+                    col < event.start_area + eventWidth;
+                    col++
+                ) {
+                    if (rowData[col]) {
+                        canPlace = false;
+                        break;
+                    }
+                }
+
+                if (canPlace) {
+                    for (
+                        let col = event.start_area;
+                        col < event.start_area + eventWidth;
+                        col++
+                    ) {
+                        rowData[col] = true;
+                    }
+
+                    layoutEvents.push({
+                        ...event,
+                        row,
+                        column: event.start_area
+                    });
+
+                    placed = true;
+                    break;
+                }
+            }
+
+            if (!placed) {
+                // 새로운 행 생성
+                const newRow = Array(GRID_COLS).fill(false);
+                for (
+                    let col = event.start_area;
+                    col < event.start_area + eventWidth;
+                    col++
+                ) {
+                    newRow[col] = true;
+                }
+
+                const newRowIndex = rowOccupancy.length;
+                rowOccupancy.push(newRow);
+
+                layoutEvents.push({
+                    ...event,
+                    row: newRowIndex,
+                    column: event.start_area
+                });
+            }
+        }
+
+        return layoutEvents;
+    }, [viewMode]);
+
     return(
         <div className="border border-gray-300 dark:border-gray-800 rounded-xl flex-1 flex flex-row overflow-hidden bg-white dark:bg-[#0d1117]">
             <div className="w-[40px] sm:w-[70px] border-r border-gray-300 dark:border-gray-800 flex flex-col">
-                <div className="min-h-[32px] max-h-[36px] dark:bg-gray-800"></div>
+                <div className="min-h-[36px] lg:min-h-[32px] max-h-[36px] dark:bg-gray-800"></div>
+                <div className="h-[100px]"></div>
                 {Array.from({ length: 24 }, (_, h) => (
                     <div
                         key={h}
@@ -423,25 +616,97 @@ export default function WeekAndDayCalendarSection({
             <div
                 onScroll={handleScroll}
                 ref={scrollRef}
-                className="flex-1 overflow-y-hidden hidden-scroll overflow-x-auto snap-x snap-mandatory flex"
+                className="flex-1 overflow-y-hidden hidden-scroll overflow-x-auto snap-x snap-mandatory flex relative"
             >
+
+                <div className={`${viewMode === "week" ? "w-[calc((100%/7)*9)] grid-cols-9" : "w-[calc((100%)*3)] grid-cols-3"} h-[100px] absolute left-0 top-[36px] lg:top-[32px] text-center overflow-x-hidden overflow-y-auto grid py-5`}>
+                    {(() => {
+                        const first = days[0];
+                        const last = days[days.length - 1];
+                        if (!first || !last) return null;
+
+                        const firstDate = new Date(first.getFullYear(), first.getMonth(), first.getDate());
+                        const lastDate = new Date(last.getFullYear(), last.getMonth(), last.getDate());
+
+                        const rawIncludeEvents = findIncludeDate(firstDate, lastDate, events);
+                        const includeEvents: EventWithLayout[] = calculateEventLayout(rawIncludeEvents);
+
+                        return includeEvents.map((includeEvent) => {
+                            const GRID_COLS = viewMode === "week" ? 9 : 3;
+                            const span = Math.max(1, GRID_COLS - includeEvent.start_area - includeEvent.end_area);
+
+                            let bodyColor = null;
+
+                            switch (includeEvent.color) {
+                                case "bg-red-500":
+                                    bodyColor = "bg-red-500/40";
+                                    break;
+                                case "bg-orange-500":
+                                    bodyColor = "bg-orange-500/40";
+                                    break;
+                                case "bg-yellow-500":
+                                    bodyColor = "bg-yellow-500/40";
+                                    break;
+                                case "bg-green-500":
+                                    bodyColor = "bg-green-500/40";
+                                    break;
+                                case "bg-blue-500":
+                                    bodyColor = "bg-blue-500/40";
+                                    break;
+                                case "bg-purple-500":
+                                    bodyColor = "bg-purple-500/40";
+                                    break;
+                                case "bg-gray-500":
+                                    bodyColor = "bg-gray-500/40";
+                                    break;
+                            }
+
+                            return (
+                                <div
+                                    key={includeEvent.uuid}
+                                    className="pointer-events-auto relative h-[25px]"
+                                    style={{
+                                        gridRow: includeEvent.row + 1,
+                                        gridColumn: `${includeEvent.start_area + 1} / span ${span}`,
+                                        margin: '1px'
+                                    }}
+                                >
+                                    <div
+                                        onClick={async () => {
+                                            if (handleEventClick) {
+                                                await handleEventClick(includeEvent);
+                                            }
+                                        }}
+                                        className={`h-full rounded overflow-hidden flex cursor-pointer transition-opacity hover:opacity-80`}
+                                    >
+                                        <div className={`w-[4px] ${includeEvent.color}`}></div>
+                                        <div className={`${eventId === includeEvent.uuid ? includeEvent.color : bodyColor} flex-1 flex justify-start items-center`}>
+                                            <p className={`text-xs pl-1 truncate ${eventId === includeEvent.uuid ? "text-white" : "text-gray-950"}`}>{includeEvent.title}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        });
+                    })()}
+                </div>
+
                 {days.map((day, index) => {
                     const WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
                     return (
                         <div
                             data-prentdate={day}
                             key={day.getTime()}
-                            className={`${mobileView && viewMode === "week" ? "w-[calc(100%/3)]" : viewMode === "week" ? "w-[calc(100%/7)]" : "w-[calc(100%)]"} h-full flex flex-col snap-start flex-shrink-0 ${
+                            className={`${viewMode === "week" ? "w-[calc(100%/7)]" : "w-[calc(100%)]"} h-full flex flex-col snap-start flex-shrink-0 ${
                                 day.toDateString() === baseDate?.toDateString() ? "active" : ""
-                            } ${viewMode === "week" ? (index === 0 ? "first" : "") : index === 1 ? "first" : ""}`}
-                        >
-                            <div className="py-2 text-center text-sm dark:bg-gray-800 max-h-[36px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
-                                <span className="text-xs text-gray-500 space-x-1">
-                                    <span>{WEEK_DAYS[day.getDay()]}</span>
-                                    <span>{day.getDate()}</span>
+                            } ${index === 1 ? "first" : ""}`}
+                            >
+                            <div className="py-2 text-center text-sm dark:bg-gray-800 max-h-[36px] lg:max-h-[72px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
+                                <span className="text-xs text-gray-500 flex flex-col lg:flex-row gap-1">
+                                    <span className="">{WEEK_DAYS[day.getDay()]}</span>
+                                    <span className="">{day.getDate()}</span>
                                 </span>
                             </div>
-
+                            <div className="h-[100px]"></div>
                             <div className="flex-1 grid">
                                 {Array.from({ length: 24 }, (_, hour) => (
                                     <div

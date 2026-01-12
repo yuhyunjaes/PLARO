@@ -9,6 +9,9 @@ import {EventsData, ReminderData, ReminderEventsData} from "../CalenoteSectionsD
 import ReminderView from "./SideBarSection/ReminderView";
 
 interface SideBarSectionProps {
+    sideBarToggle: boolean;
+    setSideBarToggle: Dispatch<SetStateAction<boolean>>;
+    handleEventClick: (Event:EventsData) => Promise<void>;
     reminders: ReminderData[];
     now: Date;
     events: EventsData[];
@@ -33,7 +36,7 @@ interface SideBarSectionProps {
     setEndAt: Dispatch<SetStateAction<Date | null>>;
 }
 
-export default function SideBarSection({ reminders, now, events, eventReminder, setEventReminder, deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
+export default function SideBarSection({ sideBarToggle, setSideBarToggle, handleEventClick, reminders, now, events, eventReminder, setEventReminder, deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
     const [onlyOneClick, setOnlyOneClick] = useState(false);
     useEffect(() => {
         if(eventId && onlyOneClick) {
@@ -43,7 +46,7 @@ export default function SideBarSection({ reminders, now, events, eventReminder, 
 
     return (
         <div
-            className={`${sideBar <= 0 ? "hidden" : "flex-1"} border max-h-[calc(100vh-(70px+2.5rem))] sticky top-[1.25rem] bg-white dark:bg-[#0d1117] border-gray-300 dark:border-gray-800 rounded-xl normal-text user-select-none space-y-5`}
+            className={`w-[250px] ${sideBar <= 0 ? (sideBarToggle ? "fixed overflow-x-hidden overflow-y-auto right-5 pointer-events-auto opacity-100 duration-300 transition-all" : "duration-300 transition-all opacity-0 -right-[100%] fixed pointer-events-none") : "sticky top-[1.25rem]"} border max-h-[calc(100vh-(70px+2.5rem))] bg-white dark:bg-[#0d1117] border-gray-300 dark:border-gray-800 rounded-xl normal-text user-select-none space-y-5`}
         >
             {(eventId || (startAt && endAt)) ? (
                     <>
@@ -52,7 +55,7 @@ export default function SideBarSection({ reminders, now, events, eventReminder, 
                         <EventDescriptionControl updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
                         <EventColorControl eventColor={eventColor} setEventColor={setEventColor} />
                         <ReminderControl eventReminder={eventReminder} setEventReminder={setEventReminder} />
-                        <div className="px-5">
+                        <div className="px-5 pb-5">
                         {
                             (!eventId && !onlyOneClick) ? (
                                 <button onClick={() => {
@@ -71,7 +74,7 @@ export default function SideBarSection({ reminders, now, events, eventReminder, 
                     </>
                 ) : (
                     <div className="p-5 space-y-5 h-full overflow-y-auto overflow-x-hidden relative flex flex-col">
-                        <ReminderView events={events} now={now} reminders={reminders} />
+                        <ReminderView handleEventClick={handleEventClick} events={events} now={now} reminders={reminders} />
                     </div>
             )}
 

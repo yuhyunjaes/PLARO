@@ -8,6 +8,7 @@ import { useContext } from "react";
 import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 
 interface SideBarSectionProps {
+    handleEventClick: (Event:EventsData) => Promise<void>;
     getActiveEventReminder: (eventUuid:string) => Promise<void>;
     setEventReminder: Dispatch<SetStateAction<number[]>>;
     setEventIdChangeDone: Dispatch<SetStateAction<boolean>>;
@@ -43,7 +44,7 @@ interface EventWithLayout extends EventsData {
     column: number;
 }
 
-export default function MonthCalendarSection({ getActiveEventReminder, setEventReminder, setEventIdChangeDone, setIsHaveEvent, events, IsHaveEvent, firstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
+export default function MonthCalendarSection({ handleEventClick, getActiveEventReminder, setEventReminder, setEventIdChangeDone, setIsHaveEvent, events, IsHaveEvent, firstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -130,18 +131,20 @@ export default function MonthCalendarSection({ getActiveEventReminder, setEventR
 
     }, [isScrolling]);
 
-    const center:()=>void = () => {
+    const center = () => {
         const container = scrollRef.current;
-        if (!container || !isScrolling) return;
+        if (!container) return;
 
         const firstEl = container.querySelectorAll(".count-2")[0] as HTMLElement | null;
+
         if (!firstEl) return;
 
-        const rect = firstEl.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
-
-        container.scrollTop = rect.top - containerRect.top;
+        firstEl.scrollIntoView({
+            behavior: "auto",
+            block: "start"
+        });
     };
+
 
     useEffect(() => {
         requestAnimationFrame(() => { center(); });
@@ -602,36 +605,6 @@ export default function MonthCalendarSection({ getActiveEventReminder, setEventR
         }
 
         return layoutEvents;
-    };
-
-    const handleEventClick = async (includeEvent: EventsData) => {
-        if (includeEvent.uuid === eventId) return;
-
-        setLoading(true);
-        setEventIdChangeDone(false);
-
-        try {
-            await getActiveEventReminder(includeEvent.uuid);
-            setEventId(includeEvent.uuid);
-            setEventTitle(includeEvent.title);
-            setEventDescription(includeEvent.description);
-            setEventColor(includeEvent.color);
-            setStartAt(new Date(includeEvent.start_at));
-            setEndAt(new Date(includeEvent.end_at));
-
-            return new Promise<void>((resolve) => {
-                router.visit(`/calenote/calendar/${includeEvent.uuid}`, {
-                    method: "get",
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => resolve(),
-                });
-            });
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
     };
 
 

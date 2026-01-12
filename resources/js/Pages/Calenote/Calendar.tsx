@@ -11,6 +11,8 @@ import axios from "axios";
 import {EventsData, ReminderData, ReminderEventsData} from "./Sections/CalenoteSectionsData";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../Providers/GlobalUIContext";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faAngleLeft, faAngleRight, faPlus} from "@fortawesome/free-solid-svg-icons";
 
 
 interface CalendarProps {
@@ -48,8 +50,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
-
-    const [mobileView, setMobileView] = useState<boolean>(():boolean => (window.innerWidth <= 640));
 
     const [startAt, setStartAt] = useState<Date | null>(null);
     const [endAt, setEndAt] = useState<Date | null>(null);
@@ -341,7 +341,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         try {
             const res = await axios.put(`/api/event/${eventId}/reminders`);
             if(res.data.success) {
-                console.log('update');
                 setReminders(prev =>
                         prev.map(pre => pre.event_id === eventId
                                 ? { ...pre, read: 0 }
@@ -379,16 +378,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             setEventColor("bg-blue-500");
         }
     }, [eventId, startAt, endAt, getDone]);
-
-    const handleResize = () => {
-        setMobileView(window.innerWidth <= 640);
-    }
-
-    useEffect((): ()=> void => {
-        window.addEventListener("resize", handleResize);
-        handleResize();
-        return ():void => window.removeEventListener("resize", handleResize);
-    }, [handleResize]);
 
     useEffect(() => {
         if (!activeAt) return;
@@ -462,25 +451,67 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         }
     }, [mode]);
 
+    const handleEventClick = async (Event: EventsData) => {
+        if (Event.uuid === eventId) return;
+
+        setLoading(true);
+        setEventIdChangeDone(false);
+
+        try {
+            await getActiveEventReminder(Event.uuid);
+            setEventId(Event.uuid);
+            setEventTitle(Event.title);
+            setEventDescription(Event.description);
+            setEventColor(Event.color);
+            setStartAt(new Date(Event.start_at));
+            setEndAt(new Date(Event.end_at));
+
+            router.visit(`/calenote/calendar/${Event.uuid}`, {
+                method: "get",
+                preserveState: true,
+                preserveScroll: true,
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <>
             <Head title="Calendar"/>
             <div className="min-h-full bg-gray-100 dark:bg-gray-950 relative flex flex-col">
                 <div className="flex-1 flex px-5 gap-5 flex-row py-5">
-                    <div className="w-[1150px] max-w-[1150px] flex flex-col gap-5">
+                    <div className={`flex-1 flex flex-col gap-5`}>
                         <CalendarControlSection setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay}/>
                         {
                             viewMode === "month" && (
-                                <MonthCalendarSection getActiveEventReminder={getActiveEventReminder} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} setIsHaveEvent={setIsHaveEvent} events={events} IsHaveEvent={IsHaveEvent} firstCenter={firstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                                <MonthCalendarSection handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} setIsHaveEvent={setIsHaveEvent} events={events} IsHaveEvent={IsHaveEvent} firstCenter={firstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
                             )
                         }
                         {
                             (viewMode === "week" || viewMode === "day") && (
-                                <WeekAndDayCalendarSection setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} mobileView={mobileView} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
+                                <WeekAndDayCalendarSection handleEventClick={handleEventClick} events={events} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
                             )
                         }
                     </div>
-                    <SideBarSection reminders={reminders} now={now} events={events} eventReminder={eventReminder} setEventReminder={setEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                    {
+                        sideBarToggle ? (
+                            <button onClick={() => {
+                                setSideBarToggle(false);
+                            }} className="fixed block sm:hidden bottom-0 cursor-pointer right-[250px] bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-10 rounded-full text-white font-semibold m-[25px] sm:m-[50px]">
+                                <FontAwesomeIcon icon={faAngleRight} />
+                            </button>
+                        ) : (
+                            <button onClick={() => {
+                                setSideBarToggle(true);
+                            }} className="fixed block sm:hidden bottom-0 cursor-pointer right-0 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-10 rounded-full text-white font-semibold m-[25px] sm:m-[50px]">
+                                <FontAwesomeIcon icon={faAngleLeft} />
+                            </button>
+                        )
+                    }
+                    <SideBarSection sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} eventReminder={eventReminder} setEventReminder={setEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
                 </div>
             </div>
         </>

@@ -143,7 +143,7 @@ export default function ReminderControl({ eventReminder, setEventReminder }:Remi
                 />
 
                 {reminderSelector ?
-                    <div className="absolute w-[200px] top-0 right-[calc(100%+0.5rem)] rounded bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800">
+                    <div className="absolute w-[200px] top-[34px] sm:top-0 sm:right-[calc(100%+0.5rem)] rounded bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800">
 
 
                         {(() => {
@@ -171,7 +171,7 @@ export default function ReminderControl({ eventReminder, setEventReminder }:Remi
                         {reminderChangeKorean(reminder)}
                         <button onClick={() => {
                             setEventReminder(pre => pre.filter(item => item !== reminder));
-                        }} className="text-[10px] hidden group-hover:block">
+                        }} className="text-[10px] block sm:hidden group-hover:block">
                             <FontAwesomeIcon icon={faX} />
                         </button>
                     </div>

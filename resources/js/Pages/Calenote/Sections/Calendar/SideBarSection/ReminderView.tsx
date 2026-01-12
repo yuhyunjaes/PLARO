@@ -4,11 +4,12 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faClock} from "@fortawesome/free-solid-svg-icons";
 
 interface ReminderViewProps {
+    handleEventClick: (Event:EventsData) => Promise<void>;
     events: EventsData[];
     now: Date;
     reminders: ReminderData[];
 }
-export default function ReminderView({ events, now, reminders }:ReminderViewProps) {
+export default function ReminderView({ handleEventClick, events, now, reminders }:ReminderViewProps) {
     const [searchReminder, setSearchReminder] = useState<string>("");
     const koreanDate:String[] = [
         "일",
@@ -37,7 +38,10 @@ export default function ReminderView({ events, now, reminders }:ReminderViewProp
                     </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-5">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-5 relative">
+                {events.length <= 0 ? (
+                    <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold w-full text-center">아직 등록된 이벤트가 없어요.</p>
+                ) : ""}
                 {(() => {
                     const afterNowEvents: EventsData[] = events.filter(event => {
                         const eventDate = new Date(event.start_at);
@@ -88,11 +92,21 @@ export default function ReminderView({ events, now, reminders }:ReminderViewProp
                                         const eventStartIncludeAfterNowEventReminder:ReminderData[] = reminders.filter(reminder => reminder.event_id === eventStartIncludeAfterNowEvent.uuid).sort((a, b) => b.seconds - a.seconds);
 
                                         return(
-                                            <div key={index} className="flex flex-row">
-                                                <div className={`w-[4px] ${eventStartIncludeAfterNowEvent.color} rounded`}></div>
+                                            <div onClick={async () => {
+                                                await handleEventClick(eventStartIncludeAfterNowEvent);
+                                            }} key={index} className="flex flex-row py-2 bg-transparent transition-colors duration-300 cursor-pointer hover:bg-gray-200/40 dark:hover:bg-gray-800/40 rounded">
+                                                <div className={`w-[4px] ${eventStartIncludeAfterNowEvent.color} rounded shrink-0`}></div>
                                                 <div className="flex-1 pl-2 flex flex-row gap-2">
                                                     <div className="flex-1">
-                                                        <p className={`text-sm font-semibold ${eventStartIncludeAfterNowEvent.title ? "normal-text" : "text-gray-500"}`}>{eventStartIncludeAfterNowEvent.title ? eventStartIncludeAfterNowEvent.title : "이벤트 제목"}</p>
+                                                        <p
+                                                            className={`text-sm font-semibold ${
+                                                                eventStartIncludeAfterNowEvent.title ? "normal-text" : "text-gray-500"
+                                                            } truncate`}
+                                                        >
+                                                            {eventStartIncludeAfterNowEvent.title
+                                                                ? eventStartIncludeAfterNowEvent.title
+                                                                : "이벤트 제목"}
+                                                        </p>
                                                         <p className="text-gray-500 text-xs font-semibold">
                                                         <span>
                                                             {startAt.getFullYear()}.
