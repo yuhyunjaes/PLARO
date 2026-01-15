@@ -10,6 +10,7 @@ import { Categories, AuthUser, Message, Room} from "../../../Types/LifeBotTypes"
 import Alert from "../../../Components/Elements/Alert";
 
 interface LifeBotSectionProps {
+    now: Date;
     getMessages: () => Promise<void>;
     alertSwitch: boolean;
     setAlertSwitch: Dispatch<SetStateAction<boolean>>;
@@ -36,7 +37,7 @@ interface LifeBotSectionProps {
     setRoomCategories: Dispatch<SetStateAction<Categories[]>>;
 }
 
-export default function LifeBotSection({ getMessages, alertSwitch, setAlertSwitch, alertMessage, setAlertMessage, alertType, setAlertType, handleDeleteChatCategories, setNewChat, sideBar, setLoading, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories } : LifeBotSectionProps) {
+export default function LifeBotSection({ now, getMessages, alertSwitch, setAlertSwitch, alertMessage, setAlertMessage, alertType, setAlertType, handleDeleteChatCategories, setNewChat, sideBar, setLoading, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories } : LifeBotSectionProps) {
     const [category, setCategory] = useState<string>("");
     const [categoryToggle, setCategoryToggle] = useState<boolean>(false);
     const [saveMsg, setSaveMsg] = useState<[]>([]);
@@ -90,7 +91,7 @@ export default function LifeBotSection({ getMessages, alertSwitch, setAlertSwitc
                 <FormModal Submit={categorySubmit} toggle={categoryToggle} setToggle={setCategoryToggle} Title="메모장 저장" SubmitText="저장" Label="카테고리" Type="text" Name="category" Id="category" onChange={setCategory} Value={category}/>
             )}
             <MessageList setAlertSwitch={setAlertSwitch} setAlertMessage={setAlertMessage} setAlertType={setAlertType} chatId={chatId} messages={messages} handleNotepad={handleNotepad}/>
-            <ChatInput getMessages={getMessages} setAlertSwitch={setAlertSwitch} setAlertMessage={setAlertMessage} setAlertType={setAlertType} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} setLoading={setLoading} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
+            <ChatInput now={now} getMessages={getMessages} setAlertSwitch={setAlertSwitch} setAlertMessage={setAlertMessage} setAlertType={setAlertType} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} setLoading={setLoading} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
         </main>
     );
 }

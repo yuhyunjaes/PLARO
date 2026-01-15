@@ -11,6 +11,7 @@ import {Room, Message, AuthUser, Notepad, Categories} from "../../../../Types/Li
 import axios from "axios";
 
 interface ChatInputProps {
+    now: Date;
     getMessages: () => Promise<void>;
     setAlertSwitch: Dispatch<SetStateAction<boolean>>;
     setAlertMessage: Dispatch<SetStateAction<any>>;
@@ -35,6 +36,7 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({
+    now,
     getMessages,
     setAlertSwitch,
     setAlertMessage,
@@ -85,7 +87,7 @@ export default function ChatInput({
                 setRoomCategories([]);
             }
         } catch (err) {
-            console.log(err);
+            console.error(err);
         }
     }, [chatId])
 
@@ -102,7 +104,7 @@ export default function ChatInput({
         if (textarea) {
             textarea.style.height = "40px";
         }
-    }, [chatId, setPrompt]);
+    }, [chatId]);
 
     useEffect(() => {
         inputSize();
@@ -182,6 +184,7 @@ export default function ChatInput({
                     contents: [
                         {
                             parts: [
+                                { text: `NOW***${now}***` },
                                 { text: prompts.DEFAULT_PROMPT },
                                 { text: prompts.HISTORY_PROMPT },
                                 { text: `HISTORY-JSON***${historyText}***` },
@@ -201,6 +204,7 @@ export default function ChatInput({
             const decoder = new TextDecoder("utf-8");
 
             let aiCode = "";
+            let eventCode = "";
             let catMatch: RegExpMatchArray | null = null;
             let combined: string = "";
             let fullText: string = "";
@@ -224,12 +228,25 @@ export default function ChatInput({
                         if (text) {
                             combined += text;
 
-                            const match = combined.match(/<<<\[([\s\S]*?)\]>>>/);
-                            if (match) {
-                                catMatch = match; // 마지막 매칭 저장
-                                combined = combined.replace(match[0], "");
+                            // 캘린더 이벤트 패턴 추출: &&&{...}&&&
+                            if (combined.includes("&&&{")) {
+                                const eventMatch = combined.match(/&&&({[\s\S]*?})&&&/);
+                                if (eventMatch && eventMatch[1]) {
+                                    eventCode = eventMatch[1];
+                                    combined = combined.replace(eventMatch[0], "").trim();
+                                }
                             }
 
+                            // 카테고리 추천 패턴 추출: <<<[...]>>>
+                            if (combined.includes("<<<[")) {
+                                const match = combined.match(/<<<\[([\s\S]*?)\]>>>/);
+                                if (match) {
+                                    catMatch = match;
+                                    combined = combined.replace(match[0], "").trim();
+                                }
+                            }
+
+                            // 메모 저장 패턴 추출: ***{...}***
                             if (combined.includes('***{')) {
                                 const jsonStart = combined.indexOf('***{');
                                 fullText = combined.slice(0, jsonStart).trim();
@@ -255,6 +272,7 @@ export default function ChatInput({
                 }
             }
 
+            // 카테고리 추천 처리
             if (catMatch && currentRoomId) {
                 try {
                     const arr = JSON.parse("[" + catMatch[1] + "]");
@@ -274,7 +292,10 @@ export default function ChatInput({
                 fullText = combined.replace(match[0], "").trim();
             }
 
-            if (fullText.trim().length === 0) {
+            if (combined.trim().length === 0 &&
+                !aiCode &&
+                !catMatch &&
+                !eventCode) {
                 setLoad(false);
                 setPrompt("");
                 setLoading(false);
@@ -286,6 +307,7 @@ export default function ChatInput({
                             if(currentRoomId) {
                                 await handleDeleteChatCategories(currentRoomId);
                             }
+                            setMessages([]);
                             router.visit(`/lifebot`, {
                                 method: "get",
                                 preserveState: true,
@@ -334,14 +356,34 @@ export default function ChatInput({
                 }
             }
 
-            // DB 저장
+            let aiMessageId: string | null = null;
+
             if (aiArr.length > 0) {
                 if (aiArr[0]?.id) {
                     await handleNotepad(aiArr[0]);
                 }
-                await saveMessageToDB(currentRoomId, text, fullText, !aiArr[0]?.id ? aiArr : []);
+                aiMessageId = await saveMessageToDB(
+                    currentRoomId,
+                    text,
+                    fullText,
+                    !aiArr[0]?.id ? aiArr : []
+                );
             } else {
-                await saveMessageToDB(currentRoomId, text, fullText, []);
+                aiMessageId = await saveMessageToDB(
+                    currentRoomId,
+                    text,
+                    fullText,
+                    []
+                );
+            }
+
+            if (eventCode && currentRoomId && aiMessageId) {
+                try {
+                    const eventObj = JSON.parse(eventCode);
+                    await handleCalendarEvent(eventObj, aiMessageId);
+                } catch (err) {
+                    console.warn("캘린더 이벤트 JSON 파싱 실패:", err);
+                }
             }
 
         } catch (err) {
@@ -352,19 +394,48 @@ export default function ChatInput({
             setPrompt("");
         }
     }, [
+        now,
         prompt,
         chatId,
         messages,
-        handleNotepad,
-        setChatId,
-        setMessages,
-        setNewChat,
-        setPrompt,
-        setRooms,
-        setLoading,
+        handleNotepad
     ]);
 
-    const saveMessageToDB = async (roomId: string | null, userText: string, aiText: string, arr: any[]) => {
+    const handleCalendarEvent = async (event:{
+        title: string,
+        description: string,
+        start_at: Date,
+        end_at: Date
+    }, id:string) => {
+        if(!event) return;
+        setLoading(true);
+
+        try {
+            const res = await axios.post(`/api/events`, {
+                eventSwitch: "chat",
+                chat_id: id,
+                title: event.title,
+                description: event.description,
+                start_at: event.start_at,
+                end_at: event.end_at,
+            });
+
+            setAlertSwitch(true);
+            setAlertMessage(res.data.message);
+            setAlertType(res.data.type);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const saveMessageToDB = async (
+        roomId: string | null,
+        userText: string,
+        aiText: string,
+        arr: any[]
+    ): Promise<string | null> => {
         try {
             const res = await axios.post("/api/messages", {
                 room_id: roomId,
@@ -397,9 +468,13 @@ export default function ChatInput({
                     if (current) return [current, ...filtered];
                     return prevRooms;
                 });
+
+                return data.ai_id;
             }
+            return null;
         } catch (err) {
             console.error("메시지 저장 오류:", err);
+            return null;
         }
     };
 

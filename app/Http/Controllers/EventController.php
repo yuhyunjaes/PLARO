@@ -34,7 +34,7 @@ class EventController extends Controller
             'start_at' => $startAt,
             'end_at' => $endAt,
             'description' => $request->description,
-            'color' => $request->color,
+            'color' => $eventSwitch ? "bg-blue-500" : $request->color,
         ]);
 
         if (!$event) {
@@ -47,6 +47,8 @@ class EventController extends Controller
 
         return response()->json([
             'success' => true,
+            'message' => "이벤트가 생성되었습니다.",
+            'type' => 'success',
             'event' => $event,
         ]);
     }

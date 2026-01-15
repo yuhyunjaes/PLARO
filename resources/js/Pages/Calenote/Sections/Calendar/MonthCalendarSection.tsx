@@ -16,6 +16,7 @@ interface SideBarSectionProps {
     events: EventsData[];
     IsHaveEvent: boolean;
     firstCenter: boolean;
+    setFirstCenter: Dispatch<SetStateAction<boolean>>;
     eventId: string | null;
     setEventId: Dispatch<SetStateAction<string | null>>;
     setEventDescription: Dispatch<SetStateAction<string>>;
@@ -44,7 +45,7 @@ interface EventWithLayout extends EventsData {
     column: number;
 }
 
-export default function MonthCalendarSection({ handleEventClick, getActiveEventReminder, setEventReminder, setEventIdChangeDone, setIsHaveEvent, events, IsHaveEvent, firstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
+export default function MonthCalendarSection({ handleEventClick, getActiveEventReminder, setEventReminder, setEventIdChangeDone, setIsHaveEvent, events, IsHaveEvent, firstCenter, setFirstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -167,6 +168,7 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
     useEffect(() => {
         if(!firstCenter) return;
         firstCenterFn();
+        setFirstCenter(false);
     }, [firstCenter]);
 
     useEffect(() => {
