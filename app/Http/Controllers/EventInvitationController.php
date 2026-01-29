@@ -86,6 +86,7 @@ class EventInvitationController extends Controller
                 'success' => true,
                 'message' => '초대가 성공적으로 발송되었습니다.',
                 'type' => 'success',
+                'invitationId' => $invitation->id
             ]);
 
         } catch (\Throwable $e) {

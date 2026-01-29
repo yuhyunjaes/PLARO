@@ -57,13 +57,13 @@ export default function SideBarSection({ eventParticipants, setEventParticipants
             {
                 (() => {
                     const IsEditAuthority: "owner" | "editor" | "viewer" | null | undefined = eventParticipants.find(eventParticipant => eventParticipant.user_id === auth.user!.id)?.role;
-                    // 사이드 바 참가자에 owner가 삭제및 수정 기능 만들어야 됨
+
                     return (
                         (eventId || (startAt && endAt)) ? (
                             <>
                                 <EventTitleControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventTitle={eventTitle} setEventTitle={setEventTitle} />
                                 <EventDateViewAndControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
-                                <ParticipantControl disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
+                                <ParticipantControl IsEditAuthority={IsEditAuthority} disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
                                 <EventDescriptionControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
                                 <EventColorControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} eventColor={eventColor} setEventColor={setEventColor} />
                                 <ReminderControl eventReminder={eventReminder} setEventReminder={setEventReminder} />

@@ -91,6 +91,7 @@ export interface EventInvitationsData {
 export interface ParticipantsData {
     user_name: string | null;
     user_id: number | null;
+    invitation_id?: number;
     event_id: string;
     email: string;
     role: "owner" | "editor" | "viewer" | null;

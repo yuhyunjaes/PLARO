@@ -171,7 +171,7 @@ export default function ReminderControl({ eventReminder, setEventReminder }:Remi
                         {reminderChangeKorean(reminder)}
                         <button onClick={() => {
                             setEventReminder(pre => pre.filter(item => item !== reminder));
-                        }} className="text-[10px] block sm:hidden group-hover:block">
+                        }} className="text-[10px] block sm:hidden group-hover:block cursor-pointer">
                             <FontAwesomeIcon icon={faX} />
                         </button>
                     </div>

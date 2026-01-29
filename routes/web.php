@@ -203,6 +203,7 @@ Route::middleware('web')->group(function () {
         // Participant Api
         // --------------------
         Route::get('/api/event/{uuid}/participants', [EventParticipantController::class, 'GetActiveParticipants'])->name('event.active.participant.get');
+        Route::delete('/api/event/participants', [EventParticipantController::class, 'DeleteParticipants'])->name('event.participant.delete');
         Route::post('/api/event/{uuid}/invitations', [EventInvitationController::class, 'StoreInvitation'])->name('event.invitation.store');
 
         // --------------------

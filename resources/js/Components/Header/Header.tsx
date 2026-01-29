@@ -29,19 +29,18 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
 
     useEffect(() => {
         myBoxRef.current = myBox;
-    }, [myBox])
-
-    const handleClickOutside = useCallback((e : any) => {
-        if (myBoxRef.current && profileRef.current && !profileRef.current.contains(e.target)) {
-            setMyBox(false);
-        }
-    }, []);
+    }, [myBox]);
 
     useEffect(() => {
+        const handleClickOutside = (e : any) => {
+            if (myBoxRef.current && profileRef.current && !profileRef.current.contains(e.target)) {
+                setMyBox(false);
+            }
+        };
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [handleClickOutside]);
+    }, []);
 
 
     const handleResize = useCallback(() => {
