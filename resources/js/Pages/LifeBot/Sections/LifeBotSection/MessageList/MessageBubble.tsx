@@ -3,17 +3,16 @@
 import MessageActions from "./MessageActions";
 import { Message, Notepad } from "../../../../../Types/LifeBotTypes";
 import {Dispatch, SetStateAction} from "react";
+import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 
 interface MessageBubbleProps {
-    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
-    setAlertMessage: Dispatch<SetStateAction<any>>;
-    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
+    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     msg: Message;
     handleNotepad: (notepad: Notepad) => Promise<void>;
 }
 
 
-export default function MessageBubble({ msg, handleNotepad, setAlertSwitch, setAlertMessage, setAlertType } : MessageBubbleProps) {
+export default function MessageBubble({ setAlerts, msg, handleNotepad } : MessageBubbleProps) {
     const isUser = msg.role === "user";
 
     return (
@@ -30,7 +29,7 @@ export default function MessageBubble({ msg, handleNotepad, setAlertSwitch, setA
                 {msg.text}
             </div>
 
-            {!isUser && msg.id && <MessageActions msg={msg} handleNotepad={handleNotepad} setAlertSwitch={setAlertSwitch} setAlertMessage={setAlertMessage} setAlertType={setAlertType} />}
+            {!isUser && msg.id && <MessageActions setAlerts={setAlerts} msg={msg} handleNotepad={handleNotepad} />}
         </div>
     );
 }

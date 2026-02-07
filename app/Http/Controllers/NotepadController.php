@@ -10,6 +10,7 @@ use App\Models\ChatMessage;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use TypeError;
 
 class NotepadController extends Controller
 {
@@ -45,93 +46,131 @@ class NotepadController extends Controller
 //    메모장 타이틀 수정
     public function UpdateNotepadTitle($uuid, Request $request)
     {
-        $notepad = Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->first();
-        if(!$notepad) return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.', 'type' => 'danger']);
+        try {
+            $data = $request->validate([
+                'title' => ['required', 'string'],
+            ]);
 
-        $notepad->update([
-            'title' => $request->title
-        ]);
+            DB::transaction(function () use ($uuid, $data) {
+                Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->firstOrFail()->update([
+                    'title' => $data['title'],
+                ]);;
+            });
 
-        return response()->json(['success' => true, 'message' => '메모장 이름이 변경되었습니다.', 'type' => 'success']);
+            return response()->json(['success' => true, 'message' => '메모장 이름이 변경되었습니다.', 'type' => 'success']);
+        } catch (\Throwable $e) {
+            return response()->json(['success'=>false, 'message'=>'메모장을 생성하는 중 오류가 발생했습니다.', 'type'=>'danger']);
+        }
     }
 
     //    메모장 카테고리 수정
     public function UpdateNotepadCategory($uuid, Request $request)
     {
-        $notepad = Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->first();
-        if(!$notepad) return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.', 'type' => 'danger']);
+        try {
+            $data = $request->validate([
+                'category' => ['required', 'string'],
+            ]);
 
-        $notepad->update([
-            'category' => $request->category
-        ]);
+            DB::transaction(function () use ($uuid, $data) {
+                Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->firstOrFail()->update([
+                    'category' => $data['category'],
+                ]);
+            });
 
-        return response()->json(['success' => true, 'message' => '메모장 카테고리가 변경되었습니다.', 'type' => 'success']);
+            return response()->json(['success' => true, 'message' => '메모장 카테고리가 변경되었습니다.', 'type' => 'success']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.', 'type' => 'danger']);
+        }
     }
 
 //    사용자 메모장 카테고리들 가져오기
     public function GetNotepadsByCategory()
     {
-        $categories = Notepad::where('user_id', Auth::id())
-            ->select('category', DB::raw('COUNT(*) as count'))
-            ->groupBy('category')
-            ->orderByDesc('count')
-            ->get();
+        try {
+            $categories = DB::transaction(function () {
+                return Notepad::where('user_id', Auth::id())
+                    ->select('category', DB::raw('COUNT(*) as count'))
+                    ->groupBy('category')
+                    ->orderByDesc('count')
+                    ->get();
+            });
 
-        if($categories) return response()->json(['success' => true, 'categories' => $categories]);
-        return response()->json(['success', false]);
+            return response()->json(['success' => true, 'categories' => $categories]);
+        } catch (TypeError $e) {
+            return response()->json(['success', false, 'message' => '카테고리를 가져오는 중 오류가 발생했습니다.']);
+        }
     }
 
 //    오늘의 사용자 메모장 생성 갯수
     public function GetNotepadsCount()
     {
-        $totalCount = Notepad::where('user_id', Auth::id())->count();
+        try {
+            $totalCount = DB::transaction(function () {
+                return Notepad::where('user_id', Auth::id())->count();
+            });
 
-        $todayCount = Notepad::where('user_id', Auth::id())
-            ->whereDate('created_at', Carbon::today())
-            ->count();
 
-        return response()->json([
-            'success' => true,
-            'total_count' => $totalCount,
-            'today_count' => $todayCount
-        ]);
+            $todayCount = DB::transaction(function () {
+                return Notepad::where('user_id', Auth::id())
+                    ->whereDate('created_at', Carbon::today())
+                    ->count();
+            });
+
+            return response()->json([
+                'success' => true,
+                'total_count' => $totalCount,
+                'today_count' => $todayCount
+            ]);
+        } catch (TypeError $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '사용자 데이터를 가져오는 중 오류가 발생했습니다.',
+                'type' => 'danger'
+            ]);
+        }
     }
 
 //    메모장들 가져오기
     public function GetNotepads(Request $request)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        $query = Notepad::where('user_id', $user->id);
+            $query = Notepad::where('user_id', $user->id);
 
-        if ($request->filled('title')) {
-            $query->where('title', 'like', '%'.$request->query('title').'%');
-        }
+            if ($request->filled('title')) {
+                $query->where('title', 'like', '%'.$request->query('title').'%');
+            }
 
-        if ($request->filled('category')) {
-            $query->where('category', $request->query('category'));
-        }
+            if ($request->filled('category')) {
+                $query->where('category', $request->query('category'));
+            }
 
-        // liked 필터
-        if ($request->boolean('liked')) {
-            $query->whereHas('likes', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+            // liked 필터
+            if ($request->boolean('liked')) {
+                $query->whereHas('likes', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                });
+            }
+
+            $notepads = DB::transaction(function () use ($query) {
+                return $query->orderByDesc('created_at')
+                    ->get()
+                    ->map(function ($n) {
+                        return [
+                            'id' => $n->uuid,
+                            'title' => $n->title,
+                            'content' => $n->content,
+                            'category' => $n->category,
+                            'created_at' => $n->created_at->format('Y-m-d H:i:s'),
+                        ];
+                    });
             });
+
+            return response()->json(['success' => true, 'notepads' => $notepads]);
+        } catch (TypeError $e) {
+            return response()->json(['success' => false, 'message' => '메모장을 가져오는 중 오류가 발생하였습니다.', 'type' => 'danger']);
         }
-
-        $notepads = $query->orderByDesc('created_at')
-            ->get()
-            ->map(function ($n) {
-                return [
-                    'id' => $n->uuid,
-                    'title' => $n->title,
-                    'content' => $n->content,
-                    'category' => $n->category,
-                    'created_at' => $n->created_at->format('Y-m-d H:i:s'),
-                ];
-            });
-
-        return response()->json(['success' => true, 'notepads' => $notepads]);
     }
 
 
@@ -150,44 +189,69 @@ class NotepadController extends Controller
 //    메모장 내용 수정
     public function UpdateNotepads($uuid, Request $request)
     {
-        $notepad = Notepad::where('uuid', $uuid)->first();
-        if(!$notepad) return response()->json(['success' => false]);
+        try {
 
-        $notepad->update([
-            'content' => $request->text
-        ]);
+            DB::transaction(function () use ($uuid, $request) {
+                Notepad::where('uuid', $uuid)->firstOrFail()->update([
+                    'content' => $request->text
+                ]);
+            });
 
-        return response()->json(['success' => true, 'message'=>'메모장이 수정되었습니다.']);
+            return response()->json(['success' => true, 'message'=>'메모장이 수정되었습니다.', 'type' => 'success']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message'=>'메모장이 존재하지 않습니다.', 'type' => 'danger']);
+        }
     }
 
 //    메모장 삭제
     public function DeleteNotepads($uuid) {
-        $notepad = Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->first();
-        if(!$notepad) return response()->json(['success' => false]);
-        $notepad->delete();
-        return response()->json(['success' => true, 'message'=>'메모장이 삭제되었습니다.']);
+        try {
+            DB::transaction(function () use ($uuid) {
+                Notepad::where('uuid', $uuid)->where('user_id', Auth::id())->firstOrFail()->delete();
+            });
+            return response()->json(['success' => true, 'message'=>'메모장이 삭제되었습니다.', 'type' => 'success']);
+        } catch (TypeError $e) {
+            return response()->json(['success' => false, 'message'=>'메모장이 존재하지 않습니다.', 'type' => 'danger']);
+        }
     }
 
 //    메모장 내용 이메일 전송
     public function shareEmail($notepad) {
-        $notepad = Notepad::where('uuid', $notepad)->first();
-        if (!$notepad) {
-            return response()->json(['success' => false]);
+        try {
+            $notepad = Notepad::where('uuid', $notepad)->first();
+            if (!$notepad) {
+                return response()->json(['success' => false]);
+            }
+
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => '로그인 후 이용 가능합니다.', 'type' => 'danger']);
+            }
+
+            $content = $notepad->content ?: "공유된 메모장의 내용이 없습니다.";
+
+            Mail::html(
+                '
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <h2>📒 메모장이 공유되었습니다</h2>
+                <hr>
+                <div style="margin: 12px;background: #f3f4f6;">
+                    ' . $content . '
+                </div>
+            </div>
+    ',
+                function ($message) use ($user, $notepad) {
+                    $message->to($user->email)
+                        ->subject($notepad->title ?: "메모장 공유");
+                }
+            );
+
+            return response()->json(['success' => true, 'message' => '메모장 내용이 이메일로 전송되었습니다.', 'type' => 'success']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => '이메일이 존재하지 않습니다.', 'type' => 'danger']);
         }
-
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => '로그인 후 이용 가능합니다.', 'type' => 'danger']);
-        }
-
-        $content = $notepad->content ?: "공유된 메모장의 내용이 없습니다.";
-
-        Mail::raw($content, function ($message) use ($user, $notepad) {
-            $message->to($user->email)
-                ->subject($notepad->title ?: "메모장 공유");
-        });
-
-        return response()->json(['success' => true, 'message' => '메모장 내용이 이메일로 전송되었습니다', 'type' => 'success']);
     }
 
 }
+
+

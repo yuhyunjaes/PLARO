@@ -1,14 +1,11 @@
 import { createContext, Dispatch, SetStateAction } from "react";
+import {AlertsData} from "../Components/Elements/ElementsData";
 
 export interface GlobalUIContextType {
-    alertSwitch: boolean;
-    alertMessage: string;
-    alertType: "success" | "danger" | "info" | "warning";
+    alerts: AlertsData[];
     loading: boolean;
 
-    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
-    setAlertMessage: Dispatch<SetStateAction<string>>;
-    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
+    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     setLoading: Dispatch<SetStateAction<boolean>>;
 }
 

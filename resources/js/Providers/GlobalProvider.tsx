@@ -1,26 +1,22 @@
 import {ReactNode, useEffect, useState} from "react";
 import { GlobalUIContext } from "./GlobalUIContext";
+import {AlertsData} from "../Components/Elements/ElementsData";
 
 interface GlobalProviderProps {
     children: ReactNode;
 }
 
 export default function GlobalProvider({ children }: GlobalProviderProps) {
-    const [alertSwitch, setAlertSwitch] = useState(false);
-    const [alertMessage, setAlertMessage] = useState<string>("");
-    const [alertType, setAlertType] = useState<"success" | "danger" | "info" | "warning">("success");
     const [loading, setLoading] = useState(false);
+
+    const [alerts, setAlerts] = useState<AlertsData[]>([]);
 
     return (
         <GlobalUIContext.Provider
             value={{
-                alertSwitch,
-                alertMessage,
-                alertType,
+                alerts,
+                setAlerts,
                 loading,
-                setAlertSwitch,
-                setAlertMessage,
-                setAlertType,
                 setLoading,
             }}
         >

@@ -20,9 +20,8 @@ export default function MonthCreator({ now, date, scrollRef, activeAt, count, se
     const lastDay = new Date(year, month + 1, 0).getDate();
     const prevLastDay = new Date(year, month, 0).getDate();
 
-    // 필요한 총 셀 수 계산 (5주 또는 6주)
-    const totalDays = firstDayIndex + lastDay;
-    const TOTAL_CELLS = totalDays > 35 ? 42 : 35;
+    // 42칸 고정
+    const TOTAL_CELLS = 42;
 
     const allDays: CalendarAtData[] = [];
     let dayCounter = 0;

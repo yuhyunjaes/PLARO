@@ -4,15 +4,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faClipboard } from "@fortawesome/free-solid-svg-icons";
 import {Message, Notepad} from "../../../../../Types/LifeBotTypes";
 import {Dispatch, SetStateAction} from "react";
+import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 
 interface MessageActionsProps {
-    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
-    setAlertMessage: Dispatch<SetStateAction<any>>;
-    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
+    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     msg: Message;
     handleNotepad: (notepad: Notepad) => Promise<void>;
 }
-export default function MessageActions({ msg, handleNotepad, setAlertSwitch, setAlertMessage, setAlertType } : MessageActionsProps) {
+export default function MessageActions({ setAlerts, msg, handleNotepad } : MessageActionsProps) {
     return (
         <div className="absolute h-[50px] bottom-[-50px] left-0 w-full flex justify-start items-center space-x-2">
             <button
@@ -20,9 +19,12 @@ export default function MessageActions({ msg, handleNotepad, setAlertSwitch, set
                 title="복사"
                 onClick={() => {
                     navigator.clipboard.writeText(msg.text);
-                    setAlertSwitch(true);
-                    setAlertType("success");
-                    setAlertMessage("복사가 완료되었습니다.");
+                    const alertData:AlertsData = {
+                        id: new Date(),
+                        message: "복사가 완료되었습니다.",
+                        type: "success"
+                    }
+                    setAlerts(pre => [...pre, alertData]);
                 }}
             >
                 <FontAwesomeIcon className="normal-text" icon={faCopy}/>
@@ -32,18 +34,21 @@ export default function MessageActions({ msg, handleNotepad, setAlertSwitch, set
                 title="메모장 저장"
                 onClick={() => {
                     if (!msg.id) {
-                        setAlertSwitch(true);
-                        setAlertType("danger");
-                        setAlertMessage("아이디가 존재하지 않아 저장할 수 없습니다.");
+                        const alertData:AlertsData = {
+                            id: new Date(),
+                            message: "아이디가 존재하지 않아 저장할 수 없습니다.",
+                            type: "danger"
+                        }
+                        setAlerts(pre => [...pre, alertData]);
                         return;
+                    } else {
+                        const notepad: Notepad = {
+                            id: msg.id,
+                            text: msg.text
+                        };
+
+                        handleNotepad(notepad);
                     }
-
-                    const notepad: Notepad = {
-                        id: msg.id,
-                        text: msg.text
-                    };
-
-                    handleNotepad(notepad);
                 }}
             >
                 <FontAwesomeIcon className="normal-text" icon={faClipboard}/>

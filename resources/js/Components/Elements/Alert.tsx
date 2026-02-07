@@ -1,15 +1,16 @@
 import {Dispatch, SetStateAction, useEffect, useState} from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faX} from "@fortawesome/free-solid-svg-icons";
+import {AlertsData} from "./ElementsData";
 
 interface AlertProps {
-    close: Dispatch<SetStateAction<boolean>>;
+    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     type: "success" | "danger" | "info" | "warning";
-    message: any;
+    message: string;
     width?: number;
 }
 
-export default function Alert({ close, type, message, width = 0 }: AlertProps) {
+export default function Alert({ setAlerts, type, message, width = 0 }: AlertProps) {
     const [timer, setTimer] = useState<number>(0);
 
     const alertStyles: Record<
@@ -46,14 +47,14 @@ export default function Alert({ close, type, message, width = 0 }: AlertProps) {
     useEffect(() => {
         if (timer < 100) return;
         setTimeout(() => {
-            close(false);
+            setAlerts(prev => prev.slice(1));
         }, 500);
     }, [timer]);
 
     return (
         <div
-            className={`fixed flex justify-between items-center z-[5] right-0 ${style.background} ${style.color} p-5 shadow-lg ${(timer >= 100) ? "animate-out-modal" : "animate-in-modal"}`}
-            style={{width: `calc(100% - ${width}px`}}
+            className={`fixed flex duration-300 transition-[width] justify-between items-center z-[5] right-0 ${style.background} ${style.color} p-5 shadow-lg ${(timer >= 100) ? "animate-out-modal" : "animate-in-modal"}`}
+            style={{width: `calc(100% - ${width}px)`}}
         >
             {message}
 

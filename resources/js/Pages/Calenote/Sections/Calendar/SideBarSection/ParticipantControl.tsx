@@ -2,11 +2,13 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEye, faPen, faEllipsis, faX, faArrowRightFromBracket} from "@fortawesome/free-solid-svg-icons";
 import {Dispatch, SetStateAction, useCallback, useContext, useEffect, useRef, useState} from "react";
 import {AuthUser} from "../../../../../Types/CalenoteTypes";
-import {ParticipantsData} from "../../CalenoteSectionsData";
+import {EventsData, ParticipantsData} from "../../CalenoteSectionsData";
 import axios from "axios";
 import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
+import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 
 interface ParticipantControlProps {
+    setEvents: Dispatch<SetStateAction<EventsData[]>>;
     resetEvent: () => void;
     IsEditAuthority: "owner" | "editor" | "viewer" | null | undefined;
     disabled: boolean;
@@ -19,7 +21,7 @@ interface ParticipantControlProps {
     };
 }
 
-export default function ParticipantControl({ resetEvent, IsEditAuthority, disabled, saveEvent, eventId, eventParticipants, setEventParticipants, auth }:ParticipantControlProps) {
+export default function ParticipantControl({ setEvents, resetEvent, IsEditAuthority, disabled, saveEvent, eventId, eventParticipants, setEventParticipants, auth }:ParticipantControlProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -27,9 +29,7 @@ export default function ParticipantControl({ resetEvent, IsEditAuthority, disabl
     }
 
     const {
-        setAlertSwitch,
-        setAlertMessage,
-        setAlertType,
+        setAlerts,
         setLoading,
         loading
     } = ui;
@@ -85,9 +85,12 @@ export default function ParticipantControl({ resetEvent, IsEditAuthority, disabl
 
                 setEventParticipants(pre => [...pre, newParticipantsData]);
             } else {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -141,6 +144,12 @@ export default function ParticipantControl({ resetEvent, IsEditAuthority, disabl
             });
 
             if(res.data.success) {
+                if(self) {
+                    resetEvent();
+                    setEvents(prev =>
+                        prev.filter(e => e.uuid !== eventId)
+                    );
+                }
                 setEventParticipants(pre =>
                     pre.filter(eventParticipant =>
                         eventParticipant.user_id ? (
@@ -151,9 +160,12 @@ export default function ParticipantControl({ resetEvent, IsEditAuthority, disabl
                     )
                 );
             } else {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -187,9 +199,12 @@ export default function ParticipantControl({ resetEvent, IsEditAuthority, disabl
                     })
                 );
             } else {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -243,7 +258,7 @@ export default function ParticipantControl({ resetEvent, IsEditAuthority, disabl
                                                     status: eventParticipant.user_id ? "EventUser" : "EventInvitation"
                                                 }
                                             ]);
-                                        }} className={`${isActive ? "" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto cursor-pointer"}`}>
+                                        }} className={`${isActive ? "" : "text-[10px] block sm:hidden group-hover:block cursor-pointer"}`}>
                                             <FontAwesomeIcon icon={faEllipsis} />
                                         </button>
                                     ) : ""}
@@ -287,7 +302,6 @@ export default function ParticipantControl({ resetEvent, IsEditAuthority, disabl
                                             ) : ((eventParticipant.user_id === auth.user?.id && eventParticipant.role !== "owner") ? (
                                                 <button onClick={async () => {
                                                     await removeParticipant(true);
-                                                    resetEvent();
                                                 }} className="btn transition-colors duration-300 w-full flex justify-start items-center py-2 text-red-500 hover:text-red-50 hover:bg-red-500/80 space-x-1">
                                                     <FontAwesomeIcon icon={faArrowRightFromBracket}/>
                                                     <span>나가기</span>

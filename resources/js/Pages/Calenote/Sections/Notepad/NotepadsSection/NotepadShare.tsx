@@ -5,6 +5,7 @@ import {Dispatch, SetStateAction, useCallback, useEffect, useRef} from "react";
 import axios from "axios";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
+import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 
 interface NotepadShareProps {
     notepadId: string;
@@ -21,9 +22,7 @@ export default function NotepadShare({ notepadId, shareId, setShareId, isLastInR
     }
 
     const {
-        setAlertSwitch,
-        setAlertMessage,
-        setAlertType,
+        setAlerts,
         setLoading,
     } = ui;
 
@@ -45,9 +44,12 @@ export default function NotepadShare({ notepadId, shareId, setShareId, isLastInR
         setLoading(true);
         try {
             const res = await axios.post(`/api/notepads/${notepad}/share/email`);
-            setAlertSwitch(true);
-            setAlertType(res.data.type);
-            setAlertMessage(res.data.message);
+            const alertData:AlertsData = {
+                id: new Date(),
+                message: res.data.message,
+                type: res.data.type
+            }
+            setAlerts(pre => [...pre, alertData]);
         } catch (err) {
             console.error(err);
         } finally {

@@ -6,50 +6,58 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Notepad;
 use App\Models\NotepadLike;
+use Illuminate\Support\Facades\DB;
 
 class NotepadLikeController extends Controller
 {
 //    메모장 찜 추가
     public function StoreNotepadsLike($uuid) {
-        $user = auth()->user();
+        try {
+            $user = auth()->user();
 
-        $notepad = Notepad::where('uuid', $uuid)->firstOrFail();
+            $notepad = Notepad::where('uuid', $uuid)->firstOrFail();
 
-        $exists = NotepadLike::where('user_id', $user->id)
-            ->where('notepad_id', $notepad->id)
-            ->exists();
+            $exists = NotepadLike::where('user_id', $user->id)
+                ->where('notepad_id', $notepad->id)
+                ->exists();
 
-        if ($exists) {
-            return response()->json(['success' => false, 'message' => '이미 찜한 노트입니다.']);
+            if ($exists) {
+                return response()->json(['success' => false, 'message' => '이미 찜한 노트입니다.', 'type' => 'info']);
+            }
+
+            NotepadLike::create([
+                'user_id' => $user->id,
+                'notepad_id' => $notepad->id,
+            ]);
+
+            return response()->json(['success' => true, 'message' => '메모장을 찜했습니다.', 'type' => 'success']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.', 'type' => 'danger']);
         }
-
-        NotepadLike::create([
-            'user_id' => $user->id,
-            'notepad_id' => $notepad->id,
-        ]);
-
-        return response()->json(['success' => true, 'message' => '노트 찜']);
     }
 
 //    메모장 찜 삭제
     public function DeleteNotepadsLike($uuid) {
-        $user = auth()->user();
+        try {
 
-        $notepad = Notepad::where('uuid', $uuid)->firstOrFail();
+            DB::transaction(function () use ($uuid) {
+                $notepad = Notepad::where('uuid', $uuid)->firstOrFail();
 
-        NotepadLike::where('user_id', $user->id)
-            ->where('notepad_id', $notepad->id)
-            ->delete();
+                NotepadLike::where('user_id', auth()->id())
+                    ->where('notepad_id', $notepad->id)
+                    ->delete();
+            });
 
-        return response()->json(['success' => true, 'message' => '노트 찜 취소']);
+            return response()->json(['success' => true, 'message' => '메모장 찜을 취소하였습니다.', 'type' => 'success']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.', 'type' => 'danger']);
+        }
     }
 
 //    찜된 메모장들 가져오기
     public function GetNotepadsLike()
     {
-        $user = auth()->user();
-
-        $likes = NotepadLike::where('user_id', $user->id)
+        $likes = NotepadLike::where('user_id', auth()->id())
             ->with('notepad:id,uuid')
             ->get();
 

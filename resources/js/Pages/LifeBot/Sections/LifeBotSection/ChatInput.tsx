@@ -9,13 +9,12 @@ import { prompts } from "../../../../../../config/prompt";
 import { router } from "@inertiajs/react";
 import {Room, Message, AuthUser, Notepad, Categories} from "../../../../Types/LifeBotTypes";
 import axios from "axios";
+import {AlertsData} from "../../../../Components/Elements/ElementsData";
 
 interface ChatInputProps {
+    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     now: Date;
     getMessages: () => Promise<void>;
-    setAlertSwitch: Dispatch<SetStateAction<boolean>>;
-    setAlertMessage: Dispatch<SetStateAction<any>>;
-    setAlertType: Dispatch<SetStateAction<"success" | "danger" | "info" | "warning">>;
     roomCategories: Categories[];
     setRoomCategories: Dispatch<SetStateAction<Categories[]>>;
     handleDeleteChatCategories: (roomId: string) => Promise<void>;
@@ -36,11 +35,9 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({
+    setAlerts,
     now,
     getMessages,
-    setAlertSwitch,
-    setAlertMessage,
-    setAlertType,
     roomCategories,
     setRoomCategories,
     handleDeleteChatCategories,
@@ -313,9 +310,13 @@ export default function ChatInput({
                                 preserveState: true,
                                 preserveScroll: true,
                             });
-                            setAlertSwitch(true);
-                            setAlertType("danger");
-                            setAlertMessage("연결이 원활하지 않습니다.");
+
+                            const alertData:AlertsData = {
+                                id: new Date(),
+                                message: "연결이 원활하지 않습니다,",
+                                type: "danger"
+                            }
+                            setAlerts(pre => [...pre, alertData]);
 
                         }
                     } catch (err) {
@@ -332,9 +333,12 @@ export default function ChatInput({
                     preserveScroll: true,
                 });
 
-                setAlertSwitch(true);
-                setAlertType("danger");
-                setAlertMessage("연결이 원활하지 않습니다.");
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: "연결이 원활하지 않습니다,",
+                    type: "danger"
+                }
+                setAlerts(pre => [...pre, alertData]);
 
                 await getMessages();
                 return;
@@ -420,9 +424,12 @@ export default function ChatInput({
                 end_at: event.end_at,
             });
 
-            setAlertSwitch(true);
-            setAlertMessage(res.data.message);
-            setAlertType(res.data.type);
+            const alertData:AlertsData = {
+                id: new Date(),
+                message: res.data.message,
+                type: res.data.type
+            }
+            setAlerts(pre => [...pre, alertData]);
         } catch (err) {
             console.error(err);
         } finally {

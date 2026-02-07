@@ -34,7 +34,7 @@ export default function NotepadWriteSection({ content, uuid, title } : NotepadWr
 
     return (
         <>
-            <Head title="Notepad Write" />
+            <Head title={`Notepad - ${title}`} />
             <div className="h-full flex flex-col relative overflow-y-auto">
                 <ControlSection saveStatus={saveStatus} title={title}/>
                 <WriteSection handleSaveNotepadContent={handleSaveNotepadContent} notepadText={notepadText} setNotepadText={setNotepadText} setSaveStatus={setSaveStatus}/>

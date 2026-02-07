@@ -12,6 +12,7 @@ import NotepadsSection from "./Sections/Notepad/NotepadsSection";
 import NotepadFilterSection from "./Sections/Notepad/NotepadFilterSection";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../Providers/GlobalUIContext";
+import {AlertsData} from "../../Components/Elements/ElementsData";
 
 
 interface NotepadProps {
@@ -28,9 +29,7 @@ export default function Notepad({ auth } : NotepadProps) {
     }
 
     const {
-        setAlertSwitch,
-        setAlertMessage,
-        setAlertType,
+        setAlerts,
         setLoading,
     } = ui;
 
@@ -84,6 +83,13 @@ export default function Notepad({ auth } : NotepadProps) {
                     preserveState: true,
                     preserveScroll: true,
                 });
+            } else {
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -97,6 +103,13 @@ export default function Notepad({ auth } : NotepadProps) {
             const res = await axios.get("/api/notepads/categories");
             if(res.data.success) {
                 setCategories(res.data.categories);
+            } else {
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -124,6 +137,13 @@ export default function Notepad({ auth } : NotepadProps) {
 
             if (res.data.success) {
                 setNotepads(res.data.notepads);
+            } else {
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.log(err);
@@ -146,9 +166,12 @@ export default function Notepad({ auth } : NotepadProps) {
                 setEditId("");
                 setNotepads((prevNotepads) => prevNotepads.filter(notepad => notepad.id !== editId));
                 getNotepadCategories();
-                setAlertSwitch(true);
-                setAlertType("success");
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);

@@ -14,6 +14,7 @@ import {GlobalUIContext} from "../../Providers/GlobalUIContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faAngleLeft, faAngleRight, faPlus} from "@fortawesome/free-solid-svg-icons";
 import Echo from 'laravel-echo';
+import {AlertsData} from "../../Components/Elements/ElementsData";
 
 
 interface CalendarProps {
@@ -43,9 +44,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     }
 
     const {
-        setAlertSwitch,
-        setAlertMessage,
-        setAlertType,
+        setAlerts,
         setLoading,
         loading
     } = ui;
@@ -113,9 +112,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         });
 
         if (!res.data.success) {
-            setAlertSwitch(true);
-            setAlertType(res.data.type);
-            setAlertMessage(res.data.message);
+            const alertData:AlertsData = {
+                id: new Date(),
+                message: res.data.message,
+                type: res.data.type
+            }
+            setAlerts(pre => [...pre, alertData]);
             return;
         }
 
@@ -156,9 +158,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             });
 
             if(!res.data.success)  {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             } else {
                 const currentReminder = res.data.reminders;
                 setReminders(pre => [
@@ -255,9 +260,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                 });
 
             } else {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -321,9 +329,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                     setFirstCenter(true);
                 }
             } else {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
                 router.visit(`/calenote/calendar`, {
                     method: "get",
                     preserveState: true,
@@ -345,9 +356,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             if(res.data.success) {
                 setEventReminder(res.data.reminders);
             } else {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -361,9 +375,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             if(res.data.success) {
                 setEventParticipants(res.data.participants);
             } else {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -387,9 +404,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                         )
                 );
             } else {
-                setAlertSwitch(true);
-                setAlertType(res.data.type);
-                setAlertMessage(res.data.message);
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         } catch (err) {
             console.error(err);
@@ -544,7 +564,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     }, [viewMode, activeAt, eventId]);
 
     useEffect(() => {
-        if (!window.Echo || !getDone) return;
+        if (!window.Echo || !getDone || events.length <= 0) return;
 
         const channel = window.Echo.private('events.all');
 
@@ -610,9 +630,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                     preserveScroll: true,
                 });
 
-                setAlertSwitch(true);
-                setAlertType("warning");
-                setAlertMessage("해당 이벤트가 삭제되었습니다.");
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: "해당 이벤트가 삭제되었습니다.",
+                    type: "warning"
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         };
 
@@ -622,8 +645,9 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         return () => {
             channel.stopListening('.event.updated');
             channel.stopListening('.event.deleted');
+            window.Echo.leave('events.all');
         };
-    }, [getDone, eventId, auth.user?.id]);
+    }, [getDone, eventId, auth.user?.id, events]);
 
     useEffect(() => {
         if (!window.Echo || !getDone || !eventId) return;
@@ -698,6 +722,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
         return () => {
             channel.stopListening('.participant.updated');
+            window.Echo.leave(`event.${eventId}.participants`);
         };
     }, [getDone, eventId, auth.user?.id]);
 
@@ -730,10 +755,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                     preserveState: true,
                     preserveScroll: true,
                 });
-
-                setAlertSwitch(true);
-                setAlertType("warning");
-                setAlertMessage("해당 이벤트가 삭제되었습니다.");
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: "해당 이벤트에서 추방되었습니다.",
+                    type: "warning"
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
         };
 
@@ -741,6 +768,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
         return () => {
             channel.stopListening('.participant.deleted');
+            window.Echo.leave(`user.${auth.user?.id}.events.participants`);
         };
 
     }, [getDone, auth.user?.id, eventId]);
@@ -763,22 +791,13 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                             )
                         }
                     </div>
-                    {
-                        sideBarToggle ? (
-                            <button onClick={() => {
-                                setSideBarToggle(false);
-                            }} className="fixed block sm:hidden bottom-0 cursor-pointer right-[250px] bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-10 rounded-full text-white font-semibold m-[25px] sm:m-[50px]">
-                                <FontAwesomeIcon icon={faAngleRight} />
-                            </button>
-                        ) : (
-                            <button onClick={() => {
-                                setSideBarToggle(true);
-                            }} className="fixed block sm:hidden bottom-0 cursor-pointer right-0 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-10 rounded-full text-white font-semibold m-[25px] sm:m-[50px]">
-                                <FontAwesomeIcon icon={faAngleLeft} />
-                            </button>
-                        )
-                    }
-                    <SideBarSection eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} eventReminder={eventReminder} setEventReminder={setEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+
+                    <button onClick={() => {
+                        setSideBarToggle(!sideBarToggle);
+                    }} className={`fixed block sm:hidden bottom-0 duration-300 transition-[right] cursor-pointer ${sideBarToggle ? 'right-[250px]' : 'right-0'}  bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-10 rounded-full text-white font-semibold m-[25px] sm:m-[50px]`}>
+                        <FontAwesomeIcon icon={sideBarToggle ? faAngleRight : faAngleLeft} />
+                    </button>
+                    <SideBarSection eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} setEvents={setEvents} eventReminder={eventReminder} setEventReminder={setEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
                 </div>
             </div>
         </>

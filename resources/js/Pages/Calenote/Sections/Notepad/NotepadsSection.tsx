@@ -12,6 +12,7 @@ import NotepadCategoryEdit from "./NotepadsSection/NotepadCategoryEdit";
 import {Notepads, NotepadsLike, Category} from "../../../../Types/CalenoteTypes";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
+import {AlertsData} from "../../../../Components/Elements/ElementsData";
 
 interface NotepadsSectionProps {
     notepads: Notepads[];
@@ -40,9 +41,7 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, not
     }
 
     const {
-        setAlertSwitch,
-        setAlertMessage,
-        setAlertType,
+        setAlerts,
         setLoading,
     } = ui;
     const [shareId, setShareId] = useState<string>("");
@@ -98,6 +97,13 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, not
             if(res.data.success) {
                 setNotepadLikes(prev => [...prev, { notepad_uuid: uuid }]);
             }
+            const alertData:AlertsData = {
+                id: new Date(),
+                message: res.data.message,
+                type: res.data.type
+            }
+            setAlerts(pre => [...pre, alertData]);
+
         } catch (err) {
             console.error(err);
         } finally {
@@ -115,6 +121,12 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, not
             if(res.data.success && (tab === "liked")) {
                 setNotepads(prev => prev.filter(notepad => notepad.id !== uuid));
             }
+            const alertData:AlertsData = {
+                id: new Date(),
+                message: res.data.message,
+                type: res.data.type
+            }
+            setAlerts(pre => [...pre, alertData]);
         } catch (err) {
             console.error(err);
         } finally {
@@ -152,9 +164,12 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, not
                 setEditStatus("");
                 setTemporaryEditTitle("");
             }
-            setAlertSwitch(true);
-            setAlertType(res.data.type);
-            setAlertMessage(res.data.message);
+            const alertData:AlertsData = {
+                id: new Date(),
+                message: res.data.message,
+                type: res.data.type
+            }
+            setAlerts(pre => [...pre, alertData]);
 
         } catch (err) {
             console.log(err);

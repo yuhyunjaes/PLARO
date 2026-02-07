@@ -18,6 +18,17 @@ export default function ReminderView({ handleEventClick, events, now, reminders 
         "금",
         "토",
     ];
+
+    const afterNowEvents: EventsData[] = events.filter(event => {
+        const eventDate = new Date(event.start_at);
+        const today = new Date(now);
+
+        eventDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        return eventDate.getTime() >= today.getTime();
+    });
+
     return (
         <>
             <div className="text-xs font-semibold normal-text space-x-1 sticky top-0">
@@ -37,20 +48,10 @@ export default function ReminderView({ handleEventClick, events, now, reminders 
             </div>
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-5 relative">
-                {events.length <= 0 ? (
-                    <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold w-full text-center">아직 등록된 이벤트가 없어요.</p>
+                {afterNowEvents.length <= 0 ? (
+                    <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold w-full text-center">앞으로 예정된 이벤트가 없어요.</p>
                 ) : ""}
                 {(() => {
-                    const afterNowEvents: EventsData[] = events.filter(event => {
-                        const eventDate = new Date(event.start_at);
-                        const today = new Date(now);
-
-                        eventDate.setHours(0, 0, 0, 0);
-                        today.setHours(0, 0, 0, 0);
-
-                        return eventDate.getTime() >= today.getTime();
-                    });
-
                     const eventStartAtDates: Date[] = afterNowEvents
                         .map(e => new Date(e.start_at))
                         .filter((date, index, self) =>

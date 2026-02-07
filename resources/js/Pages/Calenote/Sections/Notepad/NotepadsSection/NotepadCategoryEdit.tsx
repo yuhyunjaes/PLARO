@@ -5,6 +5,7 @@ import { faFloppyDisk } from "@fortawesome/free-solid-svg-icons";
 import {Category, Notepads} from "../../../../../Types/CalenoteTypes";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
+import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 
 interface NotepadCategoryEdit {
     notepadId: string;
@@ -22,9 +23,7 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
     }
 
     const {
-        setAlertSwitch,
-        setAlertMessage,
-        setAlertType,
+        setAlerts,
         setLoading,
     } = ui;
 
@@ -53,9 +52,12 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
                 setTemporaryEditCategory("");
                 await getNotepadCategories();
             }
-            setAlertType(res.data.type);
-            setAlertSwitch(true);
-            setAlertMessage(res.data.message);
+            const alertData:AlertsData = {
+                id: new Date(),
+                message: res.data.message,
+                type: res.data.type
+            }
+            setAlerts(pre => [...pre, alertData]);
         } catch (err) {
             console.error(err);
         } finally {
@@ -88,7 +90,7 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
             setTemporaryEditCategory(notepadCategory);
         }} className="text-gray-500 text-sm cursor-pointer relative">
             {categoryEditId ? (
-                <div className="flex">
+                <div className="flex space-x-1">
                     <input
                         autoFocus
                         onMouseDown={(e) => e.stopPropagation()}
@@ -105,7 +107,7 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
                         onChange={(e) => {
                             setTemporaryEditCategory(e.target.value);
                         }}
-                        type="text" name="" id="" className="normal-text truncate border-0 outline-none max-w-[100px]" value={temporaryEditCategory}/>
+                        type="text" name="temporaryEditCategory" id="temporaryEditCategory" className="normal-text truncate border-0 outline-none max-w-[100px]" value={temporaryEditCategory}/>
 
                     <button
                         onMouseDown={(e) => e.stopPropagation()}
@@ -116,12 +118,12 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
                                 editNotepadCategory();
                             }
                     }}
-                            className="size-5 transition-colors duration-150 text-green-500 hover:text-green-50 hover:bg-green-500/80 rounded-full cursor-pointer">
+                            className="size-5 transition-colors duration-300 text-green-500 hover:text-white hover:bg-green-500/80 rounded cursor-pointer">
                         <FontAwesomeIcon icon={faFloppyDisk} />
                     </button>
                 </div>
             ) : (
-                <p>{notepadCategory}</p>
+                <p className="truncate max-w-[100px]">{notepadCategory}</p>
             )}
             {
                 (notepadId === categoryEditId) && (

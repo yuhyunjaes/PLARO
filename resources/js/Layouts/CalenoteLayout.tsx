@@ -1,5 +1,5 @@
 // CalenoteLayout.tsx
-import {
+import React, {
     cloneElement,
     isValidElement, ReactElement,
     ReactNode,
@@ -10,9 +10,12 @@ import {
 import Header from "../Components/Header/Header";
 import SideBarSection from "../Pages/Calenote/Sections/SideBarSection";
 import Loading from "../Components/Elements/Loading";
-import Alert from "../Components/Elements/Alert";
 import {useContext} from "react";
 import {GlobalUIContext} from "../Providers/GlobalUIContext";
+import Alert from "../Components/Elements/Alert";
+import {ReminderData} from "../Pages/Calenote/Sections/CalenoteSectionsData";
+import Reminder from "../Components/Elements/Reminder";
+import {AlertsData} from "../Components/Elements/ElementsData";
 
 // Props 타입
 export interface AuthUser {
@@ -36,11 +39,9 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
     }
 
     const {
-        alertSwitch,
-        alertMessage,
-        alertType,
+        alerts,
+        setAlerts,
         loading,
-        setAlertSwitch,
     } = ui;
 
 
@@ -74,6 +75,17 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
         }
     }, [sideBar]);
 
+    function formatDateKey(date: Date) {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        const hh = String(date.getHours()).padStart(2, "0");
+        const mi = String(date.getMinutes()).padStart(2, "0");
+        const ss = String(date.getSeconds()).padStart(2, "0");
+
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+    }
+
     return (
         <>
             <Header
@@ -92,7 +104,15 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
                 />
 
                 <main className="transition-[width] duration-300 h-full flex-1 overflow-y-auto overflow-x-hidden">
-                    {alertSwitch && <Alert close={setAlertSwitch} message={alertMessage} type={alertType} width={sideBar}/>}
+                    {alerts.length > 0 && (
+                        <Alert
+                            key={formatDateKey(alerts[0]!.id)}
+                            setAlerts={setAlerts}
+                            type={alerts[0]!.type}
+                            message={alerts[0]!.message}
+                            width={sideBar}
+                        />
+                    )}
                     {isValidElement(children)
                         ? cloneElement(children as ReactElement, { ...props })
                         : children}

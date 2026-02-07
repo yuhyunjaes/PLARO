@@ -22,6 +22,7 @@ interface SideBarSectionProps {
     reminders: ReminderData[];
     now: Date;
     events: EventsData[];
+    setEvents: Dispatch<SetStateAction<EventsData[]>>;
     eventReminder: number[];
     setEventReminder: Dispatch<SetStateAction<number[]>>;
     deleteEvent: () => Promise<void>;
@@ -43,7 +44,7 @@ interface SideBarSectionProps {
     setEndAt: Dispatch<SetStateAction<Date | null>>;
 }
 
-export default function SideBarSection({ eventParticipants, setEventParticipants, auth, sideBarToggle, setSideBarToggle, handleEventClick, reminders, now, events, eventReminder, setEventReminder, deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
+export default function SideBarSection({ eventParticipants, setEventParticipants, auth, sideBarToggle, setSideBarToggle, handleEventClick, reminders, now, events, setEvents, eventReminder, setEventReminder, deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
     const [onlyOneClick, setOnlyOneClick] = useState(false);
     useEffect(() => {
         if(eventId && onlyOneClick) {
@@ -69,7 +70,7 @@ export default function SideBarSection({ eventParticipants, setEventParticipants
 
     return (
         <div
-            className={`w-[250px] overflow-x-hidden overflow-y-auto ${sideBar <= 0 ? (sideBarToggle ? "absolute h-full right-5 pointer-events-auto opacity-100 duration-300 transition-all" : "duration-300 transition-all opacity-0 -right-[100%] fixed pointer-events-none") : "sticky top-[1.25rem]"} border max-h-[calc(100vh-(70px+2.5rem))] bg-white dark:bg-[#0d1117] border-gray-300 dark:border-gray-800 rounded-xl normal-text user-select-none space-y-5`}
+            className={`w-[250px] duration-300 transition-[right] overflow-x-hidden overflow-y-auto ${sideBar <= 0 ? (sideBarToggle ? "fixed h-full right-5 pointer-events-auto" : "-right-[100%] fixed pointer-events-none h-full") : "sticky top-[1.25rem]"} border max-h-[calc(100vh-(70px+2.5rem))] bg-white dark:bg-[#0d1117] border-gray-300 dark:border-gray-800 rounded-xl normal-text user-select-none space-y-5`}
         >
             {
                 (() => {
@@ -80,7 +81,7 @@ export default function SideBarSection({ eventParticipants, setEventParticipants
                             <>
                                 <EventTitleControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventTitle={eventTitle} setEventTitle={setEventTitle} />
                                 <EventDateViewAndControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
-                                <ParticipantControl resetEvent={resetEvent} IsEditAuthority={IsEditAuthority} disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
+                                <ParticipantControl setEvents={setEvents} resetEvent={resetEvent} IsEditAuthority={IsEditAuthority} disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
                                 <EventDescriptionControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
                                 <EventColorControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} eventColor={eventColor} setEventColor={setEventColor} />
                                 <ReminderControl eventReminder={eventReminder} setEventReminder={setEventReminder} />
