@@ -566,12 +566,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     useEffect(() => {
         if (!window.Echo || !getDone || events.length <= 0) return;
 
-        const channel = window.Echo.private('events.all');
+        const channel = window.Echo.private(`user.${auth.user?.id}.events`);
 
         const handleEventUpdated = (data: any) => {
-            const { event, user_id } = data.payload;
+            const { event, update_by } = data.payload;
 
-            if (user_id === auth.user?.id) return;
+            if (update_by === auth.user?.id) return;
 
             // 원격 업데이트 플래그
             setIsRemoteUpdate(true);
@@ -605,9 +605,9 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         };
 
         const handleEventDeleted = (data: any) => {
-            const { event_uuid, user_id } = data;
+            const { event_uuid, delete_by } = data;
 
-            if (user_id === auth.user?.id) return;
+            if (delete_by === auth.user?.id) return;
 
             setEvents(prev =>
                 prev.filter(e => e.uuid !== event_uuid)
@@ -645,7 +645,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         return () => {
             channel.stopListening('.event.updated');
             channel.stopListening('.event.deleted');
-            window.Echo.leave('events.all');
+            window.Echo.leave(`user.${auth.user?.id}.events`);
         };
     }, [getDone, eventId, auth.user?.id, events]);
 

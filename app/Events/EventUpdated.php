@@ -17,9 +17,13 @@ class EventUpdated implements ShouldBroadcastNow
         public array $payload
     ) {}
 
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
-        return new PrivateChannel('events.all');
+        return collect($this->payload['participant_ids'])
+            ->map(fn ($userId) =>
+            new PrivateChannel("user.{$userId}.events")
+            )
+            ->toArray();
     }
 
     public function broadcastAs(): string

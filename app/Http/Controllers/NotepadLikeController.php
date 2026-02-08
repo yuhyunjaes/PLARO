@@ -54,19 +54,4 @@ class NotepadLikeController extends Controller
         }
     }
 
-//    찜된 메모장들 가져오기
-    public function GetNotepadsLike()
-    {
-        $likes = NotepadLike::where('user_id', auth()->id())
-            ->with('notepad:id,uuid')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'likes' => $likes->map(fn ($like) => [
-                'notepad_uuid' => $like->notepad?->uuid,
-            ]),
-        ]);
-    }
-
 }

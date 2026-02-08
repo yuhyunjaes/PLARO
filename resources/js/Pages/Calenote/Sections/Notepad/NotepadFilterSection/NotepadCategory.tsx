@@ -2,7 +2,7 @@ import {Dispatch, SetStateAction} from "react";
 import {Category} from "../../../../../Types/CalenoteTypes";
 
 interface NotepadCategoryProps {
-    categories: Category[];
+    categories: string[];
     temporarySearchCategory: string;
     setTemporarySearchCategory: Dispatch<SetStateAction<string>>;
 }
@@ -21,7 +21,7 @@ export default function NotepadCategory({ categories, temporarySearchCategory, s
             >
                 <option value=" ">카테고리를 선택해주세요.</option>
                 {categories.map((item, index) => (
-                    <option key={index} value={item.category}>{item.category}</option>
+                    <option key={index} value={item}>{item}</option>
                 ))}
             </select>
         </div>

@@ -7,8 +7,8 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-Broadcast::channel('events.all', function ($user) {
-    return EventUser::where('user_id', $user->id)->exists();
+Broadcast::channel('user.{userId}.events', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
 });
 
 Broadcast::channel('event.{eventId}.participants', function ($user, $eventId) {

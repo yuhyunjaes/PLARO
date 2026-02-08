@@ -115,7 +115,10 @@ class EventController extends Controller
             $event->uuid,
             [
                 'event' => $event->toArray(),
-                'user_id' => auth()->id(),
+                'update_by' => auth()->id(),
+                'participant_ids' => EventUser::where('event_id', $event->id)
+                    ->pluck('user_id')
+                    ->toArray(),
             ]
         ))->toOthers();
 
@@ -181,11 +184,16 @@ class EventController extends Controller
             $eventUuid = $event->uuid;
             $deletedBy = Auth::id();
 
+            $participantIds = EventUser::where('event_id', $event->id)
+                ->pluck('user_id')
+                ->toArray();
+
             $event->delete();
 
             broadcast(new EventDeleted(
                 eventUuid: $eventUuid,
                 deletedBy: $deletedBy,
+                participantIds: $participantIds,
             ))->toOthers();
 
             return response()->json([

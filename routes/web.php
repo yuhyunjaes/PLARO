@@ -169,7 +169,6 @@ Route::middleware('web')->group(function () {
 
         Route::post('/notepads/{uuid}/like', [NotepadLikeController::class, 'StoreNotepadsLike'])->name('notepads.like.store');
         Route::delete('/notepads/{uuid}/like', [NotepadLikeController::class, 'DeleteNotepadsLike'])->name('notepads.like.delete');
-        Route::get('/notepads/likes', [NotepadLikeController::class, 'GetNotepadsLike'])->name('notepads.like.get');
 
         // --------------------
         // Chat API

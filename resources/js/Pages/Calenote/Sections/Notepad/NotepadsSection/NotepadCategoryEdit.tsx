@@ -11,11 +11,10 @@ interface NotepadCategoryEdit {
     notepadId: string;
     notepadCategory: string;
     setNotepads: Dispatch<SetStateAction<Notepads[]>>;
-    categories: Category[];
-    getNotepadCategories: () => Promise<void>;
+    categories: string[];
 }
 
-export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNotepads, categories, getNotepadCategories } : NotepadCategoryEdit) {
+export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNotepads, categories } : NotepadCategoryEdit) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -50,7 +49,7 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
 
                 setCategoryEditId("");
                 setTemporaryEditCategory("");
-                await getNotepadCategories();
+
             }
             const alertData:AlertsData = {
                 id: new Date(),
@@ -85,7 +84,6 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
     return (
         <div onClick={(e) => {
             e.stopPropagation();
-            getNotepadCategories();
             setCategoryEditId(notepadId);
             setTemporaryEditCategory(notepadCategory);
         }} className="text-gray-500 text-sm cursor-pointer relative">
@@ -128,18 +126,18 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
             {
                 (notepadId === categoryEditId) && (
                     <div ref={categoryRef} className="w-[200px] max-h-[100px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-xl left-0 divide-y divide-gray-800 overflow-y-auto">
-                        {(categories.filter(item => item.category !== notepadCategory).length <= 0) ? (
+                        {(categories.filter(item => item !== notepadCategory).length <= 0) ? (
                             <div className="py-2 rounded">
                                 <p className="normal-text">등록된 카테고리가 없습니다.</p>
                             </div>
                         ) : (
                             categories.map((category, index) => {
-                                if(category.category !== notepadCategory) {
+                                if(category !== notepadCategory) {
                                     return (
                                         <div onClick={() => {
-                                            editNotepadCategory(category.category);
+                                            editNotepadCategory(category);
                                         }} key={index} className="py-2 rounded">
-                                            <p className="normal-text">{category.category}</p>
+                                            <p className="normal-text">{category}</p>
                                         </div>
                                     )
                                 }

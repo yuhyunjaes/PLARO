@@ -136,40 +136,49 @@ class NotepadController extends Controller
         try {
             $user = Auth::user();
 
-            $query = Notepad::where('user_id', $user->id);
+            $query = Notepad::where('user_id', $user->id)
+                ->withExists([
+                    'likes as liked' => function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    }
+                ]);
 
             if ($request->filled('title')) {
-                $query->where('title', 'like', '%'.$request->query('title').'%');
+                $query->where('title', 'like', '%' . $request->query('title') . '%');
             }
 
             if ($request->filled('category')) {
                 $query->where('category', $request->query('category'));
             }
 
-            // liked 필터
             if ($request->boolean('liked')) {
                 $query->whereHas('likes', function ($q) use ($user) {
                     $q->where('user_id', $user->id);
                 });
             }
 
-            $notepads = DB::transaction(function () use ($query) {
-                return $query->orderByDesc('created_at')
-                    ->get()
-                    ->map(function ($n) {
-                        return [
-                            'id' => $n->uuid,
-                            'title' => $n->title,
-                            'content' => $n->content,
-                            'category' => $n->category,
-                            'created_at' => $n->created_at->format('Y-m-d H:i:s'),
-                        ];
-                    });
-            });
+            $notepads = $query
+                ->orderByDesc('created_at')
+                ->get()
+                ->map(fn ($n) => [
+                    'id' => $n->uuid,
+                    'title' => $n->title,
+                    'content' => $n->content,
+                    'category' => $n->category,
+                    'created_at' => $n->created_at->format('Y-m-d H:i:s'),
+                    'liked' => (bool) $n->liked,
+                ]);
 
-            return response()->json(['success' => true, 'notepads' => $notepads]);
-        } catch (TypeError $e) {
-            return response()->json(['success' => false, 'message' => '메모장을 가져오는 중 오류가 발생하였습니다.', 'type' => 'danger']);
+            return response()->json([
+                'success' => true,
+                'notepads' => $notepads
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '메모장을 가져오는 중 오류가 발생하였습니다.',
+                'type' => 'danger'
+            ]);
         }
     }
 
@@ -235,7 +244,7 @@ class NotepadController extends Controller
             <div style="font-family: Arial, sans-serif; line-height: 1.6;">
                 <h2>📒 메모장이 공유되었습니다</h2>
                 <hr>
-                <div style="margin: 12px;background: #f3f4f6;">
+                <div style="padding: 12px;background: #f3f4f6;">
                     ' . $content . '
                 </div>
             </div>

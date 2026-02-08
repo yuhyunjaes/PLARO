@@ -13,7 +13,7 @@ interface NotepadFilterSectionProps {
     viewOption: "grid" | "list";
     setViewOption: Dispatch<SetStateAction<"grid" | "list">>;
     setSearchTitle: Dispatch<SetStateAction<string>>;
-    categories: Category[];
+    categories: string[];
     setSearchCategory: Dispatch<SetStateAction<string>>;
 }
 

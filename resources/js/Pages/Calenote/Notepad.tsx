@@ -1,11 +1,11 @@
 // 메모장 영역
 
 import { Head, router } from '@inertiajs/react';
-import {Dispatch, SetStateAction, useCallback, useEffect, useState} from "react";
+import {Dispatch, SetStateAction, useCallback, useEffect, useMemo, useState} from "react";
 import axios from "axios";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { AuthUser, Notepads, NotepadsLike, Category } from "../../Types/CalenoteTypes";
+import { AuthUser, Notepads, Category } from "../../Types/CalenoteTypes";
 import FormModal from "../../Components/Elements/FormModal";
 import Modal from "../../Components/Elements/Modal";
 import NotepadsSection from "./Sections/Notepad/NotepadsSection";
@@ -36,7 +36,6 @@ export default function Notepad({ auth } : NotepadProps) {
     const [tab, setTab] = useState<"all" | "liked">("all");
     const [viewOption, setViewOption] = useState<"grid" | "list">("grid");
     const [notepads, setNotepads] = useState<Notepads[]>([]);
-    const [notepadLikes, setNotepadLikes] = useState<NotepadsLike[]>([]);
 
     const [editId, setEditId] = useState<string>("");
     const [editStatus, setEditStatus] = useState<string>("");
@@ -44,7 +43,12 @@ export default function Notepad({ auth } : NotepadProps) {
 
     const [modal, setModal] = useState<boolean>(false);
 
-    const [categories, setCategories] = useState<Category[]>([]);
+    const categories:string[] = useMemo(() => {
+        return Array.from(
+            new Set(notepads.map(n => n.category))
+        );
+    }, [notepads]);
+
 
     const [formModal, setFormModal] = useState<boolean>(false);
     const [notepadTitle, setNotepadTitle] = useState<string>("");
@@ -98,28 +102,6 @@ export default function Notepad({ auth } : NotepadProps) {
         }
     }, [notepadTitle, notepadCategory]);
 
-    const getNotepadCategories = useCallback(async () => {
-        try {
-            const res = await axios.get("/api/notepads/categories");
-            if(res.data.success) {
-                setCategories(res.data.categories);
-            } else {
-                const alertData:AlertsData = {
-                    id: new Date(),
-                    message: res.data.message,
-                    type: res.data.type
-                }
-                setAlerts(pre => [...pre, alertData]);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    }, []);
-
-    useEffect(() => {
-        getNotepadCategories();
-    }, [getNotepadCategories]);
-
     const [searchTitle, setSearchTitle] = useState("");
     const [searchCategory, setSearchCategory] = useState("");
 
@@ -165,7 +147,6 @@ export default function Notepad({ auth } : NotepadProps) {
                 setEditStatus("");
                 setEditId("");
                 setNotepads((prevNotepads) => prevNotepads.filter(notepad => notepad.id !== editId));
-                getNotepadCategories();
                 const alertData:AlertsData = {
                     id: new Date(),
                     message: res.data.message,
@@ -186,11 +167,11 @@ export default function Notepad({ auth } : NotepadProps) {
             <div className="min-h-full bg-gray-100 dark:bg-gray-950 relative flex flex-col">
                 {
                     (notepads.length <= 0) && (
-                        <span className="normal-text text-sm lg:text-base w-full px-5 text-center absolute top-[70%] lg:top-1/2 left-1/2 -translate-1/2 font-semibold">
-                          {
-                              (tab === "liked") ? "찜한 메모가 아직 없어요." : "아직 작성된 메모가 없어요."
-                          }
-                        </span>
+                        <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold w-full text-center">
+                            {
+                                (tab === "liked") ? "찜한 메모가 아직 없어요." : "아직 작성된 메모가 없어요."
+                            }
+                        </p>
                     )
                 }
 
@@ -199,7 +180,7 @@ export default function Notepad({ auth } : NotepadProps) {
                     <NotepadFilterSection setSearchCategory={setSearchCategory} categories={categories} setSearchTitle={setSearchTitle} viewOption={viewOption} setViewOption={setViewOption} tab={tab} setTab={setTab}/>
 
                     {/*메모장 read영역*/}
-                    <NotepadsSection getNotepadCategories={getNotepadCategories} categories={categories} modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} notepadLikes={notepadLikes} tab={tab} setNotepadLikes={setNotepadLikes} viewOption={viewOption} notepads={notepads} setNotepads={setNotepads} />
+                    <NotepadsSection categories={categories} modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} tab={tab} viewOption={viewOption} notepads={notepads} setNotepads={setNotepads} />
                 </div>
 
                 {/*메모장 삭제 모달창*/}
@@ -207,7 +188,7 @@ export default function Notepad({ auth } : NotepadProps) {
 
                 <button onClick={() => {
                     setFormModal(true);
-                }} className="fixed bottom-0 cursor-pointer right-0 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-10 rounded-full text-white font-semibold m-[25px] sm:m-[50px]">
+                }} className="fixed bottom-0 cursor-pointer right-0 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-12 rounded-full text-white font-semibold m-[25px] sm:m-[50px]">
                     <FontAwesomeIcon icon={faPlus} />
                 </button>
 

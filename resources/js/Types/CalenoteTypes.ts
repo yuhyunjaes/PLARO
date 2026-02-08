@@ -10,10 +10,7 @@ export interface Notepads {
     content: string;
     category: string;
     created_at: string;
-}
-
-export interface NotepadsLike {
-    notepad_uuid: string;
+    liked: boolean;
 }
 
 export interface Category {

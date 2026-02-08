@@ -91,8 +91,9 @@ export default function LifeBotSection({ alerts, setAlerts, now, getMessages, ha
         const hh = String(date.getHours()).padStart(2, "0");
         const mi = String(date.getMinutes()).padStart(2, "0");
         const ss = String(date.getSeconds()).padStart(2, "0");
+        const ms = String(date.getMilliseconds()).padStart(3, "0");
 
-        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}.${ms}`;
     }
 
     return (

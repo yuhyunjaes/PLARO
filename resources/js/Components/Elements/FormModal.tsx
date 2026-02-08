@@ -62,7 +62,7 @@ export default function FormModal({
     return (
         <div
             onClick={close}
-            className="absolute inset-0 z-[1] bg-black/30 flex justify-center items-center px-5"
+            className="fixed inset-0 z-[1] bg-black/30 flex justify-center items-center px-5"
         >
             <div
                 onClick={(e) => e.stopPropagation()}

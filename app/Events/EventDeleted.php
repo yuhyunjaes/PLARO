@@ -17,10 +17,15 @@ class EventDeleted implements ShouldBroadcastNow {
     public function __construct(
         public string $eventUuid,
         public int $deletedBy,
+        public array $participantIds,
     ) {}
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
-        return new PrivateChannel('events.all');
+        return collect($this->participantIds)
+            ->map(fn ($userId) =>
+            new PrivateChannel("user.{$userId}.events")
+            )
+            ->toArray();
     }
 
     public function broadcastAs(): string
@@ -31,7 +36,7 @@ class EventDeleted implements ShouldBroadcastNow {
     public function broadcastWith(): array {
         return [
             'event_uuid' => $this->eventUuid,
-            'user_id' => $this->deletedBy,
+            'delete_by' => $this->deletedBy,
         ];
     }
 }

@@ -9,7 +9,7 @@ import {router} from "@inertiajs/react";
 import NotepadShare from "./NotepadsSection/NotepadShare";
 import NotepadEdit from "./NotepadsSection/NotepadEdit";
 import NotepadCategoryEdit from "./NotepadsSection/NotepadCategoryEdit";
-import {Notepads, NotepadsLike, Category} from "../../../../Types/CalenoteTypes";
+import {Notepads, Category} from "../../../../Types/CalenoteTypes";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 import {AlertsData} from "../../../../Components/Elements/ElementsData";
@@ -18,8 +18,6 @@ interface NotepadsSectionProps {
     notepads: Notepads[];
     setNotepads: Dispatch<SetStateAction<Notepads[]>>;
     viewOption: "grid" | "list";
-    notepadLikes: NotepadsLike[];
-    setNotepadLikes: Dispatch<SetStateAction<NotepadsLike[]>>;
     tab: "all" | "liked";
     setEditStatus: Dispatch<SetStateAction<string>>;
     editId: string;
@@ -29,11 +27,10 @@ interface NotepadsSectionProps {
     setTemporaryEditTitle: Dispatch<SetStateAction<string>>;
     modal: boolean;
     setModal: Dispatch<SetStateAction<boolean>>;
-    categories: Category[];
-    getNotepadCategories: () => Promise<void>;
+    categories: string[];
 }
 
-export default function NotepadsSection({ notepads, setNotepads, viewOption, notepadLikes, setNotepadLikes, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal, categories, getNotepadCategories } : NotepadsSectionProps) {
+export default function NotepadsSection({ notepads, setNotepads, viewOption, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal, categories } : NotepadsSectionProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -72,37 +69,22 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, not
         setModal(true);
     }, [editId, temporaryEditTitle]);
 
-    const getNotepadLikes = useCallback(async ()=> {
-        setLoading(true);
-        try {
-            const res = await axios.get("/notepads/likes");
-            if(res.data.success) {
-                setNotepadLikes(res.data.likes);
-            }
-        } catch (err) {
-            console.log(err);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const handleLikeInsert = async (uuid: string) => {
+        if(!uuid) return;
 
-    useEffect(() => {
-        getNotepadLikes();
-    }, [getNotepadLikes]);
-
-    const handleLikeInsert = async (uuid : string) => {
         setLoading(true);
         try {
             const res = await axios.post(`/notepads/${uuid}/like`);
-            if(res.data.success) {
-                setNotepadLikes(prev => [...prev, { notepad_uuid: uuid }]);
+
+            if (res.data.success) {
+                updateLikeState(uuid, true);
             }
-            const alertData:AlertsData = {
+
+            setAlerts(prev => [...prev, {
                 id: new Date(),
                 message: res.data.message,
-                type: res.data.type
-            }
-            setAlerts(pre => [...pre, alertData]);
+                type: res.data.type,
+            }]);
 
         } catch (err) {
             console.error(err);
@@ -111,28 +93,42 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, not
         }
     };
 
-    const handleLikeDelete = useCallback(async (uuid : string) => {
+    const handleLikeDelete = useCallback(async (uuid: string) => {
+        if(!uuid) return;
+
         setLoading(true);
         try {
             const res = await axios.delete(`/notepads/${uuid}/like`);
-            if(res.data.success) {
-                setNotepadLikes(prev => prev.filter(like => like.notepad_uuid !== uuid));
+
+            if (res.data.success) {
+                updateLikeState(uuid, false, tab === "liked");
             }
-            if(res.data.success && (tab === "liked")) {
-                setNotepads(prev => prev.filter(notepad => notepad.id !== uuid));
-            }
-            const alertData:AlertsData = {
+
+            setAlerts(prev => [...prev, {
                 id: new Date(),
                 message: res.data.message,
-                type: res.data.type
-            }
-            setAlerts(pre => [...pre, alertData]);
+                type: res.data.type,
+            }]);
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
         }
     }, [tab]);
+
+    const updateLikeState = (
+        uuid: string,
+        liked: boolean,
+        removeWhenUnliked = false
+    ) => {
+        setNotepads(prev =>
+            removeWhenUnliked && !liked
+                ? prev.filter(n => n.id !== uuid)
+                : prev.map(n =>
+                    n.id === uuid ? { ...n, liked } : n
+                )
+        );
+    };
 
     const getColumnCount = () => {
         if(viewOption === "grid") {
@@ -219,7 +215,7 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, not
                             </p>
                             <p className="text-sm normal-text truncate">{notepad.created_at.substring(0, 10)}</p>
                             <div className="flex justify-between items-center">
-                                <NotepadCategoryEdit categories={categories} getNotepadCategories={getNotepadCategories} setNotepads={setNotepads} notepadCategory={notepad.category} notepadId={notepad.id}/>
+                                <NotepadCategoryEdit categories={categories} setNotepads={setNotepads} notepadCategory={notepad.category} notepadId={notepad.id}/>
 
                                 <div className="space-x-2 flex">
                                     <NotepadEdit handleEditNotepadTitle={handleEditNotepadTitle} modal={modal} deleteNotepad={deleteNotepad} EditTitle={EditTitle} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setEditStatus={setEditStatus} editId={editId} setEditId={setEditId} notepadId={notepad.id} isLastInRow={isLastInRow}/>
@@ -235,14 +231,14 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, not
                                         className="transition-colors duration-300 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            if(notepadLikes.some(like => like.notepad_uuid === notepad.id)) {
-                                                handleLikeDelete(notepad.id);
-                                            } else {
-                                                handleLikeInsert(notepad.id);
-                                            }
+                                            notepad.liked
+                                                ? handleLikeDelete(notepad.id)
+                                                : handleLikeInsert(notepad.id);
                                         }}
                                     >
-                                        <FontAwesomeIcon icon={(notepadLikes.some(like => like.notepad_uuid === notepad.id)) ? (faHeartSolid) : (faHeartRegular)} />
+                                        <FontAwesomeIcon
+                                            icon={notepad.liked ? faHeartSolid : faHeartRegular}
+                                        />
                                     </button>
                                 </div>
                             </div>

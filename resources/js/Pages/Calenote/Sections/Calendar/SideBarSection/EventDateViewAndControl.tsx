@@ -187,7 +187,7 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
                                             <button onClick={() => {
                                                 editEventAt("startDate");
                                                 setEditType(null);
-                                            }} className="size-4 rounded bg-green-500">
+                                            }} className="size-4 rounded bg-green-500 text-white cursor-pointer">
                                                 <FontAwesomeIcon icon={faFloppyDisk} />
                                             </button>
                                         </div>
@@ -208,7 +208,7 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
                                             <button onClick={() => {
                                                 editEventAt("startTime");
                                                 setEditType(null);
-                                            }} className="size-4 rounded bg-green-500">
+                                            }} className="size-4 rounded bg-green-500 text-white cursor-pointer">
                                                 <FontAwesomeIcon icon={faFloppyDisk} />
                                             </button>
                                         </div>
@@ -231,7 +231,7 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
                                             <button onClick={() => {
                                                 editEventAt("endDate");
                                                 setEditType(null);
-                                            }} className="size-4 rounded bg-green-500">
+                                            }} className="size-4 rounded bg-green-500 text-white cursor-pointer">
                                                 <FontAwesomeIcon icon={faFloppyDisk} />
                                             </button>
                                         </div>
@@ -252,7 +252,7 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
                                             <button onClick={() => {
                                                 editEventAt("endTime");
                                                 setEditType(null);
-                                            }} className="size-4 rounded bg-green-500">
+                                            }} className="size-4 rounded bg-green-500 text-white cursor-pointer">
                                                 <FontAwesomeIcon icon={faFloppyDisk} />
                                             </button>
                                         </div>
