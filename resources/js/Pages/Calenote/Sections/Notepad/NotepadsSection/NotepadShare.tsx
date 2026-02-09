@@ -76,13 +76,13 @@ export default function NotepadShare({ notepadId, shareId, setShareId, isLastInR
                 <div
                     ref={menuRef}
                     className={`
-                        w-[200px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-xl
+                        w-[160px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-xl
                         ${isLastInRow ? "right-0" : "left-0"}
                     `}
                 >
                     <button onClick={() => {
                         sendEmail(shareId)
-                    }} className="btn transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-gray-950 dark:text-white hover:bg-gray-950/10 dark:hover:bg-gray-600 space-x-1">
+                    }} className="btn text-xs transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-gray-950 dark:text-white hover:bg-gray-950/10 dark:hover:bg-gray-600 space-x-1">
                         <FontAwesomeIcon icon={faEnvelope}/>
                         <span>
                             메일 공유

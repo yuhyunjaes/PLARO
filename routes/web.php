@@ -134,8 +134,15 @@ Route::middleware('web')->group(function () {
         })->name('notepad');
 
         Route::get('/calenote/notepad/{uuid}', function () {
-            $notepad = Notepad::where('user_id', Auth::id())
+            $user = Auth::user();
+
+            $notepad = Notepad::where('user_id', $user->id)
                 ->where('uuid', request('uuid'))
+                ->withExists([
+                    'likes as liked' => function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    }
+                ])
                 ->first();
 
             if (!$notepad) {
@@ -146,6 +153,7 @@ Route::middleware('web')->group(function () {
                 'content' => $notepad->content,
                 'uuid' => $notepad->uuid,
                 'title' => $notepad->title,
+                'liked' => (bool) $notepad->liked,
                 'status' => 200,
             ]);
         })->name('notepad.write');

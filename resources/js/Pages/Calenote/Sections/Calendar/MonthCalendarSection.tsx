@@ -110,7 +110,7 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
             });
 
             setTimeout(() => setIsScrolling(false), 300);
-        } else if (scrollTop + clientHeight >= scrollHeight - 0.5) {
+        } else if (scrollTop + clientHeight >= scrollHeight) {
             setIsScrolling(true);
 
             setMonths(prev => {

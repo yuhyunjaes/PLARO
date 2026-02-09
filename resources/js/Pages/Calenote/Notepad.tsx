@@ -36,6 +36,9 @@ export default function Notepad({ auth } : NotepadProps) {
     const [tab, setTab] = useState<"all" | "liked">("all");
     const [viewOption, setViewOption] = useState<"grid" | "list">("grid");
     const [notepads, setNotepads] = useState<Notepads[]>([]);
+    const [page, setPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     const [editId, setEditId] = useState<string>("");
     const [editStatus, setEditStatus] = useState<string>("");
@@ -55,7 +58,7 @@ export default function Notepad({ auth } : NotepadProps) {
     const [notepadCategory, setNotepadCategory] = useState<string>("");
 
     const [formInputs, setFormInputs] = useState([
-        { label: "타이틀", type: "text", id: "new-title", name: "new-title", value: notepadTitle },
+        { label: "제목", type: "text", id: "new-title", name: "new-title", value: notepadTitle },
         { label: "카테고리", type: "text", id: "new-category", name: "new-category", value: notepadCategory }
     ]);
 
@@ -105,38 +108,70 @@ export default function Notepad({ auth } : NotepadProps) {
     const [searchTitle, setSearchTitle] = useState("");
     const [searchCategory, setSearchCategory] = useState("");
 
-    const getNotepads = useCallback(async () => {
-        if(!tab) return;
-        setLoading(true);
+    const getNotepads = useCallback(async (append = false) => {
+        if (!tab) return;
+
+        append ? setIsFetchingMore(true) : setLoading(true);
+
         try {
             const res = await axios.get('/api/notepads', {
                 params: {
+                    page,
                     title: searchTitle,
                     category: searchCategory,
-                    liked: tab === 'liked'
+                    liked: tab === 'liked',
                 }
             });
 
             if (res.data.success) {
-                setNotepads(res.data.notepads);
+                setLastPage(res.data.pagination.last_page);
+
+                setNotepads(prev =>
+                    append
+                        ? [...prev, ...res.data.notepads]
+                        : res.data.notepads
+                );
             } else {
-                const alertData:AlertsData = {
+                setAlerts(pre => [...pre, {
                     id: new Date(),
                     message: res.data.message,
                     type: res.data.type
-                }
-                setAlerts(pre => [...pre, alertData]);
+                }]);
             }
         } catch (err) {
             console.log(err);
         } finally {
-            setLoading(false);
+            append ? setIsFetchingMore(false) : setLoading(false);
         }
-    }, [tab, searchTitle, searchCategory]);
+    }, [tab, searchTitle, searchCategory, page]);
 
     useEffect(() => {
         getNotepads();
-    }, [getNotepads]);
+        setPage(1);
+    }, [tab, searchTitle, searchCategory]);
+
+    useEffect(() => {
+        getNotepads(page !== 1);
+    }, [page, getNotepads]);
+
+    useEffect(() => {
+        const container = document.querySelector('.CalenoteLayout-container');
+        if (!container) return;
+
+        const handleScroll = () => {
+            if (isFetchingMore) return;
+            if (page >= lastPage) return;
+
+            const { scrollTop, clientHeight, scrollHeight } = container;
+
+            if (scrollTop + clientHeight >= scrollHeight) {
+                setPage(p => p + 1);
+            }
+        };
+
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, [isFetchingMore, page, lastPage]);
 
     const handleDeleteNotepad = useCallback( async () => {
         if(!editId) return;
@@ -167,7 +202,7 @@ export default function Notepad({ auth } : NotepadProps) {
             <div className="min-h-full bg-gray-100 dark:bg-gray-950 relative flex flex-col">
                 {
                     (notepads.length <= 0) && (
-                        <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold w-full text-center">
+                        <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold w-full text-center">
                             {
                                 (tab === "liked") ? "찜한 메모가 아직 없어요." : "아직 작성된 메모가 없어요."
                             }
@@ -184,7 +219,7 @@ export default function Notepad({ auth } : NotepadProps) {
                 </div>
 
                 {/*메모장 삭제 모달창*/}
-                {modal && <Modal Title="메모장 삭제" onClickEvent={handleDeleteNotepad} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId && '"'+notepads.find(item => item.id === editId)?.title+'"' + " 메모장을 정말 삭제 하시겠습니까?"} Position="top" CloseText="삭제" />}
+                {modal ? <Modal Title="메모장 삭제" onClickEvent={handleDeleteNotepad} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId && '"'+notepads.find(item => item.id === editId)?.title+'"' + " 메모장을 정말 삭제 하시겠습니까?"} Position="top" CloseText="삭제" /> : ""}
 
                 <button onClick={() => {
                     setFormModal(true);
@@ -192,7 +227,7 @@ export default function Notepad({ auth } : NotepadProps) {
                     <FontAwesomeIcon icon={faPlus} />
                 </button>
 
-                {formModal && (
+                {formModal ? (
                     <FormModal
                         Title="메모장 생성"
                         SubmitText="생성"
@@ -202,7 +237,7 @@ export default function Notepad({ auth } : NotepadProps) {
                         onChangeArray={handleInputChange} // index 기반 onChange
                         Submit={handleStoreNotepad}
                     />
-                )}
+                ) : ""}
             </div>
         </>
     );

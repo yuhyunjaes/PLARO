@@ -15,7 +15,7 @@ export default function NotepadTitle({ setSearchTitle, temporarySearchCategory, 
             name="searchTitle"
             id="searchTitle"
             buttonText="검색"
-            label="타이틀"
+            label="제목"
             value={temporarySearchTitle}
             onChange={(e) => {
                 setTemporarySearchTitle(e.target.value);

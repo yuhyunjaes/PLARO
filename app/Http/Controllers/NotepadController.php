@@ -159,8 +159,8 @@ class NotepadController extends Controller
 
             $notepads = $query
                 ->orderByDesc('created_at')
-                ->get()
-                ->map(fn ($n) => [
+                ->paginate(24)
+                ->through(fn ($n) => [
                     'id' => $n->uuid,
                     'title' => $n->title,
                     'content' => $n->content,
@@ -171,7 +171,13 @@ class NotepadController extends Controller
 
             return response()->json([
                 'success' => true,
-                'notepads' => $notepads
+                'notepads' => $notepads->items(),
+                'pagination' => [
+                    'current_page' => $notepads->currentPage(),
+                    'last_page' => $notepads->lastPage(),
+                    'per_page' => $notepads->perPage(),
+                    'total' => $notepads->total(),
+                ]
             ]);
         } catch (\Throwable $e) {
             return response()->json([

@@ -2,9 +2,9 @@
 import React, {
     cloneElement,
     isValidElement, ReactElement,
-    ReactNode,
+    ReactNode, RefObject,
     useCallback,
-    useEffect,
+    useEffect, useRef,
     useState,
 } from "react";
 import Header from "../Components/Header/Header";
@@ -51,6 +51,8 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
     );
     const [saveWidth, setSaveWidth] = useState<number>(250);
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
+
+    const CalenoteLayoutScrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
 
     // 반응형 처리
     const handleResize = useCallback((): void => {
@@ -104,7 +106,7 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
                     setSideBar={setSideBar}
                 />
 
-                <main className="transition-[width] duration-300 h-full flex-1 overflow-y-auto overflow-x-hidden">
+                <main className="CalenoteLayout-container transition-[width] duration-300 h-full flex-1 overflow-y-auto overflow-x-hidden" ref={CalenoteLayoutScrollRef}>
                     {alerts.length > 0 && (
                         <Alert
                             key={formatDateKey(alerts[0]!.id)}

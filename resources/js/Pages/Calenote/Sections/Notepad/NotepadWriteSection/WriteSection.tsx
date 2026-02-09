@@ -67,9 +67,9 @@ export default function WriteSection({
         quill.on("text-change", () => {
             const html = quill.root.innerHTML;
             setNotepadText(html);
-            setSaveStatus(true);
 
             if (timer.current) clearTimeout(timer.current);
+            setSaveStatus(true);
 
             timer.current = setTimeout(() => {
                 handleSaveNotepadContent(notepadTextRef.current);
