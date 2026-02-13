@@ -2,10 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotepadController;
 use App\Http\Controllers\ChatController;
@@ -17,6 +14,7 @@ use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\EventInvitationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\EventUserController;
+use App\Http\Controllers\LifeBotController;
 use App\Models\Notepad;
 use Illuminate\Support\Facades\Session;
 
@@ -87,7 +85,7 @@ Route::middleware('web')->group(function () {
 
         Route::get('/calenote/calendar', function () {
             return Inertia::render('Calenote/Calendar');
-        })->name('calendar');
+        })->name('calendar.index');
 
         Route::get('/calenote/calendar/{mode}/{year}/{month}/{day?}', function ($mode, $year = 0, $month = 0, $day = 0) {
             // mode 체크
@@ -123,11 +121,11 @@ Route::middleware('web')->group(function () {
                 'month' => (int)$month,
                 'day' => $day !== null ? (int)$day : null,
             ]);
-        })->name('calendar');
+        })->name('calendar.mode');
 
         Route::get('/calenote/calendar/{uuid}', function ($uuid) {
             return Inertia::render('Calenote/Calendar', ['event' => $uuid]);
-        })->name('calendar');
+        })->name('calendar.event');
 
         Route::get('/calenote/notepad', function () {
             return Inertia::render('Calenote/Notepad');
@@ -206,6 +204,7 @@ Route::middleware('web')->group(function () {
         Route::put('/api/event/{uuid}/reminders', [EventReminderController::class, 'updateEventRemindersRead'])->name('event.reminders.read.update');
         Route::get('/api/event/reminders', [EventReminderController::class, 'getEventReminders'])->name('event.reminder.get');
         Route::put('/api/event/reminders/{id}', [EventReminderController::class, 'updateEventReminderRead'])->name('event.reminder.read.update');
+        Route::delete('/api/event/reminders/{id}', [EventReminderController::class, 'deleteEventReminder'])->name('event.reminder.delete');
 
         // --------------------
         // Participant Api
@@ -218,37 +217,8 @@ Route::middleware('web')->group(function () {
         // --------------------
         // Gemini API
         // --------------------
-        Route::post('/api/lifebot/title', function (Request $request) {
-            $apiKey = env('GEMINI_API_KEY');
-            $model = $request->input('model_name', 'models/gemini-2.5-flash');
-            $prompt = $request->input('prompt', '테스트');
-
-            Log::info('Gemini 요청 시작', compact('model', 'prompt'));
-
-            $url = "https://generativelanguage.googleapis.com/v1beta/{$model}:generateContent?key={$apiKey}";
-
-            try {
-                $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                    ->timeout(30)
-                    ->post($url, [
-                        'contents' => [['parts' => [['text' => $prompt]]]],
-                        'generationConfig' => [
-                            'temperature' => 0.7,
-                            'maxOutputTokens' => 2048,
-                        ],
-                    ]);
-
-                Log::info('Gemini 응답', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                return $response->json();
-            } catch (\Throwable $e) {
-                Log::error('Gemini 내부 오류', ['msg' => $e->getMessage()]);
-                return response()->json(['error' => $e->getMessage()], 500);
-            }
-        });
+        Route::post('/api/lifebot/title', [LifeBotController::class, 'title'])->name('lifebot.title');
+        Route::post('/api/lifebot/chat', [LifeBotController::class, 'chat'])->name('lifebot.chat');
 
     });
 });

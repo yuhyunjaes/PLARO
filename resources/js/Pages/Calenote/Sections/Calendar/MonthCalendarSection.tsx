@@ -1,7 +1,7 @@
 import {useState, useRef, useEffect, RefObject, useCallback} from "react";
 import MonthCreator from "./MonthCalendarSection/MonthCreator";
 import { Dispatch, SetStateAction } from "react";
-import {CalendarAtData, ParticipantsData} from "../CalenoteSectionsData";
+import {CalendarAtData, EventReminderItem, ParticipantsData} from "../CalenoteSectionsData";
 import {EventsData} from "../CalenoteSectionsData";
 import {router} from "@inertiajs/react";
 import { useContext } from "react";
@@ -11,7 +11,7 @@ interface SideBarSectionProps {
     handleEventClick: (Event:EventsData) => Promise<void>;
     getActiveEventReminder: (eventUuid:string) => Promise<void>;
     setEventParticipants: Dispatch<SetStateAction<ParticipantsData[]>>;
-    setEventReminder: Dispatch<SetStateAction<number[]>>;
+    setEventReminder: Dispatch<SetStateAction<EventReminderItem[]>>;
     setEventIdChangeDone: Dispatch<SetStateAction<boolean>>;
     setIsHaveEvent: Dispatch<SetStateAction<boolean>>;
     events: EventsData[];

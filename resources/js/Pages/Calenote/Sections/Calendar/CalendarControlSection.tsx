@@ -1,4 +1,4 @@
-import {Dispatch, SetStateAction} from "react";
+import {Dispatch, SetStateAction, useCallback} from "react";
 import {router} from "@inertiajs/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {faAngleDown, faAngleLeft, faAngleRight, faAngleUp, faChevronDown} from "@fortawesome/free-solid-svg-icons";
@@ -47,24 +47,23 @@ export default function CalendarControlSection({ setFirstCenter, setIsHaveEvent,
         return newDate;
     }
 
-    function moveDay(
-        baseMonth: Date,
-        day: number,
-        type: "add" | "sub"
-    ) {
+    const moveDay = useCallback((baseMonth: Date, day: number, type: "add" | "sub") => {
         const date = new Date(
             baseMonth.getFullYear(),
             baseMonth.getMonth(),
             day
         );
 
-        date.setDate(type === "add" ? date.getDate() + 1 : date.getDate() - 1);
+        date.setDate(type === "add"
+            ? (viewMode === "week" ? date.getDate() + 7 : date.getDate() + 1)
+            : (viewMode === "week" ? date.getDate() - 7 : date.getDate() - 1)
+        );
 
         return {
             newActiveAt: new Date(date.getFullYear(), date.getMonth(), 1),
             newActiveDay: date.getDate(),
         };
-    }
+    }, [viewMode])
 
 
 

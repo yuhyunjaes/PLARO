@@ -60,6 +60,11 @@ export interface ReminderData {
     created_at: string;
 }
 
+export interface EventReminderItem {
+    id: number | null;
+    seconds: number;
+}
+
 export interface ReminderEventsData {
     id: number;
     event_id: string;

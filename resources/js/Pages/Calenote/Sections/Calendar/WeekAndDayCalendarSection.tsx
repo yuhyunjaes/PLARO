@@ -1,11 +1,11 @@
 import {Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
-import {CalendarAtData, EventsData, ParticipantsData} from "../CalenoteSectionsData";
+import {CalendarAtData, EventReminderItem, EventsData, ParticipantsData} from "../CalenoteSectionsData";
 
 interface WeekCalendarSectionProps {
     handleEventClick: (Event:EventsData) => Promise<void>;
     events: EventsData[];
     setEventParticipants: Dispatch<SetStateAction<ParticipantsData[]>>;
-    setEventReminder: Dispatch<SetStateAction<number[]>>;
+    setEventReminder: Dispatch<SetStateAction<EventReminderItem[]>>;
     eventId: string | null;
     setEventDescription: Dispatch<SetStateAction<string>>;
     setEventColor: Dispatch<SetStateAction<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">>;

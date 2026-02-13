@@ -8,7 +8,7 @@ import {router} from "@inertiajs/react";
 import CalendarControlSection from "./Sections/Calendar/CalendarControlSection";
 import WeekAndDayCalendarSection from "./Sections/Calendar/WeekAndDayCalendarSection";
 import axios from "axios";
-import {EventsData, ParticipantsData, ReminderData, ReminderEventsData} from "./Sections/CalenoteSectionsData";
+import {EventReminderItem, EventsData, ParticipantsData, ReminderData} from "./Sections/CalenoteSectionsData";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../Providers/GlobalUIContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -86,7 +86,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     const [eventTitle, setEventTitle] = useState<string>("");
     const [eventDescription, setEventDescription] = useState<string>("");
     const [eventColor, setEventColor] = useState<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">("bg-blue-500");
-    const [eventReminder, setEventReminder] = useState<number[]>([]);
+    const [eventReminder, setEventReminder] = useState<EventReminderItem[]>([]);
     const [eventParticipants, setEventParticipants] = useState<ParticipantsData[]>([]);
 
     const [eventId, setEventId] = useState<string | null>(event ? event : null);
@@ -126,7 +126,10 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         setEvents(pre => [...pre, event]);
 
         if (eventReminder.length > 0 && event.uuid) {
-            await saveEventReminder(event.uuid);
+            for (const reminder of eventReminder) {
+                await addEventReminderBySecond(event.uuid, reminder.seconds);
+            }
+            await getActiveEventReminder(event.uuid);
         }
 
         const participantsData:ParticipantsData = {
@@ -150,31 +153,75 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         return event.uuid;
     }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventReminder]);
 
-    const saveEventReminder = useCallback(async (eventUuid: string): Promise<void> => {
-        if(!eventUuid) return;
+    const addEventReminderBySecond = useCallback(async (eventUuid: string, seconds: number): Promise<void> => {
+        if (!eventUuid) return;
+
         try {
             const res = await axios.post(`/api/event/${eventUuid}/reminders`, {
-                seconds: eventReminder,
+                seconds,
             });
 
-            if(!res.data.success)  {
-                const alertData:AlertsData = {
+            if (!res.data.success) {
+                const alertData: AlertsData = {
                     id: new Date(),
                     message: res.data.message,
                     type: res.data.type
-                }
+                };
                 setAlerts(pre => [...pre, alertData]);
-            } else {
-                const currentReminder = res.data.reminders;
-                setReminders(pre => [
-                    ...pre.filter(item => item.event_uuid !== eventUuid),
-                    ...currentReminder
-                ]);
+                return;
             }
+
+            const created = res.data.reminder as ReminderData;
+
+            setEventReminder(prev => {
+                const withoutSecond = prev.filter(item => item.seconds !== seconds);
+                return [...withoutSecond, { id: created.id, seconds: created.seconds }];
+            });
+
+            setReminders(prev => {
+                const exists = prev.some(item => item.id === created.id);
+                return exists ? prev : [...prev, created];
+            });
         } catch (err) {
             console.error(err);
         }
-    }, [eventReminder]);
+    }, []);
+
+    const addEventReminder = useCallback(async (seconds: number): Promise<void> => {
+        if (eventReminder.some(item => item.seconds === seconds)) return;
+
+        if (!eventId) {
+            setEventReminder(prev => [...prev, { id: null, seconds }]);
+            return;
+        }
+
+        await addEventReminderBySecond(eventId, seconds);
+    }, [eventReminder, eventId, addEventReminderBySecond]);
+
+    const removeEventReminder = useCallback(async (reminder: EventReminderItem): Promise<void> => {
+        if (!reminder.id) {
+            setEventReminder(prev => prev.filter(item => item.seconds !== reminder.seconds));
+            return;
+        }
+
+        try {
+            const res = await axios.delete(`/api/event/reminders/${reminder.id}`);
+            if (!res.data.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setEventReminder(prev => prev.filter(item => item.id !== reminder.id));
+            setReminders(prev => prev.filter(item => item.id !== reminder.id));
+        } catch (err) {
+            console.error(err);
+        }
+    }, []);
 
     const [isRemoteUpdate, setIsRemoteUpdate] = useState<boolean>(false);
 
@@ -228,12 +275,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         }
     }, [eventColor, startAt, endAt, isDragging]);
 
-    useEffect(() => {
-        if(!isDragging) {
-            updateEventReminder();
-        }
-    }, [eventReminder, isDragging]);
-
     const deleteEvent = useCallback(async ():Promise<void> => {
         if(!eventId) return;
 
@@ -275,17 +316,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     const [firstCenter, setFirstCenter] = useState<boolean>(false);
     const [IsHaveEvent, setIsHaveEvent] = useState<boolean>(false);
     const [getDone, setGetDone] = useState<boolean>(false);
-
-    const updateEventReminder = useCallback(async () => {
-        if(!eventId || !getDone) return;
-
-        if(!eventIdChangeDone) {
-            setEventIdChangeDone(true);
-            return;
-        }
-
-        await saveEventReminder(eventId);
-    }, [eventIdChangeDone, eventReminder, eventId, getDone]);
 
     // Calendar 컴포넌트에서 getEvent 함수 수정
 
@@ -354,7 +384,11 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         try {
             const res = await axios.get(`/api/event/${eventUuid}/reminders`);
             if(res.data.success) {
-                setEventReminder(res.data.reminders);
+                const remindersData = (res.data.reminders as Array<{ id: number; seconds: number }>).map(item => ({
+                    id: item.id,
+                    seconds: item.seconds
+                }));
+                setEventReminder(remindersData);
             } else {
                 const alertData:AlertsData = {
                     id: new Date(),
@@ -797,7 +831,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                     }} className={`fixed block sm:hidden bottom-0 duration-300 transition-[right] cursor-pointer ${sideBarToggle ? 'right-[250px]' : 'right-0'}  bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-12 rounded-full text-white font-semibold m-[25px] sm:m-[50px]`}>
                         <FontAwesomeIcon icon={sideBarToggle ? faAngleRight : faAngleLeft} />
                     </button>
-                    <SideBarSection eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} setEvents={setEvents} eventReminder={eventReminder} setEventReminder={setEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                    <SideBarSection eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} setEvents={setEvents} eventReminder={eventReminder} setEventReminder={setEventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
                 </div>
             </div>
         </>

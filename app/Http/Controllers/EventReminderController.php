@@ -30,41 +30,28 @@ class EventReminderController extends Controller
             ]);
         }
 
-        $newSeconds = $request->seconds ?? [];
+        $data = $request->validate([
+            'seconds' => ['required', 'integer', 'min:0', 'max:2419200'],
+        ]);
 
-        $existingReminders = $event->reminders()
+        $reminder = $event->reminders()
             ->where('user_id', Auth::id())
-            ->get();
+            ->where('seconds', $data['seconds'])
+            ->first();
 
-        $existingSeconds = $existingReminders->pluck('seconds')->toArray();
-
-        $toDelete = array_diff($existingSeconds, $newSeconds);
-        if ($toDelete) {
-            $event->reminders()
-                ->where('user_id', Auth::id())
-                ->whereIn('seconds', $toDelete)
-                ->delete();
-        }
-
-        $toAdd = array_diff($newSeconds, $existingSeconds);
-        if ($toAdd) {
-            $event->reminders()->createMany(
-                collect($toAdd)->map(fn ($sec) => [
-                    'seconds' => $sec,
-                    'user_id' => Auth::id(),
-                ])->toArray()
-            );
+        if (!$reminder) {
+            $reminder = $event->reminders()->create([
+                'seconds' => $data['seconds'],
+                'user_id' => Auth::id(),
+            ]);
         }
 
         return response()->json([
             'success' => true,
-            'reminders' => $event->reminders()
-                ->where('user_id', Auth::id())
-                ->get()
-                ->map(fn ($r) => [
-                    ...$r->toArray(),
-                    'event_uuid' => $event->uuid
-                ])
+            'reminder' => [
+                ...$reminder->toArray(),
+                'event_uuid' => $event->uuid
+            ],
         ]);
     }
 
@@ -82,11 +69,14 @@ class EventReminderController extends Controller
 
         $reminders = $event->reminders()
             ->where('user_id', Auth::id())
-            ->pluck('seconds');
+            ->get(['id', 'seconds']);
 
         return response()->json([
             'success' => true,
-            'reminders' => $reminders
+            'reminders' => $reminders->map(fn ($r) => [
+                'id' => $r->id,
+                'seconds' => $r->seconds,
+            ]),
         ]);
     }
 
@@ -116,6 +106,25 @@ class EventReminderController extends Controller
         }
 
         $reminder->update(['read' => true]);
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteEventReminder($id)
+    {
+        $reminder = EventReminder::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$reminder) {
+            return response()->json([
+                'success' => false,
+                'message' => '리마인더가 존재하지 않습니다.',
+                'type' => 'danger'
+            ]);
+        }
+
+        $reminder->delete();
 
         return response()->json(['success' => true]);
     }

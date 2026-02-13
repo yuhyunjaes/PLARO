@@ -111,10 +111,7 @@ export default function ChatInput({
     }, [inputSize]);
 
     const handleSubmit = useCallback(async (value: string = "") => {
-        const START_API = import.meta.env.VITE_GEMINI_API_START;
-        const END_API = import.meta.env.VITE_GEMINI_API_END;
-        const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-        const MODEL_NAME = import.meta.env.VITE_GEMINI_API_MODEL;
+        const MODEL_NAME = import.meta.env.VITE_GEMINI_API_MODEL || "models/gemini-2.5-flash";
 
         const text = value ? value : prompt;
         if (!text.trim()) return;
@@ -176,101 +173,58 @@ export default function ChatInput({
                         .replace(/`/g, "\\`")
                     : "empty-message";
 
-            // Gemini API 호출
-            const response = await fetch(`${START_API}${MODEL_NAME}${END_API}${API_KEY}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [
-                        {
-                            parts: [
-                                { text: `NOW***${now}***` },
-                                { text: prompts.DEFAULT_PROMPT },
-                                { text: prompts.HISTORY_PROMPT },
-                                { text: `HISTORY-JSON***${historyText}***` },
-                                { text: `USER-TEXT***${text}***` },
-                            ],
-                        },
-                    ],
-                    generationConfig: { temperature: 0.8, maxOutputTokens: 5120 },
-                }),
+            const response = await axios.post("/api/lifebot/chat", {
+                model_name: MODEL_NAME,
+                parts: [
+                    { text: `NOW***${now}***` },
+                    { text: prompts.DEFAULT_PROMPT },
+                    { text: prompts.HISTORY_PROMPT },
+                    { text: `HISTORY-JSON***${historyText}***` },
+                    { text: `USER-TEXT***${text}***` },
+                ],
+                generationConfig: { temperature: 0.8, maxOutputTokens: 5120 },
             });
-
-            if (!response.body) {
-                throw new Error("Response body is null");
-            }
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
 
             let aiCode = "";
             let eventCode = "";
             let catMatch: RegExpMatchArray | null = null;
-            let combined: string = "";
+            let combined: string = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
             let fullText: string = "";
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk
-                    .split("\n")
-                    .filter((line) => line.trim().startsWith("data: "));
-
-                for (const line of lines) {
-                    if (line.includes("[DONE]")) continue;
-
-                    try {
-                        const json = JSON.parse(line.replace(/^data: /, ""));
-                        const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-                        if (text) {
-                            combined += text;
-
-                            // 캘린더 이벤트 패턴 추출: &&&{...}&&&
-                            if (combined.includes("&&&{")) {
-                                const eventMatch = combined.match(/&&&({[\s\S]*?})&&&/);
-                                if (eventMatch && eventMatch[1]) {
-                                    eventCode = eventMatch[1];
-                                    combined = combined.replace(eventMatch[0], "").trim();
-                                }
-                            }
-
-                            // 카테고리 추천 패턴 추출: <<<[...]>>>
-                            if (combined.includes("<<<[")) {
-                                const match = combined.match(/<<<\[([\s\S]*?)\]>>>/);
-                                if (match) {
-                                    catMatch = match;
-                                    combined = combined.replace(match[0], "").trim();
-                                }
-                            }
-
-                            // 메모 저장 패턴 추출: ***{...}***
-                            if (combined.includes('***{')) {
-                                const jsonStart = combined.indexOf('***{');
-                                fullText = combined.slice(0, jsonStart).trim();
-                            } else {
-                                fullText = combined.trim();
-                            }
-
-                            const aiMatch = fullText.match(/\*\*\*({[\s\S]*?})\*\*\*/);
-                            if (aiMatch) fullText = fullText.replace(aiMatch[0], "").trim();
-
-                            setMessages((prev) => {
-                                if (!prev.length) return prev;
-                                return prev.map((msg, i) =>
-                                    i === prev.length - 1
-                                        ? { ...msg, text: fullText }
-                                        : msg
-                                );
-                            });
-                        }
-                    } catch (err) {
-                        console.warn("파싱 오류:", err);
-                    }
+            if (combined.includes("&&&{")) {
+                const eventMatch = combined.match(/&&&({[\s\S]*?})&&&/);
+                if (eventMatch && eventMatch[1]) {
+                    eventCode = eventMatch[1];
+                    combined = combined.replace(eventMatch[0], "").trim();
                 }
             }
+
+            if (combined.includes("<<<[")) {
+                const match = combined.match(/<<<\[([\s\S]*?)\]>>>/);
+                if (match) {
+                    catMatch = match;
+                    combined = combined.replace(match[0], "").trim();
+                }
+            }
+
+            if (combined.includes('***{')) {
+                const jsonStart = combined.indexOf('***{');
+                fullText = combined.slice(0, jsonStart).trim();
+            } else {
+                fullText = combined.trim();
+            }
+
+            const aiMatch = fullText.match(/\*\*\*({[\s\S]*?})\*\*\*/);
+            if (aiMatch) fullText = fullText.replace(aiMatch[0], "").trim();
+
+            setMessages((prev) => {
+                if (!prev.length) return prev;
+                return prev.map((msg, i) =>
+                    i === prev.length - 1
+                        ? { ...msg, text: fullText }
+                        : msg
+                );
+            });
 
             // 카테고리 추천 처리
             if (catMatch && currentRoomId) {

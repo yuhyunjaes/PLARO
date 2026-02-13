@@ -4,7 +4,7 @@ import EventTitleControl from "./SideBarSection/EventTitleControl";
 import EventDescriptionControl from "./SideBarSection/EventDescriptionControl";
 import EventColorControl from "./SideBarSection/EventColorControl";
 import ReminderControl from "./SideBarSection/ReminderControl";
-import {EventsData, ParticipantsData, ReminderData, ReminderEventsData} from "../CalenoteSectionsData";
+import {EventReminderItem, EventsData, ParticipantsData, ReminderData, ReminderEventsData} from "../CalenoteSectionsData";
 import ReminderView from "./SideBarSection/ReminderView";
 import ParticipantControl from "./SideBarSection/ParticipantControl";
 import {AuthUser} from "../../../../Types/CalenoteTypes";
@@ -23,8 +23,10 @@ interface SideBarSectionProps {
     now: Date;
     events: EventsData[];
     setEvents: Dispatch<SetStateAction<EventsData[]>>;
-    eventReminder: number[];
-    setEventReminder: Dispatch<SetStateAction<number[]>>;
+    eventReminder: EventReminderItem[];
+    setEventReminder: Dispatch<SetStateAction<EventReminderItem[]>>;
+    addEventReminder: (seconds: number) => Promise<void>;
+    removeEventReminder: (reminder: EventReminderItem) => Promise<void>;
     deleteEvent: () => Promise<void>;
     updateEvent: () => Promise<void>;
     eventId: string | null;
@@ -44,7 +46,7 @@ interface SideBarSectionProps {
     setEndAt: Dispatch<SetStateAction<Date | null>>;
 }
 
-export default function SideBarSection({ eventParticipants, setEventParticipants, auth, sideBarToggle, setSideBarToggle, handleEventClick, reminders, now, events, setEvents, eventReminder, setEventReminder, deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
+export default function SideBarSection({ eventParticipants, setEventParticipants, auth, sideBarToggle, setSideBarToggle, handleEventClick, reminders, now, events, setEvents, eventReminder, setEventReminder, addEventReminder, removeEventReminder, deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
     const [onlyOneClick, setOnlyOneClick] = useState(false);
     useEffect(() => {
         if(eventId && onlyOneClick) {
@@ -84,7 +86,7 @@ export default function SideBarSection({ eventParticipants, setEventParticipants
                                 <ParticipantControl setEvents={setEvents} resetEvent={resetEvent} IsEditAuthority={IsEditAuthority} disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
                                 <EventDescriptionControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
                                 <EventColorControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} eventColor={eventColor} setEventColor={setEventColor} />
-                                <ReminderControl eventReminder={eventReminder} setEventReminder={setEventReminder} />
+                                <ReminderControl eventReminder={eventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} />
                                 <div className="px-5 pb-5">
                                     {
                                         ((!eventId && !onlyOneClick)) ? (

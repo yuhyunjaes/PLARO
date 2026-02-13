@@ -244,11 +244,17 @@ class NotepadController extends Controller
     public function UpdateNotepads($uuid, Request $request)
     {
         try {
+            $data = $request->validate([
+                'text' => ['nullable', 'string'],
+            ]);
 
-            DB::transaction(function () use ($uuid, $request) {
-                Notepad::where('uuid', $uuid)->firstOrFail()->update([
-                    'content' => $request->text
-                ]);
+            DB::transaction(function () use ($uuid, $data) {
+                Notepad::where('uuid', $uuid)
+                    ->where('user_id', Auth::id())
+                    ->firstOrFail()
+                    ->update([
+                        'content' => $data['text'] ?? null
+                    ]);
             });
 
             return response()->json(['success' => true, 'message'=>'메모장이 수정되었습니다.', 'type' => 'success']);
@@ -307,5 +313,3 @@ class NotepadController extends Controller
     }
 
 }
-
-

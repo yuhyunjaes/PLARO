@@ -1,15 +1,15 @@
-import {Dispatch, SetStateAction, useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {faX} from "@fortawesome/free-solid-svg-icons";
-import {CalendarAtData} from "../../CalenoteSectionsData";
-import {router} from "@inertiajs/react";
+import {EventReminderItem} from "../../CalenoteSectionsData";
 
 interface ReminderControlProps {
-    eventReminder: number[];
-    setEventReminder: Dispatch<SetStateAction<number[]>>;
+    eventReminder: EventReminderItem[];
+    addEventReminder: (seconds: number) => Promise<void> | void;
+    removeEventReminder: (reminder: EventReminderItem) => Promise<void> | void;
 }
 
-export default function ReminderControl({ eventReminder, setEventReminder }:ReminderControlProps) {
+export default function ReminderControl({ eventReminder, addEventReminder, removeEventReminder }:ReminderControlProps) {
     const reminderOptions: number[] = [
         0,
         300,
@@ -152,9 +152,10 @@ export default function ReminderControl({ eventReminder, setEventReminder }:Remi
 
                             return(
                                 reminders.map((reminder:number) => (
-                                    <button onMouseDown={() => {
-                                        if(!eventReminder.includes(reminder)) {
-                                            setEventReminder(pre => [...pre, reminder]);
+                                    <button onMouseDown={async () => {
+                                        const hasReminder = eventReminder.some(item => item.seconds === reminder);
+                                        if(!hasReminder) {
+                                            await addEventReminder(reminder);
                                             setReminderControl("");
                                         }
                                     }} key={reminder} className="p-2 w-full text-xs text-left hover:bg-gray-950/10 dark:hover:bg-gray-600 rounded">
@@ -166,11 +167,11 @@ export default function ReminderControl({ eventReminder, setEventReminder }:Remi
                     </div> : ""}
             </div>
             <div className="mt-2 overflow-x-hidden overflow-y-auto space-y-2 bg-transparent rounded outline-none border-gray-300 w-full dark:border-gray-800 font-semibold text-xs">
-                {eventReminder.map((reminder, index) => (
-                    <div className="border border-gray-200 dark:border-gray-800 group p-2 w-full rounded hover:bg-gray-950/10 dark:hover:bg-gray-600 flex items-center justify-between" key={index}>
-                        {reminderChangeKorean(reminder)}
-                        <button onClick={() => {
-                            setEventReminder(pre => pre.filter(item => item !== reminder));
+                {eventReminder.map((reminder) => (
+                    <div className="border border-gray-200 dark:border-gray-800 group p-2 w-full rounded hover:bg-gray-950/10 dark:hover:bg-gray-600 flex items-center justify-between" key={`${reminder.id ?? "new"}-${reminder.seconds}`}>
+                        {reminderChangeKorean(reminder.seconds)}
+                        <button onClick={async () => {
+                            await removeEventReminder(reminder);
                         }} className="text-[10px] block sm:hidden group-hover:block cursor-pointer">
                             <FontAwesomeIcon icon={faX} />
                         </button>
