@@ -122,13 +122,6 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
 
     return (
         <div className="px-5 flex flex-wrap">
-            <label
-                htmlFor="eventReminder"
-                className="text-xs font-semibold mb-2"
-            >
-                리마인더
-            </label>
-
             <div className="w-full relative">
                 <input
                     onFocus={() => { setReminderSelector(true); }}
@@ -139,11 +132,12 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
                     onChange={(e) => { setReminderControl(e.target.value); }}
                     max={40320}
                     className="border w-full border-gray-300 dark:border-gray-800 px-1 py-2 rounded bg-transparent text-xs font-semibold outline-none"
-                    placeholder="리마인더"
+                    placeholder={`리마인더 ${eventReminder.length >= 5 ? "(최대 5 개)" : ""}`}
+                    disabled={eventReminder.length >= 5}
                 />
 
                 {reminderSelector ?
-                    <div className="absolute w-full top-[34px]  rounded bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800">
+                    <div className="absolute w-full top-[34px] z-[1]  rounded bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800">
 
 
                         {(() => {
@@ -154,7 +148,7 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
                                 reminders.map((reminder:number) => (
                                     <button onMouseDown={async () => {
                                         const hasReminder = eventReminder.some(item => item.seconds === reminder);
-                                        if(!hasReminder) {
+                                        if(!hasReminder && eventReminder.length < 5) {
                                             await addEventReminder(reminder);
                                             setReminderControl("");
                                         }
@@ -166,17 +160,20 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
                         })()}
                     </div> : ""}
             </div>
-            <div className="mt-2 overflow-x-hidden overflow-y-auto space-y-2 bg-transparent rounded outline-none border-gray-300 w-full dark:border-gray-800 font-semibold text-xs">
-                {eventReminder.map((reminder) => (
-                    <div className="border border-gray-200 dark:border-gray-800 group p-2 w-full rounded hover:bg-gray-950/10 dark:hover:bg-gray-600 flex items-center justify-between" key={`${reminder.id ?? "new"}-${reminder.seconds}`}>
-                        {reminderChangeKorean(reminder.seconds)}
-                        <button onClick={async () => {
-                            await removeEventReminder(reminder);
-                        }} className="text-[10px] block sm:hidden group-hover:block cursor-pointer">
-                            <FontAwesomeIcon icon={faX} />
-                        </button>
-                    </div>
-                ))}
+            <div className="mt-2 overflow-x-hidden overflow-y-auto bg-transparent rounded outline-none border-gray-300 w-full dark:border-gray-800 font-semibold text-xs">
+                <details className="space-y-2 mt-2">
+                    <summary className="text-gray-500">리마인더 {eventReminder.length > 0 ? `${eventReminder.length}개 ` : '0개 '} 모두 보기</summary>
+                    {eventReminder.map((reminder) => (
+                        <div className="border border-gray-200 dark:border-gray-800 group p-2 w-full rounded hover:bg-gray-950/10 dark:hover:bg-gray-600 flex items-center justify-between" key={`${reminder.id ?? "new"}-${reminder.seconds}`}>
+                            {reminderChangeKorean(reminder.seconds)}
+                            <button onClick={async () => {
+                                await removeEventReminder(reminder);
+                            }} className="text-[10px] block sm:hidden group-hover:block cursor-pointer">
+                                <FontAwesomeIcon icon={faX} />
+                            </button>
+                        </div>
+                    ))}
+                </details>
             </div>
         </div>
     );

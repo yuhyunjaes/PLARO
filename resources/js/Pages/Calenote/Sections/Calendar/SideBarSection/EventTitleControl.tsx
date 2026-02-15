@@ -29,14 +29,6 @@ setEventTitle
 
     return (
         <div className="px-5 pt-5">
-            <div className="mb-2">
-                <label
-                    htmlFor="eventTitle"
-                    className="text-xs font-semibold"
-                >
-                    제목
-                </label>
-            </div>
             <input
                 disabled={disabled}
                 autoFocus

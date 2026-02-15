@@ -29,12 +29,6 @@ export default function EventDescriptionControl({
 
     return (
         <div className="px-5 flex flex-wrap">
-            <label
-                htmlFor="eventDescription"
-                className="text-xs font-semibold mb-2"
-            >
-                설명
-            </label>
             <textarea
                 disabled={disabled}
                 id="eventDescription"

@@ -45,8 +45,6 @@ export default function EventColorControl({ disabled, eventColor, setEventColor 
 
     return (
         <div className="px-5 flex flex-wrap">
-            <p className="text-xs font-semibold mb-3">이벤트 색상</p>
-
             <div className="flex justify-start items-center space-x-3 w-full">
                 {colors.map((item) => (
                     <label key={item.color} className="relative cursor-pointer">

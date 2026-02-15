@@ -71,10 +71,10 @@ class EventParticipantController extends Controller
         }
     }
 
-    public function DeleteParticipants(Request $request)
+    public function DeleteParticipants($uuid, Request $request)
     {
         try {
-            $query = Event::where('uuid', $request->event_id);
+            $query = Event::where('uuid', $uuid);
 
             if (!$request->self) {
                 $query->where('user_id', Auth::id());
@@ -161,6 +161,67 @@ class EventParticipantController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => '참가자를 제거하는 중 오류가 발생했습니다.',
+                'type' => 'danger',
+            ]);
+        }
+    }
+
+    public function DeleteParticipantsAll($uuid) {
+        try {
+            $event = Event::where('user_id', auth()->id())
+                ->where('uuid', $uuid)
+                ->firstOrFail();
+
+            $removedUserIds = [];
+
+            DB::transaction(function () use ($event, &$removedUserIds) {
+                $removedUserIds = EventUser::where('event_id', $event->id)
+                    ->where('user_id', '!=', $event->user_id)
+                    ->pluck('user_id')
+                    ->toArray();
+
+                EventInvitation::where('event_id', $event->id)->delete();
+
+                EventReminder::where('event_id', $event->id)
+                    ->where('user_id', '!=', $event->user_id)
+                    ->delete();
+
+                EventUser::where('event_id', $event->id)
+                    ->where('user_id', '!=', $event->user_id)
+                    ->delete();
+            });
+
+            broadcast(new ParticipantUpdated(
+                $event->uuid,
+                [
+                    'type' => 'participants_cleared',
+                    'participant_ids' => $removedUserIds,
+                    'user_id' => auth()->id(),
+                ]
+            ))->toOthers();
+
+            foreach ($removedUserIds as $removedUserId) {
+                broadcast(new ParticipantDelete(
+                    userId: (int)$removedUserId,
+                    eventUuid: $event->uuid,
+                ))->toOthers();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => '방장을 제외한 참가자를 모두 제거했습니다.',
+                'type' => 'success',
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '이벤트가 없거나 권한이 없습니다.',
+                'type' => 'danger',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '참가자 전체 제거 중 오류가 발생했습니다.',
                 'type' => 'danger',
             ]);
         }

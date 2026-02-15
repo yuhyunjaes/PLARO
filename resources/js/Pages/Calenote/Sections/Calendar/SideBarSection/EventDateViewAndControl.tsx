@@ -50,9 +50,9 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
     }, [editType]);
 
     useEffect(() => {
-        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("click", handleClickOutside);
         return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("click", handleClickOutside);
         };
     }, [handleClickOutside]);
 
@@ -164,32 +164,20 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
             {
                 (startAt && endAt) ? (
                     <div className="space-y-2 px-5">
-                        <div className="flex">
-                            <div className="w-1/2">
-                                <p className="normal-text text-xs font-semibold">시작일</p>
-                            </div>
-                            <div className="w-1/2">
-                                <p className="normal-text text-xs font-semibold">종료일</p>
-                            </div>
-                        </div>
                         <div ref={EditDateAreaRef} className="flex space-x-1">
                             <div className="w-1/2 flex flex-col space-y-1">
                                 {
                                     (editType === "startDate" && !disabled) ? (
                                         <div className="border border-gray-300 dark:border-gray-800 p-1 rounded bg-transparent text-xs font-semibold flex items-center justify-between">
-                                            <input autoFocus={true} type="text" className="truncate max-w-[75%] border-none outline-none" onKeyDown={(e) => {
+                                            <input autoFocus={true} type="text" className="truncate max-w-[75%] border-none outline-none" onBlur={() => {
+                                                editEventAt("startDate");
+                                                setEditType(null);
+                                            }} onKeyDown={(e) => {
                                                 if(e.key === "Enter") {
                                                     editEventAt("startDate");
                                                     setEditType(null);
                                                 }
                                             }} onChange={(e) => setStartAtDate(e.target.value)} value={startAtDate}/>
-
-                                            <button onClick={() => {
-                                                editEventAt("startDate");
-                                                setEditType(null);
-                                            }} className="size-4 rounded bg-green-500 text-white cursor-pointer">
-                                                <FontAwesomeIcon icon={faFloppyDisk} />
-                                            </button>
                                         </div>
                                     ) : (
                                         <div className="border border-gray-300 dark:border-gray-800 p-1 rounded bg-transparent text-xs font-semibold cursor-pointer" onClick={() => {setEditType("startDate")}}>{formatDate(startAt)}</div>
@@ -199,18 +187,15 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
                                 {
                                     (editType === "startTime" && !disabled) ? (
                                         <div className="border border-gray-300 dark:border-gray-800 p-1 rounded bg-transparent text-xs font-semibold flex items-center">
-                                            <input autoFocus={true} type="text" className="truncate max-w-[75%] border-none outline-none" onKeyDown={(e) => {
+                                            <input autoFocus={true} type="text" className="truncate max-w-[75%] border-none outline-none" onBlur={() => {
+                                                editEventAt("startTime");
+                                                setEditType(null);
+                                            }} onKeyDown={(e) => {
                                             if(e.key === "Enter") {
                                                 editEventAt("startTime");
                                                 setEditType(null);
                                             }
                                         }} onChange={(e) => setStartAtTime(e.target.value)} value={startAtTime}/>
-                                            <button onClick={() => {
-                                                editEventAt("startTime");
-                                                setEditType(null);
-                                            }} className="size-4 rounded bg-green-500 text-white cursor-pointer">
-                                                <FontAwesomeIcon icon={faFloppyDisk} />
-                                            </button>
                                         </div>
                                     ) : (
                                         <div className="border border-gray-300 dark:border-gray-800 p-1 rounded bg-transparent text-xs font-semibold cursor-pointer" onClick={() => {setEditType("startTime")}}>{formatTime(startAt)}</div>
@@ -222,18 +207,15 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
                                 {
                                     (editType === "endDate" && !disabled) ? (
                                         <div className="border border-gray-300 dark:border-gray-800 p-1 rounded bg-transparent text-xs font-semibold flex items-center">
-                                            <input autoFocus={true} type="text" className="truncate max-w-[75%] border-none outline-none" onKeyDown={(e) => {
+                                            <input autoFocus={true} type="text" className="truncate max-w-[75%] border-none outline-none" onBlur={() => {
+                                                editEventAt("endDate");
+                                                setEditType(null);
+                                            }} onKeyDown={(e) => {
                                             if(e.key === "Enter") {
                                                 editEventAt("endDate");
                                                 setEditType(null);
                                             }
                                         }} onChange={(e) => setEndAtDate(e.target.value)} value={endAtDate}/>
-                                            <button onClick={() => {
-                                                editEventAt("endDate");
-                                                setEditType(null);
-                                            }} className="size-4 rounded bg-green-500 text-white cursor-pointer">
-                                                <FontAwesomeIcon icon={faFloppyDisk} />
-                                            </button>
                                         </div>
                                     ) : (
                                         <div className="border border-gray-300 dark:border-gray-800 p-1 rounded bg-transparent text-xs font-semibold cursor-pointer" onClick={() => {setEditType("endDate")}}>{formatDate(endAt)}</div>
@@ -243,18 +225,15 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
                                 {
                                     (editType === "endTime" && !disabled) ? (
                                         <div className="border border-gray-300 dark:border-gray-800 p-1 rounded bg-transparent text-xs font-semibold flex items-center">
-                                            <input autoFocus={true} type="text" className="truncate max-w-[75%] border-none outline-none" onKeyDown={(e) => {
+                                            <input autoFocus={true} type="text" className="truncate max-w-[75%] border-none outline-none" onBlur={() => {
+                                                editEventAt("endTime");
+                                                setEditType(null);
+                                            }} onKeyDown={(e) => {
                                             if(e.key === "Enter") {
                                                 editEventAt("endTime");
                                                 setEditType(null);
                                             }
                                         }} onChange={(e) => setEndAtTime(e.target.value)} value={endAtTime}/>
-                                            <button onClick={() => {
-                                                editEventAt("endTime");
-                                                setEditType(null);
-                                            }} className="size-4 rounded bg-green-500 text-white cursor-pointer">
-                                                <FontAwesomeIcon icon={faFloppyDisk} />
-                                            </button>
                                         </div>
                                     ) : (
                                         <div className="border border-gray-300 dark:border-gray-800 p-1 rounded bg-transparent text-xs font-semibold cursor-pointer" onClick={() => {setEditType("endTime")}}>{formatTime(endAt)}</div>

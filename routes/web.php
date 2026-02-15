@@ -210,9 +210,10 @@ Route::middleware('web')->group(function () {
         // Participant Api
         // --------------------
         Route::get('/api/event/{uuid}/participants', [EventParticipantController::class, 'GetActiveParticipants'])->name('event.active.participant.get');
-        Route::delete('/api/event/participants', [EventParticipantController::class, 'DeleteParticipants'])->name('event.participant.delete');
+        Route::delete('/api/event/{uuid}/participants', [EventParticipantController::class, 'DeleteParticipants'])->name('event.participant.delete');
         Route::post('/api/event/{uuid}/invitations', [EventInvitationController::class, 'StoreInvitation'])->name('event.invitation.store');
         Route::put('/api/event/event-user/role', [EventUserController::class, 'UpdateEventUserRole'])->name('event.event-user.role.update');
+        Route::delete('/api/event/{uuid}/participants/all', [EventParticipantController::class, 'DeleteParticipantsAll'])->name('event.participant.delete.all');
 
         // --------------------
         // Gemini API

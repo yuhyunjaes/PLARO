@@ -40,6 +40,18 @@ class EventReminderController extends Controller
             ->first();
 
         if (!$reminder) {
+            $reminderCount = $event->reminders()
+                ->where('user_id', Auth::id())
+                ->count();
+
+            if ($reminderCount >= 5) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '리마인더는 이벤트당 최대 5개까지 등록할 수 있습니다.',
+                    'type' => 'danger'
+                ]);
+            }
+
             $reminder = $event->reminders()->create([
                 'seconds' => $data['seconds'],
                 'user_id' => Auth::id(),

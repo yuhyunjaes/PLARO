@@ -68,7 +68,7 @@ export default function CalendarControlSection({ setFirstCenter, setIsHaveEvent,
 
 
     return(
-        <div className="rounded-xl flex justify-between items-center px-5">
+        <div className="rounded-xl flex justify-between items-center p-5">
             <div className="normal-text text-2xl font-semibold user-select-none">
                 {activeAt.getFullYear()}
                 -

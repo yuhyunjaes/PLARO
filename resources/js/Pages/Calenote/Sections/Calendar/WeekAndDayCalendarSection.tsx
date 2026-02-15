@@ -2,6 +2,7 @@ import {Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, use
 import {CalendarAtData, EventReminderItem, EventsData, ParticipantsData} from "../CalenoteSectionsData";
 
 interface WeekCalendarSectionProps {
+    now: Date;
     handleEventClick: (Event:EventsData) => Promise<void>;
     events: EventsData[];
     setEventParticipants: Dispatch<SetStateAction<ParticipantsData[]>>;
@@ -30,7 +31,16 @@ interface EventWithLayout extends EventsData {
     column: number;
 }
 
+function getDayProgressPercent(date: Date): number {
+    const minutesInDay = 24 * 60;
+    const currentMinutes = (date.getHours() * 60) + date.getMinutes() + (date.getSeconds() / 60);
+    const percent = (currentMinutes / minutesInDay) * 100;
+
+    return Math.max(0, Math.min(100, percent));
+}
+
 export default function WeekAndDayCalendarSection({
+    now,
     handleEventClick,
     events,
     setEventParticipants,
@@ -57,6 +67,7 @@ export default function WeekAndDayCalendarSection({
     const [isScrolling, setIsScrolling] = useState<boolean>(false);
 
     const scrollRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
+    const timeZoneRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
     const intervalRef = useRef<any | null>(null);
     const directionRef = useRef<-1 | 0 | 1>(0);
     const lastMouseEvent = useRef<MouseEvent | null>(null);
@@ -604,10 +615,10 @@ export default function WeekAndDayCalendarSection({
     }, [viewMode]);
 
     return(
-        <div className="border border-gray-300 dark:border-gray-800 rounded-xl flex-1 flex flex-row overflow-hidden bg-white dark:bg-[#0d1117]">
+        <div className="flex-1 flex flex-row overflow-hidden bg-white dark:bg-gray-950">
             <div className="w-[40px] sm:w-[70px] border-r border-gray-300 dark:border-gray-800 flex flex-col">
-                <div className="min-h-[36px] lg:min-h-[32px] max-h-[36px] dark:bg-gray-800"></div>
-                <div className="h-[100px]"></div>
+                <div className="min-h-[36px] lg:min-h-[32px] max-h-[36px] bg-white dark:bg-gray-950"></div>
+                <div className="h-[100px] border-y-1 border-gray-300 dark:border-gray-800" />
                 {Array.from({ length: 24 }, (_, h) => (
                     <div
                         key={h}
@@ -620,10 +631,43 @@ export default function WeekAndDayCalendarSection({
             <div
                 onScroll={handleScroll}
                 ref={scrollRef}
-                className="flex-1 overflow-y-hidden hidden-scroll overflow-x-auto snap-x snap-mandatory flex relative"
-            >
+                className="flex-1 overflow-y-hidden hidden-scroll overflow-x-auto snap-x snap-mandatory flex relative">
 
-                <div className={`${viewMode === "week" ? "w-[calc((100%/7)*9)] grid-cols-9" : "w-[calc((100%)*3)] grid-cols-3"} h-[100px] absolute left-0 top-[36px] lg:top-[32px] text-center overflow-x-hidden overflow-y-auto grid py-5`}>
+                {(() => {
+                    const container = scrollRef.current;
+                    if (!container) return null;
+
+                    const firstDayCol = container.querySelector("[data-prentdate]") as HTMLElement | null;
+                    if (!firstDayCol) return null;
+
+                    const headerEl = firstDayCol.children[0] as HTMLElement | undefined; // 요일/날짜
+                    const eventEl = firstDayCol.children[1] as HTMLElement | undefined;  // 100px 영역
+                    const timeGridEl = firstDayCol.children[2] as HTMLElement | undefined; // 24h 그리드
+
+                    const headerH = headerEl?.offsetHeight ?? 0;
+                    const eventH = eventEl?.offsetHeight ?? 0;
+                    const timeGridH = timeGridEl?.offsetHeight ?? 0;
+
+                    const minutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+                    const percent = minutes / (24 * 60);
+
+                    const top = headerH + eventH + (timeGridH * percent);
+
+                    return (
+                        <div
+                            className="z-[999] absolute left-0 w-[calc((100%/7)*9)] h-[2px] bg-red-500/70 pointer-events-none flex justify-center items-center"
+                            style={{ top: `${top}px` }}>
+                            <div className="size-8 bg-red-500/70 rounded absolute left-[calc(100%/9)] z-[999] flex items-center justify-center">
+                                <span className="text-[0.5rem] font-semibold text-white">
+                                    {(now.getHours() > 9) ? now.getHours() : `0${now.getHours()}`}:
+                                    {(now.getMinutes() > 9) ? now.getMinutes() : `0${now.getMinutes()}`}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                <div className={`${viewMode === "week" ? "w-[calc((100%/7)*9)] bg-white dark:bg-gray-950 border-y border-gray-300 dark:border-gray-800 grid-cols-9" : "w-[calc((100%)*3)] grid-cols-3"} h-[100px] absolute left-0 top-[36px] lg:top-[32px] text-center overflow-x-hidden overflow-y-auto grid py-5`}>
                     {(() => {
                         const first = days[0];
                         const last = days[days.length - 1];
@@ -668,7 +712,7 @@ export default function WeekAndDayCalendarSection({
                             return (
                                 <div
                                     key={includeEvent.uuid}
-                                    className="pointer-events-auto relative h-[25px]"
+                                    className="pointer-events-auto relative h-[20px]"
                                     style={{
                                         gridRow: includeEvent.row + 1,
                                         gridColumn: `${includeEvent.start_area + 1} / span ${span}`,
@@ -704,7 +748,7 @@ export default function WeekAndDayCalendarSection({
                                 day.toDateString() === baseDate?.toDateString() ? "active" : ""
                             } ${index === 1 ? "first" : ""}`}
                             >
-                            <div className="py-2 text-center text-sm dark:bg-gray-800 max-h-[36px] lg:max-h-[72px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
+                            <div className="py-2 text-center text-sm bg-white dark:bg-gray-950 max-h-[36px] lg:max-h-[72px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
                                 <span className="text-xs text-gray-500 flex flex-col lg:flex-row gap-1">
                                     <span className="">{WEEK_DAYS[day.getDay()]}</span>
                                     <span className="">{day.getDate()}</span>
@@ -797,8 +841,8 @@ export default function WeekAndDayCalendarSection({
                                                         ${isSelected
                                                         ? "bg-blue-500/10"
                                                         : (day.getDay() === 0 || day.getDay() === 6)
-                                                            ? "bg-gray-50 dark:bg-[#0d1117]"
-                                                            : "bg-white dark:bg-gray-950"
+                                                            ? "bg-gray-100 dark:bg-[#0d1117]"
+                                                            : "bg-gray-50 dark:bg-gray-950"
                                                     } time-slot cursor-pointer transition-colors`}
                                                 />
                                             );

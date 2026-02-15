@@ -11,6 +11,7 @@ import {AuthUser} from "../../../../Types/CalenoteTypes";
 import {router} from "@inertiajs/react";
 
 interface SideBarSectionProps {
+    onlineParticipantIds: number[];
     eventParticipants: ParticipantsData[];
     setEventParticipants: Dispatch<SetStateAction<ParticipantsData[]>>;
     auth: {
@@ -46,7 +47,7 @@ interface SideBarSectionProps {
     setEndAt: Dispatch<SetStateAction<Date | null>>;
 }
 
-export default function SideBarSection({ eventParticipants, setEventParticipants, auth, sideBarToggle, setSideBarToggle, handleEventClick, reminders, now, events, setEvents, eventReminder, setEventReminder, addEventReminder, removeEventReminder, deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
+export default function SideBarSection({ onlineParticipantIds, eventParticipants, setEventParticipants, auth, sideBarToggle, setSideBarToggle, handleEventClick, reminders, now, events, setEvents, eventReminder, setEventReminder, addEventReminder, removeEventReminder, deleteEvent, updateEvent, eventId, setEventId, saveEvent, eventDescription, setEventDescription, eventColor, setEventColor, eventTitle, setEventTitle, viewMode, sideBar, startAt, setStartAt, endAt, setEndAt }:SideBarSectionProps) {
     const [onlyOneClick, setOnlyOneClick] = useState(false);
     useEffect(() => {
         if(eventId && onlyOneClick) {
@@ -72,7 +73,7 @@ export default function SideBarSection({ eventParticipants, setEventParticipants
 
     return (
         <div
-            className={`w-[250px] duration-300 transition-[right] overflow-x-hidden overflow-y-auto ${sideBar <= 0 ? (sideBarToggle ? "fixed h-full right-5 pointer-events-auto" : "-right-[100%] fixed pointer-events-none h-full") : "sticky top-[1.25rem]"} border max-h-[calc(100vh-(70px+2.5rem))] bg-white dark:bg-[#0d1117] border-gray-300 dark:border-gray-800 rounded-xl normal-text user-select-none space-y-5`}
+            className={`w-[250px] border-l overflow-y-auto overflow-x-hidden border-gray-300 dark:border-gray-800 duration-300 transition-[right] ${sideBar <= 0 ? (sideBarToggle ? "fixed h-full right-0 pointer-events-auto" : "-right-[100%] fixed pointer-events-none h-full") : "sticky top-0"} max-h-[calc(100vh-70px)] bg-white dark:bg-gray-950 normal-text user-select-none`}
         >
             {
                 (() => {
@@ -81,13 +82,15 @@ export default function SideBarSection({ eventParticipants, setEventParticipants
                     return (
                         (eventId || (startAt && endAt)) ? (
                             <>
-                                <EventTitleControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventTitle={eventTitle} setEventTitle={setEventTitle} />
-                                <EventDateViewAndControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
-                                <ParticipantControl setEvents={setEvents} resetEvent={resetEvent} IsEditAuthority={IsEditAuthority} disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
-                                <EventDescriptionControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
-                                <EventColorControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} eventColor={eventColor} setEventColor={setEventColor} />
-                                <ReminderControl eventReminder={eventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} />
-                                <div className="px-5 pb-5">
+                                <div className="space-y-5">
+                                    <EventTitleControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventTitle={eventTitle} setEventTitle={setEventTitle} />
+                                    <EventDateViewAndControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                                    <ParticipantControl onlineParticipantIds={onlineParticipantIds} setEvents={setEvents} resetEvent={resetEvent} IsEditAuthority={IsEditAuthority} disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
+                                    <EventDescriptionControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
+                                    <EventColorControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} eventColor={eventColor} setEventColor={setEventColor} />
+                                    <ReminderControl eventReminder={eventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} />
+                                </div>
+                                <div className="sticky bottom-0 bg-white dark:bg-gray-950 p-5">
                                     {
                                         ((!eventId && !onlyOneClick)) ? (
                                             <button onClick={async () => {
@@ -100,10 +103,10 @@ export default function SideBarSection({ eventParticipants, setEventParticipants
                                                 생성
                                             </button>
                                         ) : (IsEditAuthority === "owner" ? (<button onClick={() => {
-                                            deleteEvent();
-                                        }} className="btn text-xs bg-red-500 text-white w-full">
-                                            삭제
-                                        </button>) : ""
+                                                deleteEvent();
+                                            }} className="btn text-xs bg-red-500 text-white w-full">
+                                                삭제
+                                            </button>) : ""
                                         )
                                     }
                                 </div>

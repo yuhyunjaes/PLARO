@@ -36,7 +36,7 @@ interface CalendarProps {
     setNow: Dispatch<SetStateAction<Date>>;
 }
 
-export default function Calendar({ event, auth, mode, year, month, day, events, setEvents, reminders, setReminders, now, setNow, getEventDone, setGetEventDone } : CalendarProps) {
+export default function Calendar({ event, auth, mode, year, month, day, events, setEvents, reminders, setReminders, now, getEventDone, setGetEventDone } : CalendarProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -88,6 +88,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     const [eventColor, setEventColor] = useState<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">("bg-blue-500");
     const [eventReminder, setEventReminder] = useState<EventReminderItem[]>([]);
     const [eventParticipants, setEventParticipants] = useState<ParticipantsData[]>([]);
+    const [onlineParticipantIds, setOnlineParticipantIds] = useState<number[]>([]);
 
     const [eventId, setEventId] = useState<string | null>(event ? event : null);
 
@@ -807,12 +808,54 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
     }, [getDone, auth.user?.id, eventId]);
 
+    useEffect(() => {
+        if (!window.Echo || !getDone || !eventId) {
+            setOnlineParticipantIds([]);
+            return;
+        }
+
+        const channel = window.Echo.join(`event.${eventId}.online`);
+
+        const normalizeUserId = (user: any): number | null => {
+            const value = Number(user?.id ?? user?.user_id);
+            return Number.isFinite(value) ? value : null;
+        };
+
+        channel.here((users: any[]) => {
+            const ids = users
+                .map(normalizeUserId)
+                .filter((id): id is number => id !== null);
+            setOnlineParticipantIds(Array.from(new Set(ids)));
+        });
+
+        channel.joining((user: any) => {
+            const userId = normalizeUserId(user);
+            if (userId === null) return;
+
+            setOnlineParticipantIds(prev =>
+                prev.includes(userId) ? prev : [...prev, userId]
+            );
+        });
+
+        channel.leaving((user: any) => {
+            const userId = normalizeUserId(user);
+            if (userId === null) return;
+
+            setOnlineParticipantIds(prev => prev.filter(id => id !== userId));
+        });
+
+        return () => {
+            window.Echo.leave(`event.${eventId}.online`);
+            setOnlineParticipantIds([]);
+        };
+    }, [getDone, eventId]);
+
     return (
         <>
             <Head title="Calendar"/>
-            <div className="min-h-full bg-gray-100 dark:bg-gray-950 relative flex flex-col">
-                <div className="flex-1 flex px-5 gap-5 flex-row py-5">
-                    <div className={`flex-1 flex flex-col gap-5`}>
+            <div className="min-h-full bg-white dark:bg-gray-950 relative flex flex-col">
+                <div className="flex-1 flex flex-row">
+                    <div className={`flex-1 flex flex-col`}>
                         <CalendarControlSection setFirstCenter={setFirstCenter} setIsHaveEvent={setIsHaveEvent} setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay} setActiveDay={setActiveDay}/>
                         {
                             viewMode === "month" && (
@@ -821,17 +864,17 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                         }
                         {
                             (viewMode === "week" || viewMode === "day") && (
-                                <WeekAndDayCalendarSection handleEventClick={handleEventClick} events={events} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
+                                <WeekAndDayCalendarSection now={now} handleEventClick={handleEventClick} events={events} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
                             )
                         }
                     </div>
 
                     <button onClick={() => {
                         setSideBarToggle(!sideBarToggle);
-                    }} className={`fixed block sm:hidden bottom-0 duration-300 transition-[right] cursor-pointer ${sideBarToggle ? 'right-[250px]' : 'right-0'}  bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-12 rounded-full text-white font-semibold m-[25px] sm:m-[50px]`}>
+                    }} className={`fixed block sm:hidden bottom-0 duration-300 transition-[right] cursor-pointer ${sideBarToggle ? 'right-[240px]' : 'right-0'}  bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-12 rounded-full text-white font-semibold m-[25px] sm:m-[50px]`}>
                         <FontAwesomeIcon icon={sideBarToggle ? faAngleRight : faAngleLeft} />
                     </button>
-                    <SideBarSection eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} setEvents={setEvents} eventReminder={eventReminder} setEventReminder={setEventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                    <SideBarSection onlineParticipantIds={onlineParticipantIds} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} setEvents={setEvents} eventReminder={eventReminder} setEventReminder={setEventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
                 </div>
             </div>
         </>

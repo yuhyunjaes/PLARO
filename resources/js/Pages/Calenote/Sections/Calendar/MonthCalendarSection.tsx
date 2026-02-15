@@ -3,9 +3,6 @@ import MonthCreator from "./MonthCalendarSection/MonthCreator";
 import { Dispatch, SetStateAction } from "react";
 import {CalendarAtData, EventReminderItem, ParticipantsData} from "../CalenoteSectionsData";
 import {EventsData} from "../CalenoteSectionsData";
-import {router} from "@inertiajs/react";
-import { useContext } from "react";
-import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 
 interface SideBarSectionProps {
     handleEventClick: (Event:EventsData) => Promise<void>;
@@ -47,15 +44,6 @@ interface EventWithLayout extends EventsData {
 }
 
 export default function MonthCalendarSection({ handleEventClick, getActiveEventReminder, setEventParticipants, setEventReminder, setEventIdChangeDone, setIsHaveEvent, events, IsHaveEvent, firstCenter, setFirstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
-    const ui = useContext(GlobalUIContext);
-
-    if (!ui) {
-        throw new Error("Calendar must be used within GlobalProvider");
-    }
-
-    const {
-        setLoading,
-    } = ui;
     const [allDates, setAllDates] = useState<CalendarAtData[]>([]);
 
     const scrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
@@ -309,14 +297,20 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
         return () => document.removeEventListener("mousemove", handleDateMoveOut);
     }, [handleDateMoveOut]);
 
-    const checkMobile = () => {
-        setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0);
-    };
+    const checkMobile = useCallback(() => {
+        const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
+        setIsMobile(isMobileViewport);
+    }, []);
 
     useEffect(() => {
         checkMobile();
         window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
+        window.addEventListener('orientationchange', checkMobile);
+
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            window.removeEventListener('orientationchange', checkMobile);
+        };
     }, [checkMobile]);
 
     const isSameSelectedDay = (start: Date, end: Date) => {
@@ -614,8 +608,8 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
 
 
     return (
-        <div className="border border-gray-300 dark:border-gray-800 rounded-xl flex-1 flex flex-col overflow-hidden">
-            <div className="py-2 grid grid-cols-7 text-xs text-gray-500 max-h-[36px] bg-white dark:bg-gray-800">
+        <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="py-2 grid grid-cols-7 text-xs text-gray-500 max-h-[36px]">
                 {['일','월','화','수','목','금','토'].map((d) => (
                     <div key={d} className="font-semibold items-center user-select-none flex justify-center">{d}</div>
                 ))}
@@ -774,11 +768,11 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
                                                     onMouseEnter={() => handleDateMove(dayData)}
                                                     onClick={() => handleMobileDateClick(dayData)}
                                                     style={{height: `${scrollRef.current && (scrollRef.current.clientHeight/6)+'px'}` }}
-                                                    key={`${index}-${i}`} className={`border-[0.5px]
+                                                    key={`${index}-${i}`} className={`border-[0.5px] ${(i === 0) ? "!border-l-transparent" : ""} ${(i === 6) ? "!border-r-transparent" : ""}
                                              ${isSelected ? "bg-blue-500/10" : (
-                                                    dayData.isWeekend ? "bg-gray-50 dark:bg-[#0d1117]" : "bg-white dark:bg-gray-950"
+                                                    dayData.isWeekend ? "bg-gray-100 dark:bg-[#0d1117]" : "bg-gray-50 dark:bg-gray-950"
                                                 ) }
-                                                count-${dayData.count} text-xs md:text-sm border-gray-100 dark:border-gray-800 cursor-pointer transition-colors ${dayData.isToday ? "today text-white font-semibold" : (dayData.isActive ? "normal-text font-semibold" : "text-gray-400 text-sm")} user-select-none`}
+                                                count-${dayData.count} text-xs md:text-sm border-gray-200 dark:border-gray-800 cursor-pointer transition-colors ${dayData.isToday ? "today text-white font-semibold" : (dayData.isActive ? "normal-text font-semibold" : "text-gray-400 text-sm")} user-select-none`}
                                                 >
                                                     {(dayData.day === 1) ?
                                                         <div className="flex justify-end">
