@@ -22,8 +22,8 @@ interface PlaroAiProps {
 
 
 export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
-    const [sideBar, setSideBar] = useState<number>(() => (window.innerWidth <= 640 ? 0 : 250));
-    const [saveWidth, setSaveWidth] = useState<number>(250);
+    const [sideBar, setSideBar] = useState<number>(() => (window.innerWidth <= 768 ? 0 : 230));
+    const [saveWidth, setSaveWidth] = useState<number>(230);
     const [loadingToggle, setLoading] = useState<boolean>(false);
     const [chatId, setChatId] = useState<string | null>(roomId || null);
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -42,7 +42,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
 
     const [modal, setModal] = useState<boolean>(false);
 
-    const [smRoomList, setSmRoomList] = useState<boolean>(window.innerWidth <= 640);
+    const [smRoomList, setSmRoomList] = useState<boolean>(window.innerWidth <= 768);
     const [smRoomListToggle, setSmRoomListToggle] = useState<boolean>(false);
 
     const [alerts, setAlerts] = useState<AlertsData[]>([]);
@@ -50,8 +50,8 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
     // 사이드바 사이즈 조절
     useEffect(() => {
         const smSideBar = () => {
-            setSmRoomList(window.innerWidth <= 640);
-            if (window.innerWidth <= 640) {
+            setSmRoomList(window.innerWidth <= 768);
+            if (window.innerWidth <= 768) {
                 setSmRoomListToggle(false);
                 setEditId("");
                 setEditStatus("");
@@ -64,7 +64,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
 
     const handleResize = useCallback(() => {
         setSideBar((prev) => {
-            if (window.innerWidth <= 640) {
+            if (window.innerWidth <= 768) {
                 return 0;
             } else {
                 return prev === 0 ? saveWidth : prev;

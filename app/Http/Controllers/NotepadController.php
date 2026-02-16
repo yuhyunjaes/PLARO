@@ -23,6 +23,8 @@ class NotepadController extends Controller
             !empty($messageToNotepad['content']) &&
             !empty($messageToNotepad['chat_id']);
 
+        $timezone = Auth::user()?->timezone ?? config('app.timezone');
+
         if (!$messageToNotepadSwitch) {
             $validator = Validator::make($request->all(), [
                 'note_title' => ['required', 'string', 'max:255'],
@@ -77,7 +79,7 @@ class NotepadController extends Controller
             : response()->json([
                 'success'     => true,
                 'id'          => $notepad->uuid,
-                'created_at' => $notepad->created_at->format('Y-m-d H:i:s'),
+                'created_at' => $notepad->created_at->copy()->setTimezone($timezone)->format('Y-m-d H:i:s'),
                 'message'    => '메모장이 생성되었습니다.',
             ]);
     }
@@ -98,7 +100,7 @@ class NotepadController extends Controller
 
             return response()->json(['success' => true, 'message' => '메모장 이름이 변경되었습니다.', 'type' => 'success']);
         } catch (\Throwable $e) {
-            return response()->json(['success'=>false, 'message'=>'메모장을 생성하는 중 오류가 발생했습니다.', 'type'=>'danger']);
+            return response()->json(['success' => false, 'message' => '메모장이 존재하지 않습니다.', 'type' => 'danger']);
         }
     }
 
@@ -174,6 +176,7 @@ class NotepadController extends Controller
     {
         try {
             $user = Auth::user();
+            $timezone = $user?->timezone ?? config('app.timezone');
 
             $query = Notepad::where('user_id', $user->id)
                 ->withExists([
@@ -202,9 +205,12 @@ class NotepadController extends Controller
                 ->through(fn ($n) => [
                     'id' => $n->uuid,
                     'title' => $n->title,
-                    'content' => $n->content,
+                    'content' => Str::limit(
+                        trim(preg_replace('/\s+/', ' ', strip_tags($n->content))),
+                        30
+                    ),
                     'category' => $n->category,
-                    'created_at' => $n->created_at->format('Y-m-d H:i:s'),
+                    'created_at' => $n->created_at->copy()->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'liked' => (bool) $n->liked,
                 ]);
 

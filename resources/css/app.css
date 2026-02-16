@@ -38,11 +38,11 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 .b-btn {
-    @apply px-8 py-3 rounded-xl font-semibold cursor-pointer;
+    @apply px-8 py-3 rounded font-semibold cursor-pointer;
 }
 
 .btn {
-    @apply px-5 py-2 rounded-xl font-semibold cursor-pointer;
+    @apply px-5 py-2 rounded font-semibold cursor-pointer text-xs truncate;
 }
 .btn-outline-white {
     @apply border-[0.1rem] border-gray-950 dark:border-white text-gray-950 dark:text-white hover:bg-gray-950 dark:hover:bg-white active:bg-gray-900 dark:active:bg-gray-100 hover:text-white dark:hover:text-gray-950 transition-colors duration-300;
@@ -111,7 +111,7 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 .card {
-    @apply bg-white dark:bg-[#0d1117] rounded-xl overflow-hidden shadow shadow-gray-200 dark:shadow-transparent;
+    @apply bg-white dark:bg-gray-950 rounded overflow-hidden border border-gray-300 dark:border-gray-800;
 }
 .card-top {
     @apply w-full h-[220px] object-cover object-center;
@@ -129,17 +129,18 @@ input[type=number]::-webkit-inner-spin-button {
     @apply bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white transition-colors duration-300;
 }
 .form-btn {
-    @apply bg-gray-50 text-black border border-gray-200 hover:bg-gray-100 hover:border-gray-200
-        dark:bg-[#21242a] dark:hover:bg-gray-800 dark:active:bg-gray-950 dark:text-white dark:border-gray-700 dark:hover:border-gray-800
-        transition-colors duration-300 px-4 py-2 rounded-xl shadow font-semibold cursor-pointer;
+    @apply bg-gray-50 text-black border border-gray-300 hover:bg-gray-100
+        dark:bg-[#21242a] dark:hover:bg-gray-800 dark:active:bg-gray-950 dark:text-white dark:border-gray-800
+        text-xs
+        transition-colors duration-300 px-4 py-2 rounded font-semibold cursor-pointer;
 }
 
 .form-label {
-    @apply text-gray-950 dark:text-white font-semibold block mb-1 text-sm;
+    @apply text-gray-950 dark:text-white font-semibold block mb-1 text-xs;
 }
 .form-control {
-    @apply bg-white pl-3 dark:bg-gray-950 border border-gray-200
-    focus:border-gray-300 dark:focus:border-gray-600 dark:border-gray-700 py-2 w-full rounded-xl dark:text-white
+    @apply bg-white pl-3 dark:bg-gray-950 border border-gray-300
+    focus:border-gray-300 dark:focus:border-gray-600 dark:border-gray-800 py-2 w-full rounded dark:text-white text-xs
     focus:outline-none
     focus:ring-0
     active:outline-none
@@ -147,8 +148,8 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 .select-control {
-    @apply bg-white pl-3 dark:bg-gray-950 border border-gray-200
-    focus:border-gray-300 dark:focus:border-gray-600 dark:border-gray-700 py-2 w-full sm:w-[230px] max-w-full sm:max-w-[230px] rounded-xl dark:text-white
+    @apply bg-white pl-3 dark:bg-gray-950 border border-gray-300
+    focus:border-gray-300 dark:focus:border-gray-600 dark:border-gray-800 py-2 w-full sm:w-[230px] max-w-full sm:max-w-[230px] rounded dark:text-white text-xs
     focus:outline-none
     focus:ring-0
     active:outline-none
@@ -156,8 +157,9 @@ input[type=number]::-webkit-inner-spin-button {
     appearance-none;
 }
 .self-select-control {
-    @apply bg-white pl-3 dark:bg-gray-950 border border-gray-200
-    focus:border-gray-300 dark:focus:border-gray-600 rounded-xl dark:border-gray-700 py-2 dark:text-white
+    @apply bg-gray-50 pl-3 dark:bg-gray-950 border border-gray-300
+    transition-colors duration-150 cursor-pointer hover:bg-gray-200 hover:dark:bg-gray-800
+    focus:border-gray-300 dark:focus:border-gray-600 rounded dark:border-gray-800 py-1 dark:text-white
     focus:outline-none
     focus:ring-0
     active:outline-none
@@ -176,7 +178,7 @@ form > div {
 }
 
 .form-message {
-    @apply text-sm text-gray-500 dark:text-gray-300 mt-1;
+    @apply text-xs text-gray-500 dark:text-gray-300 mt-1;
 }
 
 @keyframes fadeUp {
@@ -262,7 +264,7 @@ form > div {
 }
 
 .notepad-item {
-    @apply bg-white dark:bg-[#0d1117] border rounded-xl border-gray-300 dark:border-gray-800 p-5 space-y-2;
+    @apply bg-white dark:bg-gray-950 rounded border border-gray-300 dark:border-gray-800 p-5 space-y-1;
 }
 
 .write-notepad * {

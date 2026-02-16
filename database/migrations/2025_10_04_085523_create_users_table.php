@@ -17,7 +17,10 @@ return new class extends Migration
             $table->string('password');
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('nationality', 2)->nullable();
+            $table->string('timezone')->nullable();
             $table->enum('role', ['admin', 'user'])->default('user');
+            $table->index('nationality');
             $table->timestamps();
         });
     }

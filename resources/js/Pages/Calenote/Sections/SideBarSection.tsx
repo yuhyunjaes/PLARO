@@ -25,8 +25,8 @@ export default function SideBarSection({sideBar, setSideBar, sideBarToggle, setS
     return (
         <aside
             className={`
-                h-full bg-white dark:bg-gray-950 transition-[width] duration-300 overflow-hidden border-r border-gray-300 dark:border-gray-800
-                ${sideBarToggle && "fixed inset-0 top-[70px] z-[10]"}
+                h-full bg-white dark:bg-gray-950 overflow-hidden border-r border-gray-300 dark:border-gray-800 transition-none md:transition-[width] duration-300
+                ${sideBarToggle ? "fixed inset-0 top-[70px] z-[10]" : ""}
             `}
             style={sideBarToggle ? {width: "100%"} : {width: `${sideBar}px`}}
             >
@@ -36,7 +36,7 @@ export default function SideBarSection({sideBar, setSideBar, sideBarToggle, setS
                     <button
                         className="normal-text cursor-pointer"
                         onClick={() => {
-                            (sideBar > 50) ? setSideBar(50) : setSideBar(250);
+                            (sideBar > 50) ? setSideBar(50) : setSideBar(230);
                         }}
                     >
                         <FontAwesomeIcon
@@ -54,7 +54,7 @@ export default function SideBarSection({sideBar, setSideBar, sideBarToggle, setS
                             key={index}
                             href={section.link}
                             className={`
-                            ${(sideBar > 50 || sideBarToggle) ? "btn justify-start" : "justify-center rounded"} transition-colors duration-300 w-full flex items-center px-0 py-2
+                            ${(sideBar > 50 || sideBarToggle) ? "btn justify-start" : "justify-center"} transition-colors duration-300 w-full flex items-center px-0 py-2
                             ${((index !== 0) ? (url.includes(section.link)) : (url === section.link))
                                 ? "bg-blue-500 text-white"
                                 : "text-gray-950 dark:text-white hover:bg-blue-500/80 hover:text-white"}
@@ -76,9 +76,9 @@ export default function SideBarSection({sideBar, setSideBar, sideBarToggle, setS
                     ))
                 }
             </div>
-            <div className="h-[200px] sm:h-[70px] bg-white dark:bg-gray-950 border-t border-gray-300 dark:border-gray-800 flex justify-center items-center">
+            <div className="h-[200px] md:h-[70px] bg-white dark:bg-gray-950 border-t border-gray-300 dark:border-gray-800 flex justify-center items-center">
                 {(sideBarToggle) && (
-                    <button className="size-8 rounded-full shadow bg-blue-500 cursor-pointer text-white" onClick={() => {
+                    <button className="size-12 rounded-full shadow bg-blue-500 cursor-pointer text-white" onClick={() => {
                         setSideBarToggle(false);
                     }}>
                         <FontAwesomeIcon icon={faX} />

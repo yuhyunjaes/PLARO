@@ -41,6 +41,7 @@ export default function Notepad({ auth } : NotepadProps) {
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     const [editId, setEditId] = useState<string>("");
+    const [deleteId, setDeleteId] = useState<string>("");
     const [editStatus, setEditStatus] = useState<string>("");
     const [temporaryEditTitle, setTemporaryEditTitle] = useState<string>("");
 
@@ -176,14 +177,15 @@ export default function Notepad({ auth } : NotepadProps) {
     }, [isFetchingMore, page, lastPage]);
 
     const handleDeleteNotepad = useCallback( async () => {
-        if(!editId) return;
+        if(!deleteId) return;
         setLoading(true);
         try {
-            const res = await axios.delete(`/api/notepads/${editId}`);
+            const res = await axios.delete(`/api/notepads/${deleteId}`);
             if(res.data.success) {
                 setEditStatus("");
-                setEditId("");
-                setNotepads((prevNotepads) => prevNotepads.filter(notepad => notepad.id !== editId));
+                setNotepads((prevNotepads) => prevNotepads.filter(notepad => notepad.id !== deleteId));
+                setDeleteId("");
+            } else {
                 const alertData:AlertsData = {
                     id: new Date(),
                     message: res.data.message,
@@ -196,12 +198,12 @@ export default function Notepad({ auth } : NotepadProps) {
         } finally {
             setLoading(false);
         }
-    }, [editId]);
+    }, [deleteId]);
 
     return (
         <>
             <Head title="Notepad"/>
-            <div className="min-h-full bg-gray-100 dark:bg-gray-950 relative flex flex-col">
+            <div className="min-h-full bg-white dark:bg-gray-950 relative flex flex-col">
                 {
                     (notepads.length <= 0) && (
                         <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-500 text-xs font-semibold w-full text-center">
@@ -217,11 +219,11 @@ export default function Notepad({ auth } : NotepadProps) {
                     <NotepadFilterSection setSearchCategory={setSearchCategory} categories={categories} setSearchTitle={setSearchTitle} viewOption={viewOption} setViewOption={setViewOption} tab={tab} setTab={setTab}/>
 
                     {/*메모장 read영역*/}
-                    <NotepadsSection categories={categories} modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} tab={tab} viewOption={viewOption} notepads={notepads} setNotepads={setNotepads} />
+                    <NotepadsSection deleteId={deleteId} setDeleteId={setDeleteId} categories={categories} modal={modal} setModal={setModal} editId={editId} setEditId={setEditId} editStatus={editStatus} setEditStatus={setEditStatus} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} tab={tab} viewOption={viewOption} notepads={notepads} setNotepads={setNotepads} />
                 </div>
 
                 {/*메모장 삭제 모달창*/}
-                {modal ? <Modal Title="메모장 삭제" onClickEvent={handleDeleteNotepad} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId && '"'+notepads.find(item => item.id === editId)?.title+'"' + " 메모장을 정말 삭제 하시겠습니까?"} Position="top" CloseText="삭제" /> : ""}
+                {modal ? <Modal Title="메모장 삭제" onClickEvent={handleDeleteNotepad} setModal={setModal} setEditId={setDeleteId} setEditStatus={setEditStatus} Text={deleteId && '"'+notepads.find(item => item.id === deleteId)?.title+'"' + " 메모장을 정말 삭제 하시겠습니까?"} Position="top" CloseText="삭제" /> : ""}
 
                 <button onClick={() => {
                     setFormModal(true);

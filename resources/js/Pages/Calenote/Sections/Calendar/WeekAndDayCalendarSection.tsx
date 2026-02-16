@@ -711,6 +711,7 @@ export default function WeekAndDayCalendarSection({
 
                             return (
                                 <div
+                                    data-event="true"
                                     key={includeEvent.uuid}
                                     className="pointer-events-auto relative h-[20px]"
                                     style={{

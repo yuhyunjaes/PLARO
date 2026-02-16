@@ -259,7 +259,7 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
         setIsDragging(false);
     }, [isDragging, isMobile]);
 
-    const handleDateMoveOut = useCallback((e: MouseEvent) => {
+    const handleDateMoveOut = useCallback((e: MouseEvent, interval = false) => {
         if(!isDragging || !scrollRef.current || scrollRef.current.contains(e.target as Node)) return;
 
         const weeks = document.querySelectorAll('.week');
@@ -298,7 +298,7 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
     }, [handleDateMoveOut]);
 
     const checkMobile = useCallback(() => {
-        const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
+        const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
         setIsMobile(isMobileViewport);
     }, []);
 
@@ -394,7 +394,7 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
             setTimeout(() => {
                 setIsScrolling(false);
                 if (lastMouseEvent.current) {
-                    handleDateMoveOut(lastMouseEvent.current);
+                    handleDateMoveOut(lastMouseEvent.current, true);
                 }
             }, 300);
         }, 1000);
@@ -415,18 +415,19 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
 
         const rect = scrollRef.current.getBoundingClientRect();
 
-        if (e.clientY < rect.top) {
+        if (e.clientY + 5 < rect.top) {
             directionRef.current = -1;
             startInterval();
-        } else if (e.clientY > rect.bottom) {
+        } else if (e.clientY + 5 > rect.bottom) {
             directionRef.current = 1;
+            console.log('asd')
             startInterval();
         } else {
             directionRef.current = 0;
             stopInterval();
         }
 
-        handleDateMoveOut(e);
+        handleDateMoveOut(e, true);
     }, [isDragging, handleDateMoveOut]);
 
     const handleMouseUp = useCallback(() => {
@@ -540,7 +541,7 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
     ): EventWithLayout[] => {
         if (events.length === 0) return [];
 
-        const MAX_ROWS = 5;
+        const MAX_ROWS = isMobile ? 2 : 5;
 
         const rowOccupancy: boolean[][] = Array.from(
             { length: MAX_ROWS },
@@ -656,14 +657,15 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
                                 const cellHeight = scrollRef.current ? (scrollRef.current.clientHeight/6) : 0;
                                 const paddingVertical = 20; // 상하 각 20px
                                 const availableHeight = cellHeight - (paddingVertical * 2); // 40px 빼기
-                                const eventRowHeight = (availableHeight / 5);
+                                const maxRows = isMobile ? 2 : 5;
+                                const eventRowHeight = (availableHeight / maxRows);
 
                                 return (
                                     <div key={index} className="grid grid-cols-7 text-right flex-1 snap-start week relative">
                                         <div className="absolute w-full left-0 grid pointer-events-none"
                                              style={{
                                                  gridTemplateColumns: 'repeat(7, 1fr)',
-                                                 gridTemplateRows: `repeat(5, ${eventRowHeight}px)`,
+                                                 gridTemplateRows: `repeat(${maxRows}, ${eventRowHeight}px)`,
                                                  height: `${availableHeight}px`,
                                                  top: `${paddingVertical}px` // 이 줄 추가
                                              }}>
@@ -698,14 +700,14 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
 
                                                 return (
                                                     <div
+                                                        data-event="true"
                                                         key={includeEvent.uuid}
                                                         className="pointer-events-auto relative"
                                                         style={{
                                                             gridRow: includeEvent.row + 1,
                                                             gridColumn: `${includeEvent.start_area + 1} / span ${span}`,
                                                             margin: '1px'
-                                                        }}
-                                                    >
+                                                        }}>
                                                         <div
                                                             onClick={async () => {
                                                                 await handleEventClick(includeEvent);
@@ -714,7 +716,7 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
                                                         >
                                                             <div className={`w-[4px] ${includeEvent.color}`}></div>
                                                             <div className={`${eventId === includeEvent.uuid ? includeEvent.color : bodyColor} flex-1 flex justify-start items-center`}>
-                                                                <p className={`text-xs pl-1 truncate ${eventId === includeEvent.uuid ? "text-white" : "text-gray-950"}`}>{includeEvent.title}</p>
+                                                                <p className={`text-[0.5rem] md:text-xs pl-1 truncate ${eventId === includeEvent.uuid ? "text-white" : "text-gray-950"}`}>{includeEvent.title}</p>
                                                             </div>
                                                         </div>
                                                     </div>

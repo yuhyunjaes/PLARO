@@ -4,7 +4,7 @@ import { ContentsData } from "./HomeData.js"
 import {Link} from "@inertiajs/react";
 export default function ContentsSection() {
     return (
-        <div className="w-full bg-gray-100 dark:bg-gray-950">
+        <div className="w-full bg-gray-100 dark:bg-[#0d1117]">
             <div className="container mx-auto py-16 grid grid-cols-1 md:grid-cols-3 sm:grid-cols-2 gap-10 px-5 sm:px-0">
                 <div className="col-span-full normal-text text-center font-semibold space-y-5">
                     <p>컨텐츠</p>

@@ -17,7 +17,7 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
 </style>
-<body class="bg-white dark:bg-gray-950">
+<body class="bg-white dark:bg-[#0d1117]">
 @inertia
 </body>
 </html>

@@ -43,11 +43,11 @@ class EventController extends Controller
             $eventSwitch = $request->eventSwitch === 'chat';
 
             $startAt = Carbon::parse($request->start_at)
-                ->setTimezone('Asia/Seoul')
+                ->setTimezone(config('app.timezone'))
                 ->format('Y-m-d H:i:s');
 
             $endAt = Carbon::parse($request->end_at)
-                ->setTimezone('Asia/Seoul')
+                ->setTimezone(config('app.timezone'))
                 ->format('Y-m-d H:i:s');
 
             $event = DB::transaction(function () use ($request, $startAt, $endAt, $eventSwitch) {
@@ -107,11 +107,11 @@ class EventController extends Controller
         }
 
         $startAt = Carbon::parse($request->start_at)
-            ->setTimezone('Asia/Seoul')
+            ->setTimezone(config('app.timezone'))
             ->format('Y-m-d H:i:s');
 
         $endAt = Carbon::parse($request->end_at)
-            ->setTimezone('Asia/Seoul')
+            ->setTimezone(config('app.timezone'))
             ->format('Y-m-d H:i:s');
 
         $event->fill([

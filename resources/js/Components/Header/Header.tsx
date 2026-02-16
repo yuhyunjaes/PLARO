@@ -78,7 +78,7 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
                     {(!toggle && check) && (
                         <button onClick={() => {
                             setToggle?.(true)
-                        }} className="normal-text text-xl block sm:hidden">
+                        }} className="normal-text text-xl block md:hidden">
                             <FontAwesomeIcon icon={faBars} />
                         </button>
                     )}

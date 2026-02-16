@@ -3,7 +3,7 @@
 import { IntroduceData } from "./HomeData.js";
 export default function IntroduceSection() {
     return (
-        <div className="w-full bg-white dark:bg-[#0d1117]">
+        <div className="w-full bg-white dark:bg-gray-950">
             <div className="container mx-auto py-16 gap-10 flex flex-col sm:flex-row">
                 <div className="h-[200px] flex-1 flex items-center">
                     <div className="space-y-5 text-center sm:text-left w-full sm-container">

@@ -8,6 +8,12 @@ import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
 import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 
 interface ParticipantControlProps {
+    setModalType: Dispatch<SetStateAction<"" | "delete" | "removeUser">>;
+    setModalTitle: Dispatch<SetStateAction<string>>;
+    setModalMessage: Dispatch<SetStateAction<string>>;
+    setModal: Dispatch<SetStateAction<boolean>>;
+    eventUserControl: boolean;
+    setEventUserControl: Dispatch<SetStateAction<boolean>>;
     onlineParticipantIds: number[];
     setEvents: Dispatch<SetStateAction<EventsData[]>>;
     resetEvent: () => void;
@@ -22,7 +28,7 @@ interface ParticipantControlProps {
     };
 }
 
-export default function ParticipantControl({ onlineParticipantIds, setEvents, resetEvent, IsEditAuthority, disabled, saveEvent, eventId, eventParticipants, setEventParticipants, auth }:ParticipantControlProps) {
+export default function ParticipantControl({ setModalTitle, setModalType, setModal, setModalMessage, eventUserControl, setEventUserControl, onlineParticipantIds, setEvents, resetEvent, IsEditAuthority, disabled, saveEvent, eventId, eventParticipants, setEventParticipants, auth }:ParticipantControlProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -37,8 +43,6 @@ export default function ParticipantControl({ onlineParticipantIds, setEvents, re
 
     const [IsParticipantFocus, setIsParticipantFocus] = useState<boolean>(false);
     const [IsParticipantEmail, setIsParticipantEmail] = useState<boolean>(false);
-
-    const [eventUserControl, setEventUserControl] = useState<boolean>(false);
 
     const [participantControl, setParticipantControl] = useState<string>("");
 
@@ -178,28 +182,6 @@ export default function ParticipantControl({ onlineParticipantIds, setEvents, re
         }
     }, [activeEventParticipant, eventId]);
 
-    const removeParticipantsAll = useCallback(async () => {
-        if(!eventId) return;
-
-        try {
-            const res = await axios.delete(`/api/event/${eventId}/participants/all`);
-
-            if (res.data.success) {
-                setEventParticipants(prev => prev.filter(eventParticipant => eventParticipant.role === "owner"));
-                setEventUserControl(false);
-            } else {
-                const alertData:AlertsData = {
-                    id: new Date(),
-                    message: res.data.message,
-                    type: res.data.type
-                }
-                setAlerts(pre => [...pre, alertData]);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    }, [eventId]);
-
     const changeEventUserRole = useCallback(async (role: "editor" | "viewer") => {
         if(activeEventParticipant.length <= 0 || !eventId || !role || activeEventParticipant[0]?.status !== "EventUser") return;
 
@@ -273,9 +255,12 @@ export default function ParticipantControl({ onlineParticipantIds, setEvents, re
 
                                     {
                                         eventUserControl ? (
-                                            <div ref={activeEventUserAreaRef} className="bg-[#0d1117] border rounded border-gray-800 w-[calc(100%-0.5rem)] absolute z-[1] -left-5 p-2">
-                                                <button onClick={async () => {
-                                                    await removeParticipantsAll();
+                                            <div ref={activeEventUserAreaRef} className="bg-white dark:bg-[#0d1117] border rounded border-gray-300  dark:border-gray-800 w-[calc(100%-0.5rem)] absolute z-[1] -left-5 p-2">
+                                                <button onClick={ () => {
+                                                    setModalType("removeUser");
+                                                    setModalTitle("참가자 전체 제거");
+                                                    setModalMessage("이 이벤트의 참가자를 모두 제거하시겠습니까?");
+                                                    setModal(true);
                                                 }} className="btn transition-colors duration-300 w-full flex justify-start items-center py-2 text-red-500 hover:text-red-50 hover:bg-red-500/80 space-x-1">
                                                     <FontAwesomeIcon icon={faX}/>
                                                     <span>모두 제거</span>
@@ -337,7 +322,7 @@ export default function ParticipantControl({ onlineParticipantIds, setEvents, re
                                                         status: eventParticipant.user_id ? "EventUser" : "EventInvitation"
                                                     }
                                                 ]);
-                                            }} className={`${isActive ? "" : "text-[10px] block sm:hidden group-hover:block cursor-pointer"}`}>
+                                            }} className={`${isActive ? "" : "text-[10px] block md:hidden group-hover:block cursor-pointer"}`}>
                                                 <FontAwesomeIcon icon={faEllipsis} />
                                             </button>
                                         ) : ""}
@@ -419,7 +404,7 @@ export default function ParticipantControl({ onlineParticipantIds, setEvents, re
                                 <div className="p-2 w-full text-xs hover:bg-gray-950/10 dark:hover:bg-gray-600 rounded flex items-center justify-between group">
                                     <p className="truncate max-w-[70%]">{participantControl}</p>
 
-                                    <div className="space-x-2">
+                                    <div className="space-x-2 flex">
                                         <button disabled={loading} onMouseDown={async () => {
                                     if(!eventParticipants.some(participant => participant.email === participantControl)) {
                                         let localEventId:string | undefined;
@@ -429,7 +414,7 @@ export default function ParticipantControl({ onlineParticipantIds, setEvents, re
                                         await eventInvite(participantControl, "viewer", localEventId);
                                         setParticipantControl("");
                                     }
-                                    }} className="cursor-pointer opacity-0 group-hover:opacity-100 hover:text-gray-300">
+                                    }} className="cursor-pointer block md:hidden group-hover:block hover:text-gray-300">
                                             <FontAwesomeIcon icon={faEye} />
                                         </button>
                                         <button disabled={loading} onMouseDown={async () => {
@@ -441,7 +426,7 @@ export default function ParticipantControl({ onlineParticipantIds, setEvents, re
                                         await eventInvite(participantControl, "editor", localEventId);
                                         setParticipantControl("");
                                     }
-                                    }} className="cursor-pointer opacity-0 group-hover:opacity-100 hover:text-gray-300">
+                                    }} className="cursor-pointer block md:hidden group-hover:block hover:text-gray-300">
                                             <FontAwesomeIcon icon={faPen} />
                                         </button>
                                     </div>

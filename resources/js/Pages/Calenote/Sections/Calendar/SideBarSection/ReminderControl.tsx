@@ -120,6 +120,12 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
         reminderControlToArr();
     }, [reminderControlToArr]);
 
+    useEffect(() => {
+        if(eventReminder.length >= 5) {
+            setReminderSelector(false);
+        }
+    }, [eventReminder]);
+
     return (
         <div className="px-5 flex flex-wrap">
             <div className="w-full relative">
@@ -136,7 +142,7 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
                     disabled={eventReminder.length >= 5}
                 />
 
-                {reminderSelector ?
+                {(reminderSelector && eventReminder.length < 5) ?
                     <div className="absolute w-full top-[34px] z-[1]  rounded bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800">
 
 
@@ -168,7 +174,7 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
                             {reminderChangeKorean(reminder.seconds)}
                             <button onClick={async () => {
                                 await removeEventReminder(reminder);
-                            }} className="text-[10px] block sm:hidden group-hover:block cursor-pointer">
+                            }} className="text-[10px] block md:hidden group-hover:block cursor-pointer">
                                 <FontAwesomeIcon icon={faX} />
                             </button>
                         </div>

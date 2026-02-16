@@ -2,6 +2,8 @@ export interface AuthUser {
     id: number;
     name: string;
     email: string;
+    nationality?: string;
+    timezone?: string;
 }
 
 export interface Notepads {

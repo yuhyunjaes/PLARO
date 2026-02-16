@@ -50,13 +50,14 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
                 setCategoryEditId("");
                 setTemporaryEditCategory("");
 
+            } else {
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
-            const alertData:AlertsData = {
-                id: new Date(),
-                message: res.data.message,
-                type: res.data.type
-            }
-            setAlerts(pre => [...pre, alertData]);
         } catch (err) {
             console.error(err);
         } finally {
@@ -77,8 +78,8 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
     }, [categoryEditId]);
 
     useEffect(() => {
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
     }, [handleClickOutside]);
 
     return (
@@ -91,41 +92,29 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
                 <div className="flex space-x-1">
                     <input
                         autoFocus
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onFocus={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => {
-                            e.stopPropagation();
                             if (e.key === "Enter") {
                                 if(temporaryEditCategory.trim().length > 0) {
                                     editNotepadCategory();
                                 }
                             }
                         }}
+                        onBlur={() => {
+                            if(temporaryEditCategory.trim().length > 0) {
+                                editNotepadCategory();
+                            }
+                        }}
                         onChange={(e) => {
                             setTemporaryEditCategory(e.target.value);
                         }}
                         type="text" name="temporaryEditCategory" id="temporaryEditCategory" className="normal-text text-xs truncate border-0 outline-none max-w-[100px]" value={temporaryEditCategory}/>
-
-                    <button
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onFocus={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if(temporaryEditCategory.trim().length > 0) {
-                                editNotepadCategory();
-                            }
-                    }}
-                            className="size-5 transition-colors duration-300 text-green-500 hover:text-white hover:bg-green-500/80 rounded cursor-pointer">
-                        <FontAwesomeIcon icon={faFloppyDisk} />
-                    </button>
                 </div>
             ) : (
-                <p className="truncate max-w-[100px] text-xs">{notepadCategory}</p>
+                <p className="truncate max-w-[100px] text-xs font-semibold">{notepadCategory}</p>
             )}
             {
                 (notepadId === categoryEditId) && (
-                    <div ref={categoryRef} className="w-[200px] max-h-[100px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-xl left-0 divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto">
+                    <div ref={categoryRef} className="w-[200px] max-h-[100px] absolute px-2 py-1 bg-gray-50 dark:bg-[#0d1117] shadow shadow-gray-300 dark:shadow-gray-800 top-[100%] rounded left-0 divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto text-xs font-semibold">
                         {(categories.filter(item => item !== notepadCategory).length <= 0) ? (
                             <div className="py-2 rounded">
                                 <p className="normal-text">등록된 카테고리가 없습니다.</p>
@@ -134,10 +123,12 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
                             categories.map((category, index) => {
                                 if(category !== notepadCategory) {
                                     return (
-                                        <div onClick={() => {
+                                        <div onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
                                             editNotepadCategory(category);
                                         }} key={index} className="py-2 rounded">
-                                            <p className="normal-text text-xs">{category}</p>
+                                            <p className="normal-text truncate">{category}</p>
                                         </div>
                                     )
                                 }

@@ -5,6 +5,8 @@ import {faEllipsis, faPen, faTrashCan, faFloppyDisk } from "@fortawesome/free-so
 import {Dispatch, SetStateAction, useCallback, useEffect, useRef} from "react";
 
 interface NotepadEditProps {
+    deleteId: string;
+    setDeleteId:Dispatch<SetStateAction<string>>;
     editId: string;
     setEditId: Dispatch<SetStateAction<string>>;
     notepadId: string;
@@ -19,68 +21,44 @@ interface NotepadEditProps {
     handleEditNotepadTitle: () => Promise<void>;
 }
 
-export default function NotepadEdit({ editId, setEditId, notepadId, isLastInRow, editStatus, setEditStatus, temporaryEditTitle, setTemporaryEditTitle, EditTitle, deleteNotepad, modal, handleEditNotepadTitle } : NotepadEditProps) {
+export default function NotepadEdit({ deleteId, setDeleteId, editId, setEditId, notepadId, isLastInRow, editStatus, setEditStatus, temporaryEditTitle, setTemporaryEditTitle, EditTitle, deleteNotepad, modal, handleEditNotepadTitle } : NotepadEditProps) {
     const menuRef = useRef<HTMLDivElement>(null);
 
     const handleClickOutside = useCallback( (e: MouseEvent) => {
-        if (!editId || modal) return;
+        if (!deleteId || modal) return;
 
         if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-            setEditId("");
+            setDeleteId("");
             setEditStatus("");
             setTemporaryEditTitle("");
         }
-    }, [editId, modal]);
+    }, [deleteId, modal]);
 
     useEffect(() => {
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("click", handleClickOutside);
+        return () => document.removeEventListener("click", handleClickOutside);
     }, [handleClickOutside]);
 
     return (
         <div onClick={(e) => {
             e.stopPropagation();
-            setEditId(notepadId);
+            setDeleteId(notepadId);
         }}
              className={`transition-colors duration-300 relative ${
-                 editId === notepadId
+                 deleteId === notepadId
                      ? "text-blue-700"
                      : "text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
              }`}
         >
             <FontAwesomeIcon icon={faEllipsis} />
-            {(editId === notepadId) && (
+            {(deleteId === notepadId) && (
                 <div
                     ref={menuRef}
                     className={`
-                        w-[160px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 top-[100%] shadow-md rounded-xl
+                        w-[160px] absolute p-2 bg-gray-50 dark:bg-[#0d1117] shadow shadow-gray-300 dark:shadow-gray-800 top-[100%] rounded
                         ${isLastInRow ? "right-0" : "left-0"}
                     `}
                 >
-
-                    {(editStatus === "update") ? (
-                        <button onClick={(e) => {
-                            if(temporaryEditTitle.trim().length > 0) {
-                                e.stopPropagation();
-                                handleEditNotepadTitle();
-                            }
-                        }} className="btn text-xs transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-green-500 hover:text-green-50 hover:bg-green-500/80 space-x-1">
-                            <FontAwesomeIcon icon={faFloppyDisk}/>
-                            <span>
-                            제목저장
-                        </span>
-                        </button>
-                    ) : (
-                        <button onClick={(e) => {
-                            e.stopPropagation();
-                            EditTitle();
-                        }} className="btn text-xs transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-gray-950 dark:text-white hover:bg-gray-950/10 dark:hover:bg-gray-600 space-x-1">
-                            <FontAwesomeIcon icon={faPen}/>
-                            <span>
-                            제목변경
-                        </span>
-                        </button>
-                    )}
 
                     <button onClick={(e) => {
                         e.stopPropagation();

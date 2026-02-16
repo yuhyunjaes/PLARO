@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -75,13 +76,18 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', 'min:8', 'string'],
             'name' => ['required', 'string', 'min:2', 'max:5', 'regex:/^[가-힣]+$/'],
             'email' => ['required', 'email', 'unique:users,email'],
+            'nationality' => ['required', 'string', Rule::in(array_keys(config('nationality_timezones', [])))],
         ]);
+
+        $timezone = config('nationality_timezones.' . $data['nationality'], config('app.timezone', 'UTC'));
 
         $user = User::create([
             'user_id' => $data['user_id'],
             'password' => Hash::make($data['password']),
             'name' => $data['name'],
             'email' => $data['email'],
+            'nationality' => $data['nationality'],
+            'timezone' => $timezone,
         ]);
 
         Auth::login($user);

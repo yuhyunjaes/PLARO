@@ -152,6 +152,7 @@ Route::middleware('web')->group(function () {
                 'uuid' => $notepad->uuid,
                 'title' => $notepad->title,
                 'liked' => (bool) $notepad->liked,
+                'category' => $notepad->category,
                 'status' => 200,
             ]);
         })->name('notepad.write');

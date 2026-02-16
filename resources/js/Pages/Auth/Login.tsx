@@ -74,7 +74,7 @@ export default function Login({ sessionEmail }:LoginProps) {
                         로그인
                     </button>
                     <div className="text-center">
-                        <Link href="/register" className="normal-text font-semibold text-sm">회원가입</Link>
+                        <Link href="/register" className="normal-text font-semibold text-xs">회원가입</Link>
                     </div>
                 </form>
             </div>

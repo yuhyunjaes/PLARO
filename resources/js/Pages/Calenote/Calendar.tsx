@@ -3,7 +3,7 @@ import SideBarSection from "./Sections/Calendar/SideBarSection";
 import MonthCalendarSection from "./Sections/Calendar/MonthCalendarSection";
 import { Head } from '@inertiajs/react';
 import {AuthUser} from "../../Types/CalenoteTypes";
-import {Dispatch, SetStateAction, useCallback, useEffect, useState} from "react";
+import {Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
 import {router} from "@inertiajs/react";
 import CalendarControlSection from "./Sections/Calendar/CalendarControlSection";
 import WeekAndDayCalendarSection from "./Sections/Calendar/WeekAndDayCalendarSection";
@@ -15,6 +15,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faAngleLeft, faAngleRight, faPlus} from "@fortawesome/free-solid-svg-icons";
 import Echo from 'laravel-echo';
 import {AlertsData} from "../../Components/Elements/ElementsData";
+import Modal from "../../Components/Elements/Modal";
 
 
 interface CalendarProps {
@@ -48,6 +49,14 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         setLoading,
         loading
     } = ui;
+
+    const [contentMode, setContentMode] = useState<"normal" | "challenge" | "dday">("normal");
+    const sideBarToggleRef:RefObject<HTMLButtonElement | null> = useRef<HTMLButtonElement | null>(null);
+
+    const [modal, setModal] = useState<boolean>(false);
+    const [modalTitle, setModalTitle] = useState<string>("");
+    const [modalMessage, setModalMessage] = useState<string>("");
+    const [modalType, setModalType] = useState<"" | "delete" | "removeUser">("");
 
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
@@ -850,32 +859,79 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         };
     }, [getDone, eventId]);
 
+    const [eventUserControl, setEventUserControl] = useState<boolean>(false);
+
+    const removeParticipantsAll = useCallback(async () => {
+        if(!eventId) return;
+
+        try {
+            const res = await axios.delete(`/api/event/${eventId}/participants/all`);
+
+            if (res.data.success) {
+                setEventParticipants(prev => prev.filter(eventParticipant => eventParticipant.role === "owner"));
+                setEventUserControl(false);
+            } else {
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }, [eventId]);
+
+    useEffect(() => {
+        if(!modalTitle && !modalMessage) {
+            setModalType("");
+        }
+    }, [modalTitle, modalMessage]);
+
+    useEffect(() => {
+        if(contentMode !== "normal") {
+            setViewMode("month")
+        }
+    }, [contentMode]);
+
+    const activeAtToToday = () => {
+
+    }
+
     return (
         <>
             <Head title="Calendar"/>
             <div className="min-h-full bg-white dark:bg-gray-950 relative flex flex-col">
                 <div className="flex-1 flex flex-row">
                     <div className={`flex-1 flex flex-col`}>
-                        <CalendarControlSection setFirstCenter={setFirstCenter} setIsHaveEvent={setIsHaveEvent} setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay} setActiveDay={setActiveDay}/>
-                        {
-                            viewMode === "month" && (
-                                <MonthCalendarSection handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} setIsHaveEvent={setIsHaveEvent} events={events} IsHaveEvent={IsHaveEvent} firstCenter={firstCenter} setFirstCenter={setFirstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
-                            )
-                        }
-                        {
-                            (viewMode === "week" || viewMode === "day") && (
-                                <WeekAndDayCalendarSection now={now} handleEventClick={handleEventClick} events={events} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
-                            )
-                        }
+                        <CalendarControlSection contentMode={contentMode} setContentMode={setContentMode} setFirstCenter={setFirstCenter} setIsHaveEvent={setIsHaveEvent} setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay} setActiveDay={setActiveDay}/>
+
+                        {contentMode === "normal" ? (
+                            <>
+                                {
+                                    viewMode === "month" && (
+                                        <MonthCalendarSection handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} setIsHaveEvent={setIsHaveEvent} events={events} IsHaveEvent={IsHaveEvent} firstCenter={firstCenter} setFirstCenter={setFirstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                                    )
+                                }
+                                {
+                                    (viewMode === "week" || viewMode === "day") && (
+                                        <WeekAndDayCalendarSection now={now} handleEventClick={handleEventClick} events={events} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
+                                    )
+                                }
+                            </>
+                        ) : ""}
                     </div>
 
-                    <button onClick={() => {
+                    <button ref={sideBarToggleRef} onClick={() => {
                         setSideBarToggle(!sideBarToggle);
                     }} className={`fixed block sm:hidden bottom-0 duration-300 transition-[right] cursor-pointer ${sideBarToggle ? 'right-[240px]' : 'right-0'}  bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-12 rounded-full text-white font-semibold m-[25px] sm:m-[50px]`}>
                         <FontAwesomeIcon icon={sideBarToggle ? faAngleRight : faAngleLeft} />
                     </button>
-                    <SideBarSection onlineParticipantIds={onlineParticipantIds} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} setEvents={setEvents} eventReminder={eventReminder} setEventReminder={setEventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} deleteEvent={deleteEvent} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                    <SideBarSection contentMode={contentMode} setContentMode={setContentMode} eventUserControl={eventUserControl} setEventUserControl={setEventUserControl} setModalType={setModalType} setModalTitle={setModalTitle} setModalMessage={setModalMessage} setModal={setModal} sideBarToggleRef={sideBarToggleRef} onlineParticipantIds={onlineParticipantIds} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} setEvents={setEvents} eventReminder={eventReminder} setEventReminder={setEventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
                 </div>
+
+                {modal ? <Modal custom={true} Title={modalTitle} onClickEvent={modalType === "delete" ? deleteEvent : removeParticipantsAll} setModal={setModal} setEditId={setModalTitle} setEditStatus={setModalMessage} Text={`${events.find(event => event.uuid === eventId)?.title || ""} ${modalMessage}`} Position="top" CloseText="삭제" /> : ""}
             </div>
         </>
     );

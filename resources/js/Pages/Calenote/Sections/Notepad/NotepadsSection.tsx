@@ -15,6 +15,8 @@ import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 import {AlertsData} from "../../../../Components/Elements/ElementsData";
 
 interface NotepadsSectionProps {
+    deleteId: string;
+    setDeleteId:Dispatch<SetStateAction<string>>;
     notepads: Notepads[];
     setNotepads: Dispatch<SetStateAction<Notepads[]>>;
     viewOption: "grid" | "list";
@@ -30,7 +32,7 @@ interface NotepadsSectionProps {
     categories: string[];
 }
 
-export default function NotepadsSection({ notepads, setNotepads, viewOption, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal, categories } : NotepadsSectionProps) {
+export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNotepads, viewOption, tab, setEditId, setEditStatus, editId, editStatus, setTemporaryEditTitle, temporaryEditTitle, setModal, modal, categories } : NotepadsSectionProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -43,7 +45,18 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, tab
     } = ui;
     const [shareId, setShareId] = useState<string>("");
 
-    const EditTitle = useCallback(() => {
+    const EditTitle = useCallback((uuid?:string) => {
+        if(uuid) {
+            setEditStatus("update");
+            setEditId(uuid);
+
+            const title = notepads.find(item => item.id === uuid)?.title;
+            if(title) {
+                setTemporaryEditTitle(title);
+            }
+            return;
+        }
+
         if(!editId) return;
 
         if(editId && editStatus === "update") {
@@ -61,13 +74,13 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, tab
     }, [editId, editStatus, notepads]);
 
     const deleteNotepad = useCallback(() => {
-        if(!editId) return;
+        if(!deleteId) return;
         if(temporaryEditTitle) {
             setTemporaryEditTitle("");
         }
         setEditStatus("delete");
         setModal(true);
-    }, [editId, temporaryEditTitle]);
+    }, [deleteId, temporaryEditTitle]);
 
     const handleLikeInsert = async (uuid: string) => {
         if(!uuid) return;
@@ -78,13 +91,13 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, tab
 
             if (res.data.success) {
                 updateLikeState(uuid, true);
+            } else {
+                setAlerts(prev => [...prev, {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type,
+                }]);
             }
-
-            setAlerts(prev => [...prev, {
-                id: new Date(),
-                message: res.data.message,
-                type: res.data.type,
-            }]);
 
         } catch (err) {
             console.error(err);
@@ -102,13 +115,13 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, tab
 
             if (res.data.success) {
                 updateLikeState(uuid, false, tab === "liked");
+            } else {
+                setAlerts(prev => [...prev, {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type,
+                }]);
             }
-
-            setAlerts(prev => [...prev, {
-                id: new Date(),
-                message: res.data.message,
-                type: res.data.type,
-            }]);
         } catch (err) {
             console.error(err);
         } finally {
@@ -159,13 +172,14 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, tab
                 setEditId("");
                 setEditStatus("");
                 setTemporaryEditTitle("");
+            } else {
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
-            const alertData:AlertsData = {
-                id: new Date(),
-                message: res.data.message,
-                type: res.data.type
-            }
-            setAlerts(pre => [...pre, alertData]);
 
         } catch (err) {
             console.log(err);
@@ -174,8 +188,14 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, tab
         }
     }, [editId, temporaryEditTitle]);
 
+    useEffect(() => {
+        if(shareId) {
+            setDeleteId("");
+        }
+    }, [shareId]);
+
     return (
-        <div className={`grid gap-5 ${viewOption === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"}`}>
+         <div className={`grid gap-5 ${viewOption === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"}`}>
             {notepads.map((notepad, index) => {
                 const colCount = getColumnCount();
                 const isLastInRow = (index + 1) % colCount === 0;
@@ -187,9 +207,14 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, tab
                                 preserveState: true,
                                 preserveScroll: true,
                             });
-                        }} key={index} className="notepad-item">
+                            }} key={index} className="notepad-item">
                             {(editStatus === "update" && editId === notepad.id) ? (
                                 <input autoFocus
+                                       onBlur={() => {
+                                           if(temporaryEditTitle.trim().length > 0) {
+                                               handleEditNotepadTitle();
+                                           }
+                                       }}
                                        onClick={(e) => e.stopPropagation()}
                                        onMouseDown={(e) => e.stopPropagation()}
                                        onFocus={(e) => e.stopPropagation()}
@@ -206,19 +231,29 @@ export default function NotepadsSection({ notepads, setNotepads, viewOption, tab
                                        }}
                                        type="text" name="" id="" className="normal-text font-semibold truncate border-0 outline-none max-w-full min-w-full" value={temporaryEditTitle}/>
                             ) : (
-                                <h5 className="normal-text font-semibold truncate">
+                                <h5 onClick={(e) => {
+                                    e.stopPropagation();
+                                    EditTitle(notepad.id);
+                                }} className="normal-text font-semibold truncate">
                                     {notepad.title}
                                 </h5>
                             )}
-                            <p className="text-white normal-text text-sm min-h-[80px] max-h-[80px] line-clamp-4">
+                            <p className="normal-text text-sm min-h-[80px] max-h-[80px] bg-gray-100 dark:bg-[#0d1117] p-2 rounded line-clamp-4">
                                 <span dangerouslySetInnerHTML={{ __html: notepad.content }} />
                             </p>
-                            <p className="text-sm normal-text truncate">{notepad.created_at.substring(0, 10)}</p>
+                            <div className="flex flex-row gap-2">
+                                <div>
+                                    <p className="text-xs normal-text truncate font-semibold">{notepad.created_at.substring(0, 10)}</p>
+                                </div>
+                                <div className="flex-1 flex justify-center items-center">
+                                    <div className="h-[1px] w-full bg-gray-300 dark:bg-gray-800"></div>
+                                </div>
+                            </div>
                             <div className="flex justify-between items-center">
                                 <NotepadCategoryEdit categories={categories} setNotepads={setNotepads} notepadCategory={notepad.category} notepadId={notepad.id}/>
 
                                 <div className="space-x-2 flex">
-                                    <NotepadEdit handleEditNotepadTitle={handleEditNotepadTitle} modal={modal} deleteNotepad={deleteNotepad} EditTitle={EditTitle} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setEditStatus={setEditStatus} editId={editId} setEditId={setEditId} notepadId={notepad.id} isLastInRow={isLastInRow}/>
+                                    <NotepadEdit deleteId={deleteId} setDeleteId={setDeleteId} handleEditNotepadTitle={handleEditNotepadTitle} modal={modal} deleteNotepad={deleteNotepad} EditTitle={EditTitle} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setEditStatus={setEditStatus} editId={editId} setEditId={setEditId} notepadId={notepad.id} isLastInRow={isLastInRow}/>
 
                                     <NotepadShare
                                         isLastInRow={isLastInRow}

@@ -61,12 +61,12 @@ export default function FormModal({
     return (
         <div
             onClick={close}
-            className="fixed inset-0 z-[1] bg-black/30 flex justify-center items-center px-5"
+            className="fixed inset-0 z-[999] bg-black/30 flex justify-center items-center px-5"
         >
             <div
                 onClick={(e) => e.stopPropagation()}
                 className="overflow-hidden divide-y divide-gray-200 dark:divide-gray-700
-                    max-w-[500px] rounded-xl bg-gray-100 dark:bg-gray-950
+                    max-w-[500px] rounded bg-gray-100 dark:bg-gray-950
                     border border-gray-200 dark:border-gray-700 container"
             >
                 <div className="p-5 mb-2 flex justify-between items-center">

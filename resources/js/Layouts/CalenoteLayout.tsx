@@ -47,9 +47,9 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
 
     // 사이드바 상태
     const [sideBar, setSideBar] = useState<number>(() =>
-        window.innerWidth <= 640 ? 0 : 250
+        window.innerWidth <= 768 ? 0 : 230
     );
-    const [saveWidth, setSaveWidth] = useState<number>(250);
+    const [saveWidth, setSaveWidth] = useState<number>(230);
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
 
     const CalenoteLayoutScrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
@@ -57,7 +57,7 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
     // 반응형 처리
     const handleResize = useCallback((): void => {
         setSideBar(prev => {
-            if (window.innerWidth <= 640) {
+            if (window.innerWidth <= 768) {
                 setSideBarToggle(false);
                 return 0;
             }
@@ -94,11 +94,11 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
             <Header
                 toggle={sideBarToggle}
                 setToggle={setSideBarToggle}
-                check={sideBar < 250}
+                check={sideBar < 230}
                 auth={auth}
             />
 
-            <div className="w-full h-[calc(100vh-70px)] flex transition-[width] duration-300">
+            <div className="w-full h-[calc(100vh-70px)] flex">
                 <SideBarSection
                     sideBarToggle={sideBarToggle}
                     setSideBarToggle={setSideBarToggle}
@@ -106,7 +106,7 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
                     setSideBar={setSideBar}
                 />
 
-                <main className="CalenoteLayout-container transition-[width] duration-300 h-full flex-1 overflow-y-auto overflow-x-hidden" ref={CalenoteLayoutScrollRef}>
+                <main className="CalenoteLayout-container h-full flex-1 overflow-y-auto overflow-x-hidden" ref={CalenoteLayoutScrollRef}>
                     {alerts.length > 0 && (
                         <Alert
                             key={formatDateKey(alerts[0]!.id)}

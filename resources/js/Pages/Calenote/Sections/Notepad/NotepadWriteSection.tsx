@@ -2,7 +2,7 @@ import {Head, router} from '@inertiajs/react';
 import {RefObject, useCallback, useContext, useEffect, useRef, useState} from "react";
 import 'quill/dist/quill.snow.css';
 import WriteSection from "./NotepadWriteSection/WriteSection";
-import ControlSection from "./NotepadWriteSection/ControllSection";
+import ControlSection from "./NotepadWriteSection/ControlSection";
 import axios from "axios";
 import Contents from "./NotepadWriteSection/Contents";
 import Modal from "../../../../Components/Elements/Modal";
@@ -15,16 +15,18 @@ interface NotepadWriteSectionProps {
     uuid: string;
     title: string;
     liked: boolean;
+    category: string;
 }
 
 
-export default function NotepadWriteSection({ content, uuid, title, liked } : NotepadWriteSectionProps) {
+export default function NotepadWriteSection({ content, uuid, title, liked, category } : NotepadWriteSectionProps) {
     const [modal, setModal] = useState<boolean>(false);
     const [notepadText, setNotepadText] = useState<string>(content || "");
     const [saveStatus, setSaveStatus] = useState<boolean>(false);
     const [notepadLiked, setNotepadLiked] = useState<boolean>(liked);
     const [emptyState, setEmptyState] = useState<string>("");
     const [currentTitle, setCurrentTitle] = useState(title || "");
+    const [currentCategory, setCurrentCategory] = useState(category || "");
 
     const contentsRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
 
@@ -100,7 +102,7 @@ export default function NotepadWriteSection({ content, uuid, title, liked } : No
         <>
             <Head title={`Notepad - ${currentTitle}`} />
             <div className="h-full flex flex-col relative overflow-y-auto">
-                <ControlSection notepadShareToggle={notepadShareToggle} setNotepadShareToggle={setNotepadShareToggle} notepadContentsToggle={notepadContentsToggle} setNotepadContentsToggle={setNotepadContentsToggle} saveStatus={saveStatus} currentTitle={currentTitle} setCurrentTitle={setCurrentTitle} notepadLiked={notepadLiked} setNotepadLiked={setNotepadLiked} uuid={uuid}/>
+                <ControlSection currentCategory={currentCategory} setCurrentCategory={setCurrentCategory} notepadShareToggle={notepadShareToggle} setNotepadShareToggle={setNotepadShareToggle} notepadContentsToggle={notepadContentsToggle} setNotepadContentsToggle={setNotepadContentsToggle} saveStatus={saveStatus} currentTitle={currentTitle} setCurrentTitle={setCurrentTitle} notepadLiked={notepadLiked} setNotepadLiked={setNotepadLiked} uuid={uuid}/>
                 {notepadShareToggle ? <Share uuid={uuid} ref={contentsRef} /> : ""}
                 {notepadContentsToggle ? <Contents setModal={setModal} ref={contentsRef} /> : ""}
                 <WriteSection handleSaveNotepadContent={handleSaveNotepadContent} notepadText={notepadText} setNotepadText={setNotepadText} setSaveStatus={setSaveStatus}/>

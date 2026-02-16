@@ -11,7 +11,7 @@ const Contents = forwardRef<HTMLDivElement, ContentsProps>(
         return (
             <div
                 ref={ref}
-                className="absolute z-[2] top-9 right-5 w-[160px] p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 shadow-md rounded-xl"
+                className="absolute z-[2] top-9 right-5 w-[160px] p-2 bg-white dark:bg-[#0d1117] shadow shadow-gray-300 dark:shadow-gray-800 rounded"
             >
                 <button
                     onClick={() => setModal(true)}

@@ -43,7 +43,7 @@ const Share = forwardRef<HTMLDivElement, ShareProps>(
     return (
         <div
             ref={ref}
-            className="absolute z-[2] top-9 right-10 w-[160px] p-2 bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800 shadow-md rounded-xl"
+            className="absolute z-[2] top-9 right-10 w-[160px] p-2 bg-white dark:bg-[#0d1117] shadow shadow-gray-300 dark:shadow-gray-800 rounded"
         >
             <button onClick={sendEmail} className="btn text-xs transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-gray-950 dark:text-white hover:bg-gray-950/10 dark:hover:bg-gray-600 space-x-1">
                 <FontAwesomeIcon icon={faEnvelope}/>
