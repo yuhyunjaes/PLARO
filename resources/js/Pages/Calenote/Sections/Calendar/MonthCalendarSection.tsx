@@ -1,18 +1,17 @@
 import {useState, useRef, useEffect, RefObject, useCallback} from "react";
-import MonthCreator from "./MonthCalendarSection/MonthCreator";
 import { Dispatch, SetStateAction } from "react";
 import {CalendarAtData, EventReminderItem, ParticipantsData} from "../CalenoteSectionsData";
 import {EventsData} from "../CalenoteSectionsData";
 
 interface SideBarSectionProps {
+    allDates: CalendarAtData[];
+    setAllDates: Dispatch<SetStateAction<CalendarAtData[]>>;
     handleEventClick: (Event:EventsData) => Promise<void>;
     getActiveEventReminder: (eventUuid:string) => Promise<void>;
     setEventParticipants: Dispatch<SetStateAction<ParticipantsData[]>>;
     setEventReminder: Dispatch<SetStateAction<EventReminderItem[]>>;
     setEventIdChangeDone: Dispatch<SetStateAction<boolean>>;
-    setIsHaveEvent: Dispatch<SetStateAction<boolean>>;
     events: EventsData[];
-    IsHaveEvent: boolean;
     firstCenter: boolean;
     setFirstCenter: Dispatch<SetStateAction<boolean>>;
     eventId: string | null;
@@ -43,32 +42,86 @@ interface EventWithLayout extends EventsData {
     column: number;
 }
 
-export default function MonthCalendarSection({ handleEventClick, getActiveEventReminder, setEventParticipants, setEventReminder, setEventIdChangeDone, setIsHaveEvent, events, IsHaveEvent, firstCenter, setFirstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
-    const [allDates, setAllDates] = useState<CalendarAtData[]>([]);
-
+export default function MonthCalendarSection({ allDates, setAllDates, handleEventClick, getActiveEventReminder, setEventParticipants, setEventReminder, setEventIdChangeDone, events, firstCenter, setFirstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
     const scrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
 
     const [isScrolling, setIsScrolling] = useState<boolean>(false);
     const [isMobile, setIsMobile] = useState<boolean>(false);
 
-    const updateAllDates = useCallback(() => {
-        if (allDates.length <= 0 || !now) return;
+    const createMonthDays = useCallback((date: Date, count: number): CalendarAtData[] => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
 
-        const nowYear = now.getFullYear();
-        const nowMonth = now.getMonth();
-        const nowDate = now.getDate();
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const prevLastDay = new Date(year, month, 0).getDate();
+        const TOTAL_CELLS = 42;
 
-        setAllDates(prev =>
-            prev.map(date => ({
-                ...date,
-                isToday: date.year === nowYear && date.month === nowMonth && date.day === nowDate
-            }))
-        );
-    }, [allDates, now]);
+        const allDays: CalendarAtData[] = [];
+        let dayCounter = 0;
 
+        const prevMonth = month === 0 ? 11 : month - 1;
+        const prevYear = month === 0 ? year - 1 : year;
 
-    useEffect(() => {
-        updateAllDates();
+        const nextMonth = month === 11 ? 0 : month + 1;
+        const nextYear = month === 11 ? year + 1 : year;
+
+        for (let i = firstDayIndex; i > 0; i--) {
+            const day = prevLastDay - i + 1;
+            const weekIndex = (firstDayIndex - i) % 7;
+
+            allDays.push({
+                day,
+                year: prevYear,
+                month: prevMonth,
+                isWeekend: weekIndex === 0 || weekIndex === 6,
+                isActive: false,
+                isCurrentMonth: false,
+                isToday: false,
+                count,
+            });
+            dayCounter++;
+        }
+
+        for (let i = 1; i <= lastDay; i++) {
+            const weekIndex = dayCounter % 7;
+            const isWeekend = weekIndex === 0 || weekIndex === 6;
+            const isToday =
+                now.getFullYear() === year &&
+                now.getMonth() === month &&
+                now.getDate() === i;
+
+            allDays.push({
+                day: i,
+                year,
+                month,
+                isWeekend,
+                isActive: count === 2,
+                isCurrentMonth: true,
+                isToday,
+                count,
+            });
+            dayCounter++;
+        }
+
+        let nextMonthDay = 1;
+        while (dayCounter < TOTAL_CELLS) {
+            const weekIndex = dayCounter % 7;
+            allDays.push({
+                day: nextMonthDay,
+                year: nextYear,
+                month: nextMonth,
+                isWeekend: weekIndex === 0 || weekIndex === 6,
+                isActive: false,
+                isCurrentMonth: false,
+                isToday: false,
+                count,
+            });
+            nextMonthDay++;
+            dayCounter++;
+        }
+
+        return allDays;
     }, [now]);
 
     const handleScroll = useCallback(() => {
@@ -88,7 +141,6 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
 
                 const newCenter = new Date(first.getFullYear(), first.getMonth(), 1);
                 setActiveAt(newCenter);
-                setAllDates([]);
 
                 return [
                     new Date(newCenter.getFullYear(), newCenter.getMonth() - 1, 1),
@@ -107,7 +159,6 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
 
                 const newCenter = new Date(last.getFullYear(), last.getMonth(), 1);
                 setActiveAt(newCenter);
-                setAllDates([]);
 
                 return [
                     new Date(newCenter.getFullYear(), newCenter.getMonth() - 1, 1),
@@ -161,40 +212,36 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
     }, [firstCenter]);
 
     useEffect(() => {
-        if(!IsHaveEvent) return;
-        setAllDates([]);
-        setIsHaveEvent(false);
-    }, [IsHaveEvent]);
+        if (months.length <= 0) return;
+        const nextDates = months.flatMap((m, index) => createMonthDays(m, index + 1));
 
-    useEffect(() => {
-        if(months.length <= 0) return;
+        const merged = new Map<string, CalendarAtData>();
+        for (const item of nextDates) {
+            const key = `${item.year}-${item.month}-${item.day}`;
+            const prev = merged.get(key);
 
-        setAllDates((pre: CalendarAtData[]): CalendarAtData[] => {
-            const map = new Map<string, CalendarAtData>();
-
-            for (const item of pre) {
-                const key = `${item.year}-${item.month}-${item.day}`;
-
-                if (map.has(key)) {
-                    const existing = map.get(key)!;
-
-                    if (item.isToday) {
-                        map.set(key, item);
-                    }
-                    else if (existing.isToday) {
-                        // 유지
-                    }
-                    else if (!existing.isActive && item.isActive) {
-                        map.set(key, item);
-                    }
-                } else {
-                    map.set(key, item);
-                }
+            if (!prev) {
+                merged.set(key, item);
+                continue;
             }
 
-            return Array.from(map.values());
-        });
-    }, [months]);
+            // Priority on overlap: center month(count=2) > current-month cell > today mark.
+            const prevScore =
+                (prev.count === 2 ? 100 : 0) +
+                (prev.isCurrentMonth ? 10 : 0) +
+                (prev.isToday ? 1 : 0);
+            const itemScore =
+                (item.count === 2 ? 100 : 0) +
+                (item.isCurrentMonth ? 10 : 0) +
+                (item.isToday ? 1 : 0);
+
+            if (itemScore > prevScore) {
+                merged.set(key, item);
+            }
+        }
+
+        setAllDates(Array.from(merged.values()));
+    }, [months, activeAt, createMonthDays]);
 
     const formatDate:(dayData: CalendarAtData) => Date | undefined = (dayData: CalendarAtData):Date | undefined => {
         if(!dayData.year || !dayData.day) return;
@@ -366,8 +413,6 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
 
         intervalRef.current = window.setInterval(() => {
             if (directionRef.current === 0) return;
-
-            setAllDates([]);
             setIsScrolling(true);
 
             setMonths(prev => {
@@ -620,21 +665,6 @@ export default function MonthCalendarSection({ handleEventClick, getActiveEventR
                 onScroll={handleScroll}
                 className="flex-1 hidden-scroll user-select-none overflow-x-hidden overflow-y-auto snap-y snap-mandatory"
             >
-                {(() => {
-                    return months.map((m: Date, index: number) => {
-                        return (
-                            <MonthCreator
-                                now={now}
-                                key={index}
-                                scrollRef={scrollRef}
-                                count={index+1}
-                                date={m}
-                                activeAt={activeAt}
-                                setAllDates={setAllDates}
-                            />
-                        );
-                    });
-                })()}
                 <div className="flex flex-col"
                      style={{maxHeight: `${(scrollRef.current) && scrollRef.current.clientHeight}px`}}>
                     {(() => {

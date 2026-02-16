@@ -8,7 +8,13 @@ import {router} from "@inertiajs/react";
 import CalendarControlSection from "./Sections/Calendar/CalendarControlSection";
 import WeekAndDayCalendarSection from "./Sections/Calendar/WeekAndDayCalendarSection";
 import axios from "axios";
-import {EventReminderItem, EventsData, ParticipantsData, ReminderData} from "./Sections/CalenoteSectionsData";
+import {
+    CalendarAtData,
+    EventReminderItem,
+    EventsData,
+    ParticipantsData,
+    ReminderData
+} from "./Sections/CalenoteSectionsData";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../Providers/GlobalUIContext";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -75,6 +81,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     const [activeAt, setActiveAt] = useState<Date>(At);
 
     const [activeDay, setActiveDay] = useState<number | null>(viewMode !== "month" ? temporaryDay : null);
+    const [allDates, setAllDates] = useState<CalendarAtData[]>([]);
 
     useEffect(() => {
         if (viewMode !== "month" && temporaryDay) {
@@ -324,7 +331,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     }, [eventId]);
 
     const [firstCenter, setFirstCenter] = useState<boolean>(false);
-    const [IsHaveEvent, setIsHaveEvent] = useState<boolean>(false);
     const [getDone, setGetDone] = useState<boolean>(false);
 
     // Calendar 컴포넌트에서 getEvent 함수 수정
@@ -355,7 +361,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                 const IsSameActiveAt:boolean = newActiveAt.getTime() !== At.getTime();
 
                 if(IsSameActiveAt) {
-                    setIsHaveEvent(true);
                     setActiveAt(newActiveAt);
                 }
 
@@ -569,10 +574,6 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             const startAtActiveAt = new Date(startAt.getFullYear(), startAt.getMonth(), 1);
 
             if(usuallyActiveAt.getTime() !== startAtActiveAt.getTime()) {
-                if(viewMode === "month") {
-                    setIsHaveEvent(true);
-                }
-
                 setActiveAt(new Date(startAt.getFullYear(), startAt.getMonth(), 1));
 
 
@@ -895,9 +896,57 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         }
     }, [contentMode]);
 
-    const activeAtToToday = () => {
+    useEffect(() => {
+        if(viewMode === "month") {
+            setActiveDay(null);
+        }
+    }, [viewMode]);
 
+    const getWeekWednesday = (date: Date) => {
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+
+        const wednesday = new Date(weekStart);
+        wednesday.setDate(weekStart.getDate() + 3);
+
+        return wednesday;
     }
+
+    const activeAtToToday = useCallback(() => {
+        const today = new Date();
+
+        if (viewMode === "month") {
+            if (
+                activeAt.getFullYear() === today.getFullYear() &&
+                activeAt.getMonth() === today.getMonth()
+            ) return;
+
+            setActiveAt(new Date(today.getFullYear(), today.getMonth(), 1));
+            setFirstCenter(true);
+            return;
+        }
+
+        if (viewMode === "week") {
+            const weekWednesday = getWeekWednesday(today);
+
+            setActiveAt(
+                new Date(
+                    weekWednesday.getFullYear(),
+                    weekWednesday.getMonth(),
+                    1
+                )
+            );
+
+            setActiveDay(weekWednesday.getDate());
+            return;
+        }
+
+        if (viewMode === "day") {
+            setActiveAt(new Date(today.getFullYear(), today.getMonth(), 1));
+            setActiveDay(today.getDate());
+        }
+
+    }, [activeAt, viewMode]);
 
     return (
         <>
@@ -905,13 +954,13 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             <div className="min-h-full bg-white dark:bg-gray-950 relative flex flex-col">
                 <div className="flex-1 flex flex-row">
                     <div className={`flex-1 flex flex-col`}>
-                        <CalendarControlSection contentMode={contentMode} setContentMode={setContentMode} setFirstCenter={setFirstCenter} setIsHaveEvent={setIsHaveEvent} setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay} setActiveDay={setActiveDay}/>
+                        <CalendarControlSection getWeekWednesday={getWeekWednesday} activeAtToToday={activeAtToToday} contentMode={contentMode} setContentMode={setContentMode} setFirstCenter={setFirstCenter} setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay} setActiveDay={setActiveDay}/>
 
                         {contentMode === "normal" ? (
                             <>
                                 {
                                     viewMode === "month" && (
-                                        <MonthCalendarSection handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} setIsHaveEvent={setIsHaveEvent} events={events} IsHaveEvent={IsHaveEvent} firstCenter={firstCenter} setFirstCenter={setFirstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                                        <MonthCalendarSection allDates={allDates} setAllDates={setAllDates} handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} events={events} firstCenter={firstCenter} setFirstCenter={setFirstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
                                     )
                                 }
                                 {

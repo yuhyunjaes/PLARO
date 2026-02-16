@@ -741,6 +741,8 @@ export default function WeekAndDayCalendarSection({
 
                 {days.map((day, index) => {
                     const WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+                    const today = new Date();
+                    const IsToday = (day.getFullYear() === today.getFullYear()) && (day.getMonth() === today.getMonth()) && (day.getDate() === today.getDate());
                     return (
                         <div
                             data-prentdate={day}
@@ -750,10 +752,9 @@ export default function WeekAndDayCalendarSection({
                             } ${index === 1 ? "first" : ""}`}
                             >
                             <div className="py-2 text-center text-sm bg-white dark:bg-gray-950 max-h-[36px] lg:max-h-[72px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
-                                <span className="text-xs text-gray-500 flex flex-col lg:flex-row gap-1">
-                                    <span className="">{WEEK_DAYS[day.getDay()]}</span>
-                                    <span className="">{day.getDate()}</span>
-                                </span>
+                                <p className={`text-xs ${(IsToday ? "today text-white" : "text-gray-500")} flex flex-col lg:flex-row gap-1`}>
+                                    <span className="px-2">{WEEK_DAYS[day.getDay()]} {day.getDate()}</span>
+                                </p>
                             </div>
                             <div className="h-[100px]"></div>
                             <div className="flex-1 grid">

@@ -8,10 +8,11 @@ interface Mode {
 }
 
 interface CalendarControlSectionProps {
+    getWeekWednesday: (date:Date) => Date;
+    activeAtToToday: () => void;
     contentMode: "normal" | "challenge" | "dday";
     setContentMode: Dispatch<SetStateAction<"normal" | "challenge" | "dday">>;
     setFirstCenter: Dispatch<SetStateAction<boolean>>;
-    setIsHaveEvent: Dispatch<SetStateAction<boolean>>;
     setMonths: Dispatch<SetStateAction<Date[]>>;
     setTemporaryYear: Dispatch<SetStateAction<number | null>>;
     setTemporaryMonth: Dispatch<SetStateAction<number | null>>;
@@ -26,7 +27,7 @@ interface CalendarControlSectionProps {
     setActiveDay: Dispatch<SetStateAction<number | null>>;
 }
 
-export default function CalendarControlSection({ contentMode, setContentMode, setFirstCenter, setIsHaveEvent, setMonths, setTemporaryYear, setTemporaryMonth, setTemporaryDay, setIsDragging, startAt, viewMode, setViewMode, activeAt, setActiveAt, activeDay, setActiveDay}: CalendarControlSectionProps) {
+export default function CalendarControlSection({ getWeekWednesday, activeAtToToday, contentMode, setContentMode, setFirstCenter, setMonths, setTemporaryYear, setTemporaryMonth, setTemporaryDay, setIsDragging, startAt, viewMode, setViewMode, activeAt, setActiveAt, activeDay, setActiveDay}: CalendarControlSectionProps) {
     const modes:Mode[] = [
         {
             title: "월",
@@ -68,18 +69,80 @@ export default function CalendarControlSection({ contentMode, setContentMode, se
 
     return(
         <div className="rounded-xl flex justify-between items-center px-5 pt-5">
-            <div className="normal-text text-2xl font-semibold user-select-none">
-                {activeAt.getFullYear()}
-                -
-                {(activeAt.getMonth()+1 > 9) ? activeAt.getMonth()+1 : `0${activeAt.getMonth()+1}`}월
+            <div className="flex flex-col md:flex-row items-center gap-2">
+                <h2 className="flex-1 text-base md:text-2xl normal-text font-semibold user-select-none">{activeAt.getFullYear()}
+                    -
+                    {(activeAt.getMonth()+1 > 9) ? activeAt.getMonth()+1 : `0${activeAt.getMonth()+1}`}월 </h2>
+                    <div className="flex flex-row items-center gap-1 ">
+                        {viewMode === "month" ? (
+                            <>
+                                <button onClick={() => {
+                                    setActiveAt(addOrSubOneMonth(activeAt, "sub"));
+
+                                    setFirstCenter(true);
+                                }} className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer text-base md:text-xl">
+                                    <FontAwesomeIcon icon={contentMode === "normal" ? faAngleUp : faAngleLeft} />
+                                </button>
+
+                                <button onClick={() => {
+                                    setActiveAt(addOrSubOneMonth(activeAt, "add"));
+
+                                    setFirstCenter(true);
+                                }}  className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer text-base md:text-xl">
+                                    <FontAwesomeIcon icon={contentMode === "normal" ? faAngleDown : faAngleRight} />
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        if (!activeDay) return;
+
+                                        const { newActiveAt, newActiveDay } = moveDay(
+                                            activeAt,
+                                            activeDay,
+                                            "sub"
+                                        );
+
+                                        setActiveAt(newActiveAt);
+                                        setActiveDay(newActiveDay);
+                                    }}
+                                    className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer text-base md:text-xl"
+                                >
+                                    <FontAwesomeIcon icon={faAngleLeft} />
+                                </button>
+
+
+                                <button
+                                    onClick={() => {
+                                        if (!activeDay) return;
+
+                                        const { newActiveAt, newActiveDay } = moveDay(
+                                            activeAt,
+                                            activeDay,
+                                            "add"
+                                        );
+
+                                        setActiveAt(newActiveAt);
+                                        setActiveDay(newActiveDay);
+                                    }}
+                                    className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer text-base md:text-xl"
+                                >
+                                    <FontAwesomeIcon icon={faAngleRight} />
+                                </button>
+
+                            </>
+                        )}
+                        <button onClick={activeAtToToday} className="px-3 py-1 font-semibold rounded text-xs bg-gray-50 hover:bg-gray-200 dark:bg-gray-950 hover:dark:bg-gray-800 normal-text  transition-colors duration-150 cursor-pointer border border-gray-300 dark:border-gray-800">오늘</button>
+                    </div>
             </div>
 
-            <div className={`flex ${contentMode === "normal" ? "flex-col space-y-2" : "flex-row space-x-2"} items-center`}>
-                <div className="flex items-center bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded p-1 space-x-1 user-select-none">
+            <div className={`flex flex-col gap-2 items-center`}>
+                <div className="flex items-center bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded p-1 space-x-1 transition-[width] duration-150 user-select-none">
                     <button
                         type="button"
                         onClick={() => setContentMode("normal")}
-                        className={`px-2 py-1 text-xs font-semibold rounded transition-colors duration-150 cursor-pointer ${
+                        className={`px-1 md:px-2 py-1 text-xs font-semibold rounded transition-colors duration-150 cursor-pointer ${
                             contentMode === "normal"
                                 ? "bg-blue-500 text-white"
                                 : "text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800"
@@ -90,7 +153,7 @@ export default function CalendarControlSection({ contentMode, setContentMode, se
                     <button
                         type="button"
                         onClick={() => setContentMode("challenge")}
-                        className={`px-2 py-1 text-xs font-semibold rounded transition-colors duration-150 cursor-pointer ${
+                        className={`px-1 md:px-2 py-1 text-xs font-semibold rounded transition-colors duration-150 cursor-pointer ${
                             contentMode === "challenge"
                                 ? "bg-blue-500 text-white"
                                 : "text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800"
@@ -101,7 +164,7 @@ export default function CalendarControlSection({ contentMode, setContentMode, se
                     <button
                         type="button"
                         onClick={() => setContentMode("dday")}
-                        className={`px-2 py-1 text-xs font-semibold rounded transition-colors duration-150 cursor-pointer ${
+                        className={`px-1 md:px-2 py-1 text-xs font-semibold rounded transition-colors duration-150 cursor-pointer ${
                             contentMode === "dday"
                                 ? "bg-blue-500 text-white"
                                 : "text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800"
@@ -109,9 +172,7 @@ export default function CalendarControlSection({ contentMode, setContentMode, se
                     >
                         D-day
                     </button>
-                </div>
 
-                <div className="flex items-center justify-end space-x-2">
                     {contentMode === "normal" ? (<div className="relative flex items-center">
                         <select
                             name="category"
@@ -119,14 +180,17 @@ export default function CalendarControlSection({ contentMode, setContentMode, se
                             className="self-select-control w-[60px] h-2/3 font-semibold user-select-none text-xs"
                             value={viewMode}
                             onChange={(e) => {
-                                const value:string = e.target.value;
+                                const value: string = e.target.value;
                                 setIsDragging(false);
 
                                 if (value === "month") {
-                                    setViewMode(value);
+                                    setViewMode("month");
                                     setTemporaryYear(activeAt.getFullYear());
-                                    setTemporaryMonth(activeAt.getMonth()+1)
-                                } else if (value === "week" || value === "day") {
+                                    setTemporaryMonth(activeAt.getMonth() + 1);
+                                    return;
+                                }
+
+                                if (value === "week" || value === "day") {
                                     const baseYear = startAt ? startAt.getFullYear() : activeAt.getFullYear();
                                     const baseMonth = startAt ? startAt.getMonth() + 1 : activeAt.getMonth() + 1;
                                     const baseDay = startAt
@@ -139,14 +203,10 @@ export default function CalendarControlSection({ contentMode, setContentMode, se
 
                                     const baseDate = new Date(baseYear, baseMonth - 1, baseDay);
 
-                                    setViewMode(value);
+                                    setViewMode(value as "week" | "day");
 
                                     if (value === "week") {
-                                        const weekStart = new Date(baseDate);
-                                        weekStart.setDate(baseDate.getDate() - baseDate.getDay());
-
-                                        const weekWednesday = new Date(weekStart);
-                                        weekWednesday.setDate(weekStart.getDate() + 3);
+                                        const weekWednesday = getWeekWednesday(baseDate);
 
                                         setTemporaryYear(weekWednesday.getFullYear());
                                         setTemporaryMonth(weekWednesday.getMonth() + 1);
@@ -169,72 +229,6 @@ export default function CalendarControlSection({ contentMode, setContentMode, se
                         </select>
                         <FontAwesomeIcon className="normal-text absolute end-0 pointer-events-none pe-2 text-xs" icon={faChevronDown}/>
                     </div>) : ""}
-
-                    <button className="px-3 py-1 font-semibold rounded text-xs bg-gray-50 hover:bg-gray-200 dark:bg-gray-950 hover:dark:bg-gray-800 normal-text  transition-colors duration-150 cursor-pointer border border-gray-300 dark:border-gray-800">오늘</button>
-
-                    <div className="space-x-2">
-                        {viewMode === "month" ? (
-                            <>
-                                <button onClick={() => {
-                                    setIsHaveEvent(true);
-                                    setActiveAt(addOrSubOneMonth(activeAt, "sub"));
-
-                                    setFirstCenter(true);
-                                }} className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer">
-                                    <FontAwesomeIcon icon={contentMode === "normal" ? faAngleUp : faAngleLeft} />
-                                </button>
-
-                                <button onClick={() => {
-                                    setIsHaveEvent(true);
-                                    setActiveAt(addOrSubOneMonth(activeAt, "add"));
-
-                                    setFirstCenter(true);
-                                }}  className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer">
-                                    <FontAwesomeIcon icon={contentMode === "normal" ? faAngleDown : faAngleRight} />
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={() => {
-                                        if (!activeDay) return;
-
-                                        const { newActiveAt, newActiveDay } = moveDay(
-                                            activeAt,
-                                            activeDay,
-                                            "sub"
-                                        );
-
-                                        setActiveAt(newActiveAt);
-                                        setActiveDay(newActiveDay);
-                                    }}
-                                    className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer"
-                                >
-                                    <FontAwesomeIcon icon={faAngleLeft} />
-                                </button>
-
-
-                                <button
-                                    onClick={() => {
-                                        if (!activeDay) return;
-
-                                        const { newActiveAt, newActiveDay } = moveDay(
-                                            activeAt,
-                                            activeDay,
-                                            "add"
-                                        );
-
-                                        setActiveAt(newActiveAt);
-                                        setActiveDay(newActiveDay);
-                                    }}
-                                    className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer"
-                                >
-                                    <FontAwesomeIcon icon={faAngleRight} />
-                                </button>
-
-                            </>
-                        )}
-                    </div>
                 </div>
             </div>
         </div>
