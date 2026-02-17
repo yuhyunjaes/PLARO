@@ -149,8 +149,8 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
                 ];
             });
 
-            setTimeout(() => setIsScrolling(false), 300);
-        } else if (scrollTop + clientHeight >= scrollHeight) {
+            setTimeout(() => setIsScrolling(false), 100);
+        } else if (scrollTop + clientHeight + 0.5 >= scrollHeight) {
             setIsScrolling(true);
 
             setMonths(prev => {
@@ -167,7 +167,7 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
                 ];
             });
 
-            setTimeout(() => setIsScrolling(false), 300);
+            setTimeout(() => setIsScrolling(false), 100);
         }
 
     }, [isScrolling]);

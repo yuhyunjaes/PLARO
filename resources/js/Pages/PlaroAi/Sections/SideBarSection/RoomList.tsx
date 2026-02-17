@@ -1,18 +1,18 @@
 // 라이프 봇 채팅방 read 영역
 
-import {Dispatch, SetStateAction, useCallback, useEffect } from "react";
+import {Dispatch, SetStateAction, useCallback, useContext, useEffect} from "react";
 import {router} from "@inertiajs/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 import {AuthUser, Room } from "../../../../Types/PlaroAiTypes";
 import axios from "axios";
+import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 
 interface RoomListProps {
     sideBar?: boolean;
     auth: {
         user: AuthUser | null;
     };
-    setLoading: Dispatch<SetStateAction<boolean>>;
     rooms: Room[];
     setRooms: Dispatch<SetStateAction<Room[]>>;
     setChatId: Dispatch<SetStateAction<string | null>>;
@@ -26,12 +26,21 @@ interface RoomListProps {
     temporaryEditTitle: string;
     setTemporaryEditTitle: Dispatch<SetStateAction<string>>;
     handleEditRoom: () => Promise<void>;
-    smRoomList: boolean;
-    smRoomListToggle: boolean;
-    setSmRoomListToggle: Dispatch<SetStateAction<boolean>>;
+    mdRoomList: boolean;
+    mdRoomListToggle: boolean;
+    setMdRoomListToggle: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function RoomList({ sideBar, auth, setLoading, setRooms, rooms, setChatId, chatId, setEditId, editRoomRef, setBaseTop, setBaseScroll, editId, editStatus, temporaryEditTitle, setTemporaryEditTitle, handleEditRoom, smRoomList, smRoomListToggle, setSmRoomListToggle } : RoomListProps) {
+export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, chatId, setEditId, editRoomRef, setBaseTop, setBaseScroll, editId, editStatus, temporaryEditTitle, setTemporaryEditTitle, handleEditRoom, mdRoomList, mdRoomListToggle, setMdRoomListToggle } : RoomListProps) {
+    const ui = useContext(GlobalUIContext);
+
+    if (!ui) {
+        throw new Error("CalenoteLayout must be used within GlobalProvider");
+    }
+
+    const {
+        setLoading
+    } = ui;
 
     const getRooms = useCallback(async () => {
         setLoading(true);
@@ -52,13 +61,13 @@ export default function RoomList({ sideBar, auth, setLoading, setRooms, rooms, s
 
     return (
         <>
-            <div className={`my-3 ${(smRoomList || sideBar) ? "block" : "hidden"}`}>
+            <div className={`my-3 ${(mdRoomList || sideBar) ? "block" : "hidden"}`}>
                 <p className="text-xs py-2 font-semibold mx-5 text-gray-950 dark:text-white">채팅</p>
                 {rooms.map((room) => (
                     <div onClick={() => {
                         if(room.room_id === chatId) return;
-                        if(smRoomListToggle) {
-                            setSmRoomListToggle(false);
+                        if(mdRoomListToggle) {
+                            setMdRoomListToggle(false);
                         }
                         setChatId(room.room_id);
                         router.visit(`/plaroai/${room.room_id}`, {

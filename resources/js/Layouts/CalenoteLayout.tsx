@@ -39,20 +39,15 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
     }
 
     const {
-        alerts,
-        setAlerts,
         loading,
+        sideBar,
+        setSideBar,
+        saveWidth,
+        setSaveWidth
     } = ui;
 
 
-    // 사이드바 상태
-    const [sideBar, setSideBar] = useState<number>(() =>
-        window.innerWidth <= 768 ? 0 : 230
-    );
-    const [saveWidth, setSaveWidth] = useState<number>(230);
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
-
-    const CalenoteLayoutScrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
 
     // 반응형 처리
     const handleResize = useCallback((): void => {
@@ -77,18 +72,6 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
         }
     }, [sideBar]);
 
-    function formatDateKey(date: Date) {
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, "0");
-        const dd = String(date.getDate()).padStart(2, "0");
-        const hh = String(date.getHours()).padStart(2, "0");
-        const mi = String(date.getMinutes()).padStart(2, "0");
-        const ss = String(date.getSeconds()).padStart(2, "0");
-        const ms = String(date.getMilliseconds()).padStart(3, "0");
-
-        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}.${ms}`;
-    }
-
     return (
         <>
             <Header
@@ -106,16 +89,7 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
                     setSideBar={setSideBar}
                 />
 
-                <main className="CalenoteLayout-container h-full flex-1 overflow-y-auto overflow-x-hidden" ref={CalenoteLayoutScrollRef}>
-                    {alerts.length > 0 && (
-                        <Alert
-                            key={formatDateKey(alerts[0]!.id)}
-                            setAlerts={setAlerts}
-                            type={alerts[0]!.type}
-                            message={alerts[0]!.message}
-                            width={sideBar}
-                        />
-                    )}
+                <main className="CalenoteLayout-container h-full flex-1 overflow-y-auto overflow-x-hidden">
                     {isValidElement(children)
                         ? cloneElement(children as ReactElement, { ...props })
                         : children}

@@ -10,15 +10,15 @@ interface EditRoomProps {
     sideBar: number;
     toggle: string | null;
     deleteRoom: () => void;
-    smRoomList: boolean;
-    smRoomListToggle: boolean;
+    mdRoomList: boolean;
+    mdRoomListToggle: boolean;
     editStatus: string;
     handleEditRoom: () => Promise<void>;
     temporaryEditTitle: string;
 }
-export default function EditRoom({ EditTitle, editRoomRef, sideBar, toggle, deleteRoom, smRoomList, smRoomListToggle, editStatus, handleEditRoom, temporaryEditTitle } : EditRoomProps) {
+export default function EditRoom({ EditTitle, editRoomRef, sideBar, toggle, deleteRoom, mdRoomList, mdRoomListToggle, editStatus, handleEditRoom, temporaryEditTitle } : EditRoomProps) {
     return (
-        <div ref={editRoomRef} className={`absolute z-[11] ${((sideBar > 50 && toggle) || (smRoomList && smRoomListToggle && toggle)) ? "block" : "hidden"} ${(smRoomList && smRoomListToggle && toggle) && "right-0 mt-5 rounded-3xl border"} ${(sideBar > 50 && toggle) && "left-[250px] border-t border-r border-b rounded-e-xl"} m-0  w-[200px] bg-white  dark:bg-gray-950 border-gray-200 dark:border-gray-900`}>
+        <div ref={editRoomRef} className={`absolute z-[11] ${((sideBar > 50 && toggle) || (mdRoomList && mdRoomListToggle && toggle)) ? "block" : "hidden"} ${(mdRoomList && mdRoomListToggle && toggle) && "right-0 mt-5 rounded-3xl border"} ${(sideBar > 50 && toggle) && "left-[250px] border-t border-r border-b rounded-e-xl"} m-0  w-[200px] bg-white  dark:bg-gray-950 border-gray-200 dark:border-gray-900`}>
             <div className="p-2">
                 {
                     (editStatus === "update") ? (

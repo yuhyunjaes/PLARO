@@ -1,7 +1,9 @@
 import axios from "axios";
-import React, {ReactNode, useEffect, useState, cloneElement, ReactElement} from "react";
+import React, {ReactNode, useEffect, useState, cloneElement, ReactElement, useContext} from "react";
 import {EventsData, ReminderData} from "./Pages/Calenote/Sections/CalenoteSectionsData";
 import Reminder from "./Components/Elements/Reminder";
+import Alert from "./Components/Elements/Alert";
+import {GlobalUIContext} from "./Providers/GlobalUIContext";
 
 interface RootProps {
     auth: any;
@@ -10,6 +12,18 @@ interface RootProps {
 }
 
 export default function Root({ auth, children, ...props }: RootProps) {
+    const ui = useContext(GlobalUIContext);
+
+    if (!ui) {
+        throw new Error("CalenoteLayout must be used within GlobalProvider");
+    }
+
+    const {
+        alerts,
+        setAlerts,
+        sideBar
+    } = ui;
+
     const [events, setEvents] = useState<EventsData[]>([]);
     const [reminders, setReminders] = useState<ReminderData[]>([]);
     const [getEventDone, setGetEventDone] = useState<boolean>(false);
@@ -123,6 +137,18 @@ export default function Root({ auth, children, ...props }: RootProps) {
         }
     };
 
+    function formatDateKey(date: Date) {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        const hh = String(date.getHours()).padStart(2, "0");
+        const mi = String(date.getMinutes()).padStart(2, "0");
+        const ss = String(date.getSeconds()).padStart(2, "0");
+        const ms = String(date.getMilliseconds()).padStart(3, "0");
+
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}.${ms}`;
+    }
+
     return (
         <>
             {React.isValidElement(children)
@@ -168,36 +194,48 @@ export default function Root({ auth, children, ...props }: RootProps) {
                 }
 
                 return (
-                    <div className="fixed pointer-events-none right-5 top-[calc(70px+1.25rem)] z-[1] w-[200px] sm:w-[250px] md:w-[300px] space-y-2">
-                        {filterReminders.map((reminder) => {
-                            const event = events.find(event => event.uuid === reminder.event_uuid);
-                            if (!event) return null;
+                    <>
+                        <div className="fixed pointer-events-none right-5 top-[calc(70px+1.25rem)] z-[1] w-[200px] sm:w-[250px] md:w-[300px] space-y-2">
+                            {filterReminders.map((reminder) => {
+                                const event = events.find(event => event.uuid === reminder.event_uuid);
+                                if (!event) return null;
 
-                            const title = `${event.title ? (event.title.length > 3 ? event.title.substring(0, 12)+"..." : event.title) : ""}${event.title ? "<br>" : ""}이벤트 시작 ${reminderChangeKorean(reminder.seconds)}`;
+                                const title = `${event.title ? (event.title.length > 3 ? event.title.substring(0, 12)+"..." : event.title) : ""}${event.title ? "<br>" : ""}이벤트 시작 ${reminderChangeKorean(reminder.seconds)}`;
 
-                            const startDate = formatDate(new Date(event.start_at));
-                            const endDate = formatDate(new Date(event.end_at));
+                                const startDate = formatDate(new Date(event.start_at));
+                                const endDate = formatDate(new Date(event.end_at));
 
-                            const message =
-                                startDate === endDate
-                                    ? startDate
-                                    : `${startDate} ~ ${endDate}`;
+                                const message =
+                                    startDate === endDate
+                                        ? startDate
+                                        : `${startDate} ~ ${endDate}`;
 
-                            return (
-                                <Reminder
-                                    key={reminder.id}
-                                    title={title}
-                                    message={message}
-                                    type="reminder"
-                                    uuid={event.uuid}
-                                    color={event.color}
-                                    url="/calenote/calendar"
-                                    arr={setReminders}
-                                    id={reminder.id}
-                                />
-                            );
-                        })}
-                    </div>
+                                return (
+                                    <Reminder
+                                        key={reminder.id}
+                                        title={title}
+                                        message={message}
+                                        type="reminder"
+                                        uuid={event.uuid}
+                                        color={event.color}
+                                        url="/calenote/calendar"
+                                        arr={setReminders}
+                                        id={reminder.id}
+                                    />
+                                );
+                            })}
+                        </div>
+
+                        {alerts.length > 0 && (
+                            <Alert
+                                key={formatDateKey(alerts[0]!.id)}
+                                setAlerts={setAlerts}
+                                type={alerts[0]!.type}
+                                message={alerts[0]!.message}
+                                width={sideBar}
+                            />
+                        )}
+                    </>
                 );
             })()}
         </>

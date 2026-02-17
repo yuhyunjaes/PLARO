@@ -31,14 +31,6 @@ interface EventWithLayout extends EventsData {
     column: number;
 }
 
-function getDayProgressPercent(date: Date): number {
-    const minutesInDay = 24 * 60;
-    const currentMinutes = (date.getHours() * 60) + date.getMinutes() + (date.getSeconds() / 60);
-    const percent = (currentMinutes / minutesInDay) * 100;
-
-    return Math.max(0, Math.min(100, percent));
-}
-
 export default function WeekAndDayCalendarSection({
     now,
     handleEventClick,
@@ -169,7 +161,7 @@ export default function WeekAndDayCalendarSection({
             const scrollWidth = container.scrollWidth;
             const clientWidth = container.clientWidth;
 
-            const threshold = 5;
+            const threshold = 10;
 
             if (scrollLeft < threshold) {
                 setIsScrolling(true);

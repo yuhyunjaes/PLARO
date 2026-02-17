@@ -6,13 +6,12 @@ import {Dispatch, SetStateAction} from "react";
 import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 
 interface MessageBubbleProps {
-    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     msg: Message;
     handleNotepad: (notepad: Notepad) => Promise<void>;
 }
 
 
-export default function MessageBubble({ setAlerts, msg, handleNotepad } : MessageBubbleProps) {
+export default function MessageBubble({ msg, handleNotepad } : MessageBubbleProps) {
     const isUser = msg.role === "user";
 
     return (
@@ -29,7 +28,7 @@ export default function MessageBubble({ setAlerts, msg, handleNotepad } : Messag
                 {msg.text}
             </div>
 
-            {!isUser && msg.id && <MessageActions setAlerts={setAlerts} msg={msg} handleNotepad={handleNotepad} />}
+            {!isUser && msg.id && <MessageActions msg={msg} handleNotepad={handleNotepad} />}
         </div>
     );
 }

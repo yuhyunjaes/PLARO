@@ -3,15 +3,25 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCopy, faClipboard } from "@fortawesome/free-solid-svg-icons";
 import {Message, Notepad} from "../../../../../Types/PlaroAiTypes";
-import {Dispatch, SetStateAction} from "react";
+import {Dispatch, SetStateAction, useContext} from "react";
 import {AlertsData} from "../../../../../Components/Elements/ElementsData";
+import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
 
 interface MessageActionsProps {
-    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     msg: Message;
     handleNotepad: (notepad: Notepad) => Promise<void>;
 }
-export default function MessageActions({ setAlerts, msg, handleNotepad } : MessageActionsProps) {
+export default function MessageActions({ msg, handleNotepad } : MessageActionsProps) {
+    const ui = useContext(GlobalUIContext);
+
+    if (!ui) {
+        throw new Error("CalenoteLayout must be used within GlobalProvider");
+    }
+
+    const {
+        setAlerts,
+    } = ui;
+
     return (
         <div className="absolute h-[50px] bottom-[-50px] left-0 w-full flex justify-start items-center space-x-2">
             <button

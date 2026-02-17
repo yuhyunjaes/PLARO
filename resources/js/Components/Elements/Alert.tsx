@@ -53,7 +53,7 @@ export default function Alert({ setAlerts, type, message, width = 0 }: AlertProp
 
     return (
         <div
-            className={`fixed flex duration-300 transition-[width] justify-between items-center z-[5] right-0 ${style.background} ${style.color} p-5 shadow-lg ${(timer >= 100) ? "animate-out-modal" : "animate-in-modal"}`}
+            className={`fixed top-[70px] flex duration-300 transition-[width] justify-between items-center z-[5] right-0 ${style.background} ${style.color} p-5 shadow-lg ${(timer >= 100) ? "animate-out-modal" : "animate-in-modal"}`}
             style={{width: `calc(100% - ${width}px)`}}
         >
             {message}

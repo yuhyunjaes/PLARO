@@ -70,9 +70,11 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
     return(
         <div className="rounded-xl flex justify-between items-center px-5 pt-5">
             <div className="flex flex-col md:flex-row items-center gap-2">
-                <h2 className="flex-1 text-base md:text-2xl normal-text font-semibold user-select-none">{activeAt.getFullYear()}
-                    -
-                    {(activeAt.getMonth()+1 > 9) ? activeAt.getMonth()+1 : `0${activeAt.getMonth()+1}`}월 </h2>
+                <div className="flex-1 w-full flex justify-start items-center">
+                    <h2 className="text-lg md:text-2xl normal-text font-semibold user-select-none">{activeAt.getFullYear()}
+                        -
+                        {(activeAt.getMonth()+1 > 9) ? activeAt.getMonth()+1 : `0${activeAt.getMonth()+1}`}월 </h2>
+                </div>
                     <div className="flex flex-row items-center gap-1 ">
                         {viewMode === "month" ? (
                             <>
@@ -177,7 +179,7 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
                         <select
                             name="category"
                             id="category"
-                            className="self-select-control w-[60px] h-2/3 font-semibold user-select-none text-xs"
+                            className="self-select-control w-[50px] h-2/3 font-semibold user-select-none text-xs"
                             value={viewMode}
                             onChange={(e) => {
                                 const value: string = e.target.value;

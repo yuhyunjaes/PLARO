@@ -1,6 +1,6 @@
 // 라이프 봇 프롬프트 전송 및 받기, 채팅에 필요한 영역
 
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
+import {Dispatch, SetStateAction, useCallback, useEffect, useRef, useState, KeyboardEvent, useContext} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { prompts } from "../../../../../../config/prompt";
@@ -10,9 +10,9 @@ import { router } from "@inertiajs/react";
 import {Room, Message, AuthUser, Notepad, Categories} from "../../../../Types/PlaroAiTypes";
 import axios from "axios";
 import {AlertsData} from "../../../../Components/Elements/ElementsData";
+import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 
 interface ChatInputProps {
-    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     now: Date;
     getMessages: () => Promise<void>;
     roomCategories: Categories[];
@@ -25,7 +25,6 @@ interface ChatInputProps {
     messages: Message[];
     handleNotepad: (notepad: Notepad) => Promise<void>;
     roomId: string | null;
-    setLoading: Dispatch<SetStateAction<boolean>>;
     prompt: string;
     setPrompt: Dispatch<SetStateAction<string>>;
     setNewChat: Dispatch<SetStateAction<boolean>>;
@@ -35,7 +34,6 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({
-    setAlerts,
     now,
     getMessages,
     roomCategories,
@@ -47,12 +45,22 @@ export default function ChatInput({
     setMessages,
     messages,
     handleNotepad,
-    setLoading,
     prompt,
     setPrompt,
     setNewChat,
     auth
 }: ChatInputProps) {
+    const ui = useContext(GlobalUIContext);
+
+    if (!ui) {
+        throw new Error("CalenoteLayout must be used within GlobalProvider");
+    }
+
+    const {
+        setLoading,
+        setAlerts
+    } = ui;
+
     const [load, setLoad] = useState<boolean>(false);
     const [categoryFadeAnimation, setCategoryFadeAnimation] = useState<boolean>(false);
 

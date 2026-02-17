@@ -1,6 +1,6 @@
 // 라이프 봇 채팅 영역
 
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
 import MessageList from "./PlaroAiSection/MessageList";
 import ChatInput from "./PlaroAiSection/ChatInput";
 import FormModal from "../../../Components/Elements/FormModal";
@@ -8,17 +8,14 @@ import axios from "axios";
 import { Dispatch, SetStateAction, RefObject } from 'react';
 import { Categories, AuthUser, Message, Room} from "../../../Types/PlaroAiTypes";
 import {AlertsData} from "../../../Components/Elements/ElementsData";
-import Alert from "../../../Components/Elements/Alert";
+import {GlobalUIContext} from "../../../Providers/GlobalUIContext";
 
 interface PlaroAiSectionProps {
-    alerts: AlertsData[];
-    setAlerts: Dispatch<SetStateAction<AlertsData[]>>;
     now: Date;
     getMessages: () => Promise<void>;
     handleDeleteChatCategories: (roomId: string) => Promise<void>;
     setNewChat: Dispatch<SetStateAction<boolean>>;
     sideBar: number;
-    setLoading: Dispatch<SetStateAction<boolean>>;
     chatId: string | null;
     setChatId: Dispatch<SetStateAction<string | null>>;
     setRooms: Dispatch<SetStateAction<Room[]>>;
@@ -34,7 +31,18 @@ interface PlaroAiSectionProps {
     setRoomCategories: Dispatch<SetStateAction<Categories[]>>;
 }
 
-export default function PlaroAiSection({ alerts, setAlerts, now, getMessages, handleDeleteChatCategories, setNewChat, sideBar, setLoading, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories } : PlaroAiSectionProps) {
+export default function PlaroAiSection({ now, getMessages, handleDeleteChatCategories, setNewChat, sideBar, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories } : PlaroAiSectionProps) {
+    const ui = useContext(GlobalUIContext);
+
+    if (!ui) {
+        throw new Error("CalenoteLayout must be used within GlobalProvider");
+    }
+
+    const {
+        setAlerts,
+        setLoading
+    } = ui;
+
     const [category, setCategory] = useState<string>("");
     const [categoryToggle, setCategoryToggle] = useState<boolean>(false);
     const [saveMsg, setSaveMsg] = useState<[]>([]);
@@ -88,34 +96,13 @@ export default function PlaroAiSection({ alerts, setAlerts, now, getMessages, ha
         return undefined;
     }, [category, saveMsg]);
 
-    function formatDateKey(date: Date) {
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, "0");
-        const dd = String(date.getDate()).padStart(2, "0");
-        const hh = String(date.getHours()).padStart(2, "0");
-        const mi = String(date.getMinutes()).padStart(2, "0");
-        const ss = String(date.getSeconds()).padStart(2, "0");
-        const ms = String(date.getMilliseconds()).padStart(3, "0");
-
-        return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}.${ms}`;
-    }
-
     return (
         <main className="bg-gray-100 relative dark:bg-gray-950 transition-[width] duration-300" style={{width: `calc(100% - ${sideBar}px`}}>
-            {alerts.length > 0 && (
-                <Alert
-                    key={formatDateKey(alerts[0]!.id)}
-                    setAlerts={setAlerts}
-                    type={alerts[0]!.type}
-                    message={alerts[0]!.message}
-                    width={sideBar}
-                />
-            )}
             {categoryToggle && (
                 <FormModal Submit={categorySubmit} toggle={categoryToggle} setToggle={setCategoryToggle} Title="메모장 저장" SubmitText="저장" Label="카테고리" Type="text" Name="category" Id="category" onChange={setCategory} Value={category}/>
             )}
-            <MessageList setAlerts={setAlerts} chatId={chatId} messages={messages} handleNotepad={handleNotepad}/>
-            <ChatInput setAlerts={setAlerts} now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} setLoading={setLoading} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
+            <MessageList chatId={chatId} messages={messages} handleNotepad={handleNotepad}/>
+            <ChatInput now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
         </main>
     );
 }
