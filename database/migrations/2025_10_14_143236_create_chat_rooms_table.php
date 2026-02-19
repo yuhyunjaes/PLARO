@@ -17,6 +17,8 @@ return new class extends Migration
             $table->uuid('uuid')->unique();
             $table->string('title');
             $table->string('model_name');
+            $table->text('prompt_profile')->nullable();
+            $table->boolean('use_history')->default(true);
             $table->timestamps();
         });
     }

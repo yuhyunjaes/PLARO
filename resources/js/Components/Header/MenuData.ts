@@ -22,8 +22,6 @@ export const menuData: MenuItem[] =[
         title: "PlaroAi",
         links: [
             { label: "PlaroAi", href: "/plaroai" },
-            { label: "대화 기록", href: "/sermon" },
-            { label: "대화 설정", href: "/sermon" },
         ],
     },
     {

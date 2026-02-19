@@ -44,7 +44,7 @@ autoComplete
             />
             {message && (
                 <p
-                    className={`mt-1 text-sm ${
+                    className={`mt-1 text-xs ${
                         messageType === "error" ? "text-red-500" : "form-message"
                     }`}
                 >

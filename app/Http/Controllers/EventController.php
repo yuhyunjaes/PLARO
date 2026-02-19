@@ -54,7 +54,7 @@ class EventController extends Controller
                 $event = Event::create([
                     'uuid' => Str::uuid()->toString(),
                     'chat_id' => $eventSwitch ? $request->chat_id : null,
-                    'user_id' => Auth::id(),
+                    'creator_id' => Auth::id(),
                     'title' => $request->title,
                     'start_at' => $startAt,
                     'end_at' => $endAt,

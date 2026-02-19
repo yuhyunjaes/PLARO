@@ -57,8 +57,15 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
     const [temporaryEditTitle, setTemporaryEditTitle] = useState<string>("");
 
     const [modal, setModal] = useState<boolean>(false);
+    const [settingsModal, setSettingsModal] = useState<boolean>(false);
+    const [summaryModal, setSummaryModal] = useState<boolean>(false);
+    const [summaryLoading, setSummaryLoading] = useState<boolean>(false);
+    const [summaryText, setSummaryText] = useState<string>("");
+    const [roomPromptProfile, setRoomPromptProfile] = useState<string>("");
+    const [useHistory, setUseHistory] = useState<boolean>(true);
 
     const [mdRoomList, setMdRoomList] = useState<boolean>(window.innerWidth <= 767);
+    const canUseRoomActions = Boolean(chatId);
 
     // 사이드바 사이즈 조절
     useEffect(() => {
@@ -105,6 +112,87 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
     useEffect(() => {
         setRoomCategories([]);
     }, [chatId]);
+
+    const getRoomSettings = useCallback(async () => {
+        if (!chatId) {
+            setRoomPromptProfile("");
+            setUseHistory(true);
+            return;
+        }
+
+        try {
+            const res = await axios.get(`/api/rooms/${chatId}/settings`);
+            if (res.data.success) {
+                const settings = res.data.settings;
+                setRoomPromptProfile(settings.prompt_profile ?? "");
+                setUseHistory(settings.use_history ?? true);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }, [chatId]);
+
+    useEffect(() => {
+        getRoomSettings();
+    }, [getRoomSettings]);
+
+    const saveRoomSettings = useCallback(async () => {
+        if (!chatId) return;
+
+        setLoading(true);
+        try {
+            const res = await axios.put(`/api/rooms/${chatId}/settings`, {
+                prompt_profile: roomPromptProfile,
+                use_history: useHistory,
+            });
+
+            if (res.data.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data.message ?? "대화 설정이 저장되었습니다.",
+                    type: "success"
+                };
+                setAlerts(prev => [...prev, alertData]);
+                setSettingsModal(false);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [chatId, roomPromptProfile, useHistory]);
+
+    const generateSummary = useCallback(async () => {
+        if (messages.length <= 0) {
+            setSummaryText("요약할 대화가 없습니다.");
+            return;
+        }
+
+        setSummaryLoading(true);
+        try {
+            const historyText = JSON.stringify(messages)
+                .replace(/\\/g, "\\\\")
+                .replace(/`/g, "\\`");
+
+            const res = await axios.post("/api/plaroai/chat", {
+                model_name: import.meta.env.VITE_GEMINI_API_MODEL || "models/gemini-2.5-flash",
+                parts: [
+                    { text: "너는 대화 요약 도우미다. 한국어로 핵심만 짧고 명확하게 정리한다." },
+                    { text: "출력 형식: 1) 핵심 요약 3줄 2) 결정사항 3) 다음 할 일(체크리스트)" },
+                    { text: `HISTORY-JSON***${historyText}***` },
+                ],
+                generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
+            });
+
+            const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            setSummaryText(text || "요약을 생성하지 못했습니다.");
+        } catch (err) {
+            console.error(err);
+            setSummaryText("요약 생성 중 오류가 발생했습니다.");
+        } finally {
+            setSummaryLoading(false);
+        }
+    }, [messages]);
 
     const getMessages = useCallback(async () => {
         if (!chatId || newChat) return;
@@ -270,9 +358,109 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
             <Head title="PlaroAi" />
             <div className="relative overflow-hidden flex h-[calc(100vh-70px)]">
                 <SideBarSection setMdRoomListToggle={setSideBarToggle} mdRoomListToggle={sideBarToggle} mdRoomList={mdRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} baseScroll={baseScroll} setBaseScroll={setBaseScroll} baseTop={baseTop} setBaseTop={setBaseTop} editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId}/>
-                <PlaroAiSection now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId}/>
+                <div className="flex-1 relative h-full">
+                    <div className="absolute top-3 right-3 z-[2] flex items-center gap-2">
+                        <div className="relative group">
+                            <button
+                                disabled={!canUseRoomActions}
+                                onClick={async () => {
+                                    if (!canUseRoomActions) return;
+                                    setSummaryModal(true);
+                                    await generateSummary();
+                                }}
+                                className={`btn text-xs border normal-text ${
+                                    canUseRoomActions
+                                        ? "bg-white dark:bg-gray-950 border-gray-300 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900"
+                                        : "bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-800 text-gray-400 cursor-not-allowed"
+                                }`}
+                            >
+                                대화 요약
+                            </button>
+                            {!canUseRoomActions && (
+                                <span className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 text-white text-[11px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                    채팅방 선택 후 사용 가능
+                                </span>
+                            )}
+                        </div>
+                        <div className="relative group">
+                            <button
+                                disabled={!canUseRoomActions}
+                                onClick={() => {
+                                    if (!canUseRoomActions) return;
+                                    setSettingsModal(true);
+                                }}
+                                className={`btn text-xs border normal-text ${
+                                    canUseRoomActions
+                                        ? "bg-white dark:bg-gray-950 border-gray-300 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900"
+                                        : "bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-800 text-gray-400 cursor-not-allowed"
+                                }`}
+                            >
+                                대화 설정
+                            </button>
+                            {!canUseRoomActions && (
+                                <span className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 text-white text-[11px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                    채팅방 선택 후 사용 가능
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    <PlaroAiSection now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} roomPromptProfile={roomPromptProfile} useHistory={useHistory}/>
+                </div>
                 <EditRoom temporaryEditTitle={temporaryEditTitle} handleEditRoom={handleEditRoom} editStatus={editStatus} mdRoomList={mdRoomList} mdRoomListToggle={sideBarToggle} EditTitle={EditTitle} deleteRoom={deleteRoom} editRoomRef={editRoomRef} toggle={editId} />
             </div>
+            {settingsModal && (
+                <div className="fixed inset-0 z-[999] bg-black/30 flex justify-center items-center px-5" onClick={() => setSettingsModal(false)}>
+                    <div className="w-full max-w-[560px] rounded bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="normal-text text-lg font-semibold">대화 설정</h2>
+                        <div className="space-y-2">
+                            <label className="text-xs text-gray-600 dark:text-gray-300 block">대화 설명 (사용자 맞춤 지시)</label>
+                            <textarea
+                                value={roomPromptProfile}
+                                onChange={(e) => setRoomPromptProfile(e.target.value)}
+                                placeholder="예: 답변은 핵심만"
+                                className="w-full min-h-[140px] resize-y bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded p-3 text-sm normal-text"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-sm normal-text">
+                                <input
+                                    type="checkbox"
+                                    checked={useHistory}
+                                    onChange={(e) => setUseHistory(e.target.checked)}
+                                />
+                                이전 대화를 기억
+                            </label>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 ">
+                                켜면 맥락을 더 잘 이어가지만 응답이 조금 느려질 수 있고, 끄면 빠르지만 이전 맥락 반영이 줄어듭니다.
+                            </p>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => setSettingsModal(false)} className="btn text-sm text-white bg-gray-700 hover:bg-gray-800">닫기</button>
+                            <button onClick={saveRoomSettings} className="btn text-sm text-white bg-blue-500 hover:bg-blue-600">저장</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {summaryModal && (
+                <div className="fixed inset-0 z-[999] bg-black/30 flex justify-center items-center px-5" onClick={() => setSummaryModal(false)}>
+                    <div className="w-full max-w-[640px] rounded bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between">
+                            <h2 className="normal-text text-lg font-semibold">대화 요약</h2>
+                            <button onClick={generateSummary} className="btn text-xs bg-blue-500 hover:bg-blue-600 text-white">다시 생성</button>
+                        </div>
+                        <div className="max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded p-3">
+                            {summaryLoading ? (
+                                <p className="text-sm text-gray-500">요약 생성 중...</p>
+                            ) : (
+                                <p className="text-sm whitespace-pre-wrap normal-text">{summaryText || "요약 결과가 없습니다."}</p>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => setSummaryModal(false)} className="btn text-sm text-white bg-gray-700 hover:bg-gray-800">닫기</button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {modal && <Modal Title="채팅방 삭제" onClickEvent={handleDeleteRoom} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId ? '"'+rooms.find(item => item.room_id === editId)?.title+'"' + " 채팅방을 정말 삭제 하시겠습니까?" : undefined} Position="top" CloseText="삭제" />}
         </>
     );

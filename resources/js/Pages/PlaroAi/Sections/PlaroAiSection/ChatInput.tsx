@@ -28,6 +28,8 @@ interface ChatInputProps {
     prompt: string;
     setPrompt: Dispatch<SetStateAction<string>>;
     setNewChat: Dispatch<SetStateAction<boolean>>;
+    roomPromptProfile: string;
+    useHistory: boolean;
     auth: {
         user: AuthUser | null;
     };
@@ -48,6 +50,8 @@ export default function ChatInput({
     prompt,
     setPrompt,
     setNewChat,
+    roomPromptProfile,
+    useHistory,
     auth
 }: ChatInputProps) {
     const ui = useContext(GlobalUIContext);
@@ -175,21 +179,31 @@ export default function ChatInput({
             }
 
             const historyText =
-                messages && messages.length > 0
+                useHistory && messages && messages.length > 0
                     ? JSON.stringify(messages)
                         .replace(/\\/g, "\\\\")
                         .replace(/`/g, "\\`")
                     : "empty-message";
 
+            const parts: { text: string }[] = [
+                { text: `NOW***${now}***` },
+                { text: prompts.DEFAULT_PROMPT },
+            ];
+
+            if (roomPromptProfile.trim().length > 0) {
+                parts.push({ text: `USER-PROFILE***${roomPromptProfile.trim()}***` });
+            }
+
+            if (useHistory) {
+                parts.push({ text: prompts.HISTORY_PROMPT });
+                parts.push({ text: `HISTORY-JSON***${historyText}***` });
+            }
+
+            parts.push({ text: `USER-TEXT***${text}***` });
+
             const response = await axios.post("/api/plaroai/chat", {
                 model_name: MODEL_NAME,
-                parts: [
-                    { text: `NOW***${now}***` },
-                    { text: prompts.DEFAULT_PROMPT },
-                    { text: prompts.HISTORY_PROMPT },
-                    { text: `HISTORY-JSON***${historyText}***` },
-                    { text: `USER-TEXT***${text}***` },
-                ],
+                parts,
                 generationConfig: { temperature: 0.8, maxOutputTokens: 5120 },
             });
 

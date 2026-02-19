@@ -20,7 +20,7 @@ class EventInvitationController extends Controller
     {
         try {
             $event = Event::where('uuid', $uuid)
-                ->where('user_id', Auth::id())
+                ->where('creator_id', Auth::id())
                 ->firstOrFail();
 
             $data = $request->validate([

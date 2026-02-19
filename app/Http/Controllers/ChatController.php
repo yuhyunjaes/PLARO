@@ -18,7 +18,9 @@ class ChatController extends Controller
             'user_id' => Auth::id(),
             'uuid' => Str::uuid()->toString(),
             'title' => $request->title,
-            'model_name' => $request->model_name
+            'model_name' => $request->model_name,
+            'prompt_profile' => null,
+            'use_history' => true,
         ]);
 
         return response()->json(['success'=>true, 'room_id'=>$room->uuid, 'title'=>$room->title]);
@@ -126,5 +128,56 @@ class ChatController extends Controller
             ->get(['id', 'role', 'text']);
 
         return response()->json(['success'=>true, 'messages'=>$messages, 'type'=>'success']);
+    }
+
+    // 채팅방 맞춤 설정 조회
+    public function GetRoomSettings($roomId) {
+        $room = ChatRoom::where('uuid', $roomId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if(!$room) return response()->json([
+            'success'=>false,
+            'message'=>'채팅방이 존재하지 않습니다.',
+            'type'=>'danger'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'settings' => [
+                'prompt_profile' => $room->prompt_profile ?? '',
+                'use_history' => (bool)$room->use_history,
+            ],
+            'type' => 'success'
+        ]);
+    }
+
+    // 채팅방 맞춤 설정 저장
+    public function UpdateRoomSettings(Request $request, $roomId) {
+        $room = ChatRoom::where('uuid', $roomId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if(!$room) return response()->json([
+            'success'=>false,
+            'message'=>'채팅방이 존재하지 않습니다.',
+            'type'=>'danger'
+        ]);
+
+        $data = $request->validate([
+            'prompt_profile' => ['nullable', 'string', 'max:2000'],
+            'use_history' => ['required', 'boolean'],
+        ]);
+
+        $room->update([
+            'prompt_profile' => $data['prompt_profile'] ?? null,
+            'use_history' => $data['use_history'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => '대화 설정이 저장되었습니다.',
+            'type' => 'success'
+        ]);
     }
 }

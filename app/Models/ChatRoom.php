@@ -28,6 +28,12 @@ class ChatRoom extends Model
         'user_id',
         'uuid',
         'title',
-        'model_name'
+        'model_name',
+        'prompt_profile',
+        'use_history'
+    ];
+
+    protected $casts = [
+        'use_history' => 'boolean',
     ];
 }

@@ -184,6 +184,8 @@ Route::middleware('web')->group(function () {
         Route::get('/api/rooms', [ChatController::class, 'GetRooms'])->name('rooms.get');
         Route::put('/api/rooms/{roomId}', [ChatController::class, 'UpdateRooms'])->name('rooms.update');
         Route::delete('/api/rooms/{roomId}', [ChatController::class, 'DeleteRooms'])->name('rooms.delete');
+        Route::get('/api/rooms/{roomId}/settings', [ChatController::class, 'GetRoomSettings'])->name('rooms.settings.get');
+        Route::put('/api/rooms/{roomId}/settings', [ChatController::class, 'UpdateRoomSettings'])->name('rooms.settings.update');
 
         Route::get('/api/rooms/{roomId}/categories', [ChatCategoryController::class, 'GetRoomsCategories'])->name('rooms.categories.get');
         Route::post('/api/rooms/{roomId}/categories', [ChatCategoryController::class, 'StoreRoomsCategories'])->name('rooms.categories.store');

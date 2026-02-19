@@ -77,7 +77,7 @@ class EventParticipantController extends Controller
             $query = Event::where('uuid', $uuid);
 
             if (!$request->self) {
-                $query->where('user_id', Auth::id());
+                $query->where('creator_id', Auth::id());
             }
 
             $event = $query->firstOrFail();
@@ -87,7 +87,7 @@ class EventParticipantController extends Controller
                 'id' => 'required|integer',
             ]);
 
-            if($data['status'] === "EventUser" && $data['id'] === $event->user_id) {
+            if($data['status'] === "EventUser" && $data['id'] === $event->creator_id) {
                 return response()->json([
                     'success' => false,
                     'message' => '소유자를 제거할 수 없습니다.',
@@ -168,7 +168,7 @@ class EventParticipantController extends Controller
 
     public function DeleteParticipantsAll($uuid) {
         try {
-            $event = Event::where('user_id', auth()->id())
+            $event = Event::where('creator_id', auth()->id())
                 ->where('uuid', $uuid)
                 ->firstOrFail();
 
@@ -176,18 +176,18 @@ class EventParticipantController extends Controller
 
             DB::transaction(function () use ($event, &$removedUserIds) {
                 $removedUserIds = EventUser::where('event_id', $event->id)
-                    ->where('user_id', '!=', $event->user_id)
+                    ->where('user_id', '!=', $event->creator_id)
                     ->pluck('user_id')
                     ->toArray();
 
                 EventInvitation::where('event_id', $event->id)->delete();
 
                 EventReminder::where('event_id', $event->id)
-                    ->where('user_id', '!=', $event->user_id)
+                    ->where('user_id', '!=', $event->creator_id)
                     ->delete();
 
                 EventUser::where('event_id', $event->id)
-                    ->where('user_id', '!=', $event->user_id)
+                    ->where('user_id', '!=', $event->creator_id)
                     ->delete();
             });
 

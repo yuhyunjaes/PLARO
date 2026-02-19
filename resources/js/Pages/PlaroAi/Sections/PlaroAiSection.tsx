@@ -28,9 +28,11 @@ interface PlaroAiSectionProps {
     setPrompt: Dispatch<SetStateAction<string>>;
     roomCategories: Categories[];
     setRoomCategories: Dispatch<SetStateAction<Categories[]>>;
+    roomPromptProfile: string;
+    useHistory: boolean;
 }
 
-export default function PlaroAiSection({ now, getMessages, handleDeleteChatCategories, setNewChat, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories } : PlaroAiSectionProps) {
+export default function PlaroAiSection({ now, getMessages, handleDeleteChatCategories, setNewChat, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories, roomPromptProfile, useHistory } : PlaroAiSectionProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -97,12 +99,12 @@ export default function PlaroAiSection({ now, getMessages, handleDeleteChatCateg
     }, [category, saveMsg]);
 
     return (
-        <main className="bg-gray-100 relative dark:bg-gray-950" style={{width: `calc(100% - ${sideBar}px`}}>
+        <main className="bg-gray-100 relative dark:bg-gray-950 flex-1 h-full">
             {categoryToggle && (
                 <FormModal Submit={categorySubmit} toggle={categoryToggle} setToggle={setCategoryToggle} Title="메모장 저장" SubmitText="저장" Label="카테고리" Type="text" Name="category" Id="category" onChange={setCategory} Value={category}/>
             )}
             <MessageList chatId={chatId} messages={messages} handleNotepad={handleNotepad}/>
-            <ChatInput now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad}/>
+            <ChatInput now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} auth={auth} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} roomId={roomId} chatId={chatId} setChatId={setChatId} setRooms={setRooms} setMessages={setMessages} messages={messages} handleNotepad={handleNotepad} roomPromptProfile={roomPromptProfile} useHistory={useHistory}/>
         </main>
     );
 }

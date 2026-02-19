@@ -15,12 +15,16 @@ return new class extends Migration
             $table->id();
             $table->uuid('uuid')->unique();
             $table->foreignId('chat_id')->nullable()->constrained('chat_messages')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('creator_id')->constrained('users')->onDelete('cascade');
             $table->string('title')->nullable();
             $table->dateTime('start_at');
             $table->dateTime('end_at');
+            $table->enum('type', ['normal', 'challenge', 'dday'])->default('normal');
+            $table->enum('status', ['active', 'completed', 'cancelled'])->default('active');
             $table->longText('description')->nullable();
             $table->string('color');
+            $table->index(['start_at', 'end_at']);
+            $table->index('type');
             $table->timestamps();
         });
     }

@@ -25,7 +25,7 @@ class EventUserController extends Controller
 
             DB::transaction(function () use ($data, &$event, &$eventUser) {
                 $event = Event::where('uuid', $data['event_id'])
-                    ->where('user_id', Auth::id())
+                    ->where('creator_id', Auth::id())
                     ->firstOrFail();
 
                 $eventUser = EventUser::with('user')

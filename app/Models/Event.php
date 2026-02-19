@@ -10,7 +10,7 @@ class Event extends Model
     use HasFactory;
 
     public function user() {
-        return $this->belongsTo(User::class); // owner
+        return $this->belongsTo(User::class, 'creator_id', 'id'); // owner
     }
 
     public function users()
@@ -35,10 +35,12 @@ class Event extends Model
     protected $fillable = [
         'uuid',
         'chat_id',
-        'user_id',
+        'creator_id',
         'title',
         'start_at',
         'end_at',
+        'type',
+        'status',
         'description',
         'color'
     ];
