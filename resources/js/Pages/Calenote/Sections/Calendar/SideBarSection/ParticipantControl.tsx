@@ -297,7 +297,7 @@ export default function ParticipantControl({ setModalTitle, setModalType, setMod
                                 );
 
                             return(
-                                <div className={`border border-gray-200 dark:border-gray-800 group p-2 w-full rounded ${isActive ? "bg-gray-950/10 dark:bg-gray-600" : `${auth.user?.id === eventParticipant.user_id ? "bg-blue-500/10" : ""} hover:bg-gray-950/10 dark:hover:bg-gray-600`} flex flex-row relative`} key={eventParticipant.user_id ? `user-${eventParticipant.user_id}` : `inv-${eventParticipant.invitation_id ?? index}`}>
+                                <div className={`border border-gray-300 dark:border-gray-800 group p-2 w-full rounded ${isActive ? "bg-gray-950/10 dark:bg-gray-600" : `${auth.user?.id === eventParticipant.user_id ? "bg-blue-500/10" : ""} hover:bg-gray-950/10 dark:hover:bg-gray-600`} flex flex-row relative`} key={eventParticipant.user_id ? `user-${eventParticipant.user_id}` : `inv-${eventParticipant.invitation_id ?? index}`}>
                                 <div className="w-[70%] max-w-[70%] flex items-center space-x-1">
                                         <div className="size-4 bg-gray-500 rounded-full flex justify-center items-center relative">
                                             <span className="text-[0.5rem] leading-[0.5] text-center text-white">{eventParticipant.user_name ? eventParticipant.user_name[0] : eventParticipant.email[0]}</span>
@@ -328,7 +328,7 @@ export default function ParticipantControl({ setModalTitle, setModalType, setMod
                                         ) : ""}
                                     </div>
                                     {isActive ? (
-                                        <div ref={activeEventParticipantAreaRef} className="w-[calc(100%-0.5rem)] absolute z-[1] -left-5 top-5 rounded bg-white dark:bg-[#0d1117] border-[0.5px] border-gray-200 dark:border-gray-800 p-2 space-x-2">
+                                        <div ref={activeEventParticipantAreaRef} className="w-[calc(100%-0.5rem)] absolute z-[1] -left-5 top-5 rounded bg-white dark:bg-[#0d1117] border-[0.5px] border-gray-300 dark:border-gray-800 p-2 space-x-2">
                                             {
                                                 IsEditAuthority === "owner" ? (
                                                     <>
@@ -395,7 +395,7 @@ export default function ParticipantControl({ setModalTitle, setModalType, setMod
                 />
 
                 {(IsParticipantFocus && IsParticipantEmail) ?
-                    <div className="absolute w-full top-[34px] rounded bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800">
+                    <div className="absolute w-full top-[34px] rounded bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800">
 
 
                         {(() => {

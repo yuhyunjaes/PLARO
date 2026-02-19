@@ -1,4 +1,4 @@
-import {ReactNode, useEffect, useState} from "react";
+import {ReactNode, useState} from "react";
 import { GlobalUIContext } from "./GlobalUIContext";
 import {AlertsData} from "../Components/Elements/ElementsData";
 
@@ -13,6 +13,7 @@ export default function GlobalProvider({ children }: GlobalProviderProps) {
         window.innerWidth <= 768 ? 0 : 230
     );
     const [saveWidth, setSaveWidth] = useState<number>(230);
+    const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
 
     return (
         <GlobalUIContext.Provider
@@ -24,11 +25,12 @@ export default function GlobalProvider({ children }: GlobalProviderProps) {
                 sideBar,
                 setSideBar,
                 saveWidth,
-                setSaveWidth
+                setSaveWidth,
+                sideBarToggle,
+                setSideBarToggle
             }}
         >
             {children}
         </GlobalUIContext.Provider>
     );
 }
-

@@ -53,9 +53,9 @@ export default function MobileSidebar({ sideBar, setSideBar, auth } : MobileSide
 
     return (
         <div className={`fixed top-0 left-0 w-screen h-screen z-[999] md:hidden ${fadeSideBar ? 'animate-fadeOutSideBar' : 'animate-fadeInsideBar'}`}>
-            <div className="w-[40%] h-full absolute top-0 left-0" onClick={CloseSideBar}></div>
-            <div className="w-[60%] h-full absolute top-0 right-0 bg-white shadow dark:shadow-gray-800 dark:bg-gray-950">
-                <header className="w-full px-5 sm:px-12 h-[70px] flex justify-between items-center">
+            <div className="w-[calc(100%-230px)] h-full absolute top-0 left-0" onClick={CloseSideBar}></div>
+            <div className="w-[230px] h-full absolute top-0 right-0 bg-white shadow dark:shadow-gray-800 dark:bg-gray-950">
+                <header className="w-full px-5 h-[70px] flex justify-between items-center">
                     {!auth?.user && (
                         <Link href="/login" className="m-0 h-full flex items-center text-gray-950 dark:text-white font-semibold space-x-3">
                             <FontAwesomeIcon icon={faUser} />
@@ -69,26 +69,26 @@ export default function MobileSidebar({ sideBar, setSideBar, auth } : MobileSide
                     </button>
                 </header>
 
-                <main className="w-full px-5 sm:px-12 space-y-5 h-[calc(100vh-70px)] overflow-y-auto overflow-x-hidden">
+                <main className="w-full px-5 space-y-5 h-[calc(100vh-70px)] overflow-y-auto overflow-x-hidden">
                     {menuData.map((menu, index) => (
                         <div key={index} className="mt-5">
                             <button
                                 className="flex justify-between items-center text-gray-950 dark:text-white cursor-pointer w-full"
                                 onClick={() => toggleMenu(index)}
                             >
-                                <p className="font-semibold">{menu.title}</p>
+                                <p className="font-semibold text-sm">{menu.title}</p>
                                 <FontAwesomeIcon
                                     icon={faAngleDown}
-                                    className={`text-sm transition-transform duration-300 ${openStates[index] ? "rotate-180" : ""}`}
+                                    className={`text-sm transition-transform duration-150 ${openStates[index] ? "rotate-180" : ""}`}
                                 />
                             </button>
 
                             <div
-                                className={`overflow-hidden transition-[max-height] duration-300
+                                className={`overflow-hidden transition-[max-height] duration-150
                             ${openStates[index] ? "max-h-[200px]" : "max-h-0"}`}
                             >
                                 {menu.links.map((link, i) => (
-                                    <Link key={i} href={link.href} className="block my-2 text-gray-950 dark:text-white font-light">
+                                    <Link key={i} href={link.href} className="block my-2 text-gray-950 dark:text-white text-xs font-light">
                                         - {link.label}
                                     </Link>
                                 ))}

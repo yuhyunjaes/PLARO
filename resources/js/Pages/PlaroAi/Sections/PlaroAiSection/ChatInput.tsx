@@ -467,12 +467,12 @@ export default function ChatInput({
                 className={`w-full flex justify-center items-end absolute ${chatId ? "bottom-0 left-0" : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"} mb-3 px-5`}
             >
                 {!chatId && auth.user && (
-                    <h1 className="normal-text flex absolute top-[-150%] text-2xl sm:text-4xl font-semibold">
-                        <p className="hidden md:block">{auth.user.name.slice(1)},&nbsp;</p>
-                        새로운 대화를 시작해요.
+                    <h1 className="normal-text flex absolute top-[-150%] text-xl md:text-3xl lg:text-4xl font-semibold">
+                        <p>{auth.user.name.slice(1)},&nbsp;</p>
+                        <p>새로운 대화를 시작해요.</p>
                     </h1>
                 )}
-                <div className="w-full max-w-3xl bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 rounded-[2rem] shadow-sm p-2 flex items-end relative">
+                <div className="w-full max-w-3xl bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 rounded-[2rem] shadow-sm md:p-2 p-1 flex items-end relative">
                     {(roomCategories.length > 0) && (
                         <div className="space-x-2 h-[40px] top-[-40px] left-0 absolute flex justify-start overflow-x-auto scrollbar-thin">
                             {roomCategories.map((item, i) => (
@@ -486,7 +486,7 @@ export default function ChatInput({
                                         }
                                     }}
                                     key={i}
-                                    className={`flex-shrink-0 px-3 h-[80%] cursor-pointer bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl text-sm sm:text-base transition-transform duration-200 hover:border-transparent hover:-translate-y-[0.15rem] ${categoryFadeAnimation ? "animate-categoryChipIn" : ""}`}
+                                    className={`flex-shrink-0 px-3 h-[80%] cursor-pointer bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl text-sm md:text-base transition-transform duration-200 hover:border-transparent hover:-translate-y-[0.15rem] ${categoryFadeAnimation ? "animate-categoryChipIn" : ""}`}
                                 >
                                     {item.category}
                                 </div>
@@ -502,7 +502,7 @@ export default function ChatInput({
                             placeholder-gray-950 dark:placeholder-white focus:bg-transparent border-0
                             text-gray-950 dark:text-white bg-transparent flex-grow overflow-y-auto
                             overflow-x-hidden resize-none outline-none
-                            text-xs sm:text-base
+                            text-xs md:text-sm
                         "
                         placeholder="AI에게 물어볼 내용을 입력하세요"
                         onInput={(e) => {

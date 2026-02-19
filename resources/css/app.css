@@ -20,13 +20,13 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 .link-item {
-    @apply transition-colors duration-300 hover:text-gray-800 dark:hover:text-gray-100 active:text-gray-900 dark:active:text-white font-semibold;
+    @apply transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-100 active:text-gray-900 dark:active:text-white font-semibold;
 }
 .li-item {
     @apply float-left;
 }
 .sub-menu {
-    @apply  absolute left-0 top-full w-max overflow-hidden bg-white dark:bg-gray-950 transition-[max-height] duration-300 ease-in-out;
+    @apply  absolute left-0 top-full w-max overflow-hidden bg-white dark:bg-gray-950 transition-[max-height] duration-150 ease-in-out;
 }
 
 .sub-menu li {
@@ -34,7 +34,7 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 .sub-menu li a {
-    @apply px-3 py-2 text-gray-700 dark:text-gray-300 transition-all duration-300;
+    @apply px-3 py-2 text-gray-700 dark:text-gray-300 transition-all duration-150;
 }
 
 .b-btn {
@@ -45,7 +45,7 @@ input[type=number]::-webkit-inner-spin-button {
     @apply px-5 py-2 rounded font-semibold cursor-pointer text-xs truncate;
 }
 .btn-outline-white {
-    @apply border-[0.1rem] border-gray-950 dark:border-white text-gray-950 dark:text-white hover:bg-gray-950 dark:hover:bg-white active:bg-gray-900 dark:active:bg-gray-100 hover:text-white dark:hover:text-gray-950 transition-colors duration-300;
+    @apply border-[0.1rem] border-gray-950 dark:border-white text-gray-950 dark:text-white hover:bg-gray-950 dark:hover:bg-white active:bg-gray-900 dark:active:bg-gray-100 hover:text-white dark:hover:text-gray-950 transition-colors duration-150;
 }
 
 @utility animate-fadeInLoad {
@@ -53,10 +53,10 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 @utility animate-fadeInsideBar {
-    animation: fadeInsideBar 0.4s ease-out forwards;
+    animation: fadeInsideBar 150ms ease-out forwards;
 }
 @utility animate-fadeOutSideBar {
-    animation: fadeOutSideBar 0.4s ease-out forwards;
+    animation: fadeOutSideBar 150ms ease-out forwards;
 }
 
 @keyframes fadeInsideBar {
@@ -126,13 +126,13 @@ input[type=number]::-webkit-inner-spin-button {
     @apply dark:bg-[#1E1F25];
 }
 .main-btn {
-    @apply bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white transition-colors duration-300;
+    @apply bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white transition-colors duration-150;
 }
 .form-btn {
     @apply bg-gray-50 text-black border border-gray-300 hover:bg-gray-100
         dark:bg-[#21242a] dark:hover:bg-gray-800 dark:active:bg-gray-950 dark:text-white dark:border-gray-800
         text-xs
-        transition-colors duration-300 px-4 py-2 rounded font-semibold cursor-pointer;
+        transition-colors duration-150 px-4 py-2 rounded font-semibold cursor-pointer;
 }
 
 .form-label {
@@ -286,7 +286,7 @@ form > div {
 
 
 @utility animate-in-reminder {
-    animation: fade-in-reminder 0.5s ease-in-out forwards;
+    animation: fade-in-reminder 150ms ease-in-out forwards;
 }
 @keyframes fade-in-reminder {
     0% {
@@ -300,15 +300,13 @@ form > div {
 }
 
 @utility animate-out-reminder {
-    animation: fade-out-reminder 0.5s ease-in-out forwards;
+    animation: fade-out-reminder 150ms ease-in-out forwards;
 }
 @keyframes fade-out-reminder {
     0% {
-        opacity: 1;
-        transform: translateX(0);
+
     }
     100% {
-        opacity: 0;
-        transform: translateX(100px);
+
     }
 }

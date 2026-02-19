@@ -47,7 +47,7 @@ export default function Modal({ Title, Text, Position, CloseText, setEditStatus,
                     modalAnimation === "in" ? "animate-in-modal" : "animate-out-modal"
                 } overflow-hidden divide-y divide-gray-200 dark:divide-gray-700
         max-w-[500px] rounded bg-gray-100 dark:bg-gray-950
-        border border-gray-200 dark:border-gray-700 absolute ${
+        border border-gray-300 dark:border-gray-700 absolute ${
                     Position === "top" ? "top-0 mt-10" : Position === "bottom" ? "bottom-0 mb-10" : "top-1/2 -translate-y-1/2"
                 }`}
                 onClick={(e) => e.stopPropagation()}

@@ -67,7 +67,7 @@ export default function FormModal({
                 onClick={(e) => e.stopPropagation()}
                 className="overflow-hidden divide-y divide-gray-200 dark:divide-gray-700
                     max-w-[500px] rounded bg-gray-100 dark:bg-gray-950
-                    border border-gray-200 dark:border-gray-700 container"
+                    border border-gray-300 dark:border-gray-700 container"
             >
                 <div className="p-5 mb-2 flex justify-between items-center">
                     {Title && <h1 className="normal-text text-xl font-semibold">{Title}</h1>}

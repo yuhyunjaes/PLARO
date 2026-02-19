@@ -26,6 +26,7 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
     const [myBox, setMyBox] = useState<boolean>(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const myBoxRef = useRef<boolean>(myBox);
+    const showMenuButton = Boolean(!toggle && check);
 
     useEffect(() => {
         myBoxRef.current = myBox;
@@ -74,7 +75,7 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
                     ${className && className}
                 `}
             >
-                <div className="w-full h-full flex justify-between items-center px-5 sm:px-12">
+                <div className={`w-full h-full flex ${!toggle && check ? "justify-between md:justify-end" : "justify-end"} items-center px-5 md:px-12 relative`}>
                     {(!toggle && check) && (
                         <button onClick={() => {
                             setToggle?.(true)
@@ -82,7 +83,14 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
                             <FontAwesomeIcon icon={faBars} />
                         </button>
                     )}
-                    <Logo />
+
+                    <Logo
+                        className={`absolute top-1/2 transition-[left,transform] duration-150 ${
+                            !toggle && check
+                                ? "left-1/2 -translate-x-1/2 -translate-y-1/2 md:left-12 md:translate-x-0"
+                                : "left-5 md:left-12 -translate-y-1/2"
+                        }`}
+                    />
 
                     <div className="m-0 flex items-center">
                         <DesktopMenu />

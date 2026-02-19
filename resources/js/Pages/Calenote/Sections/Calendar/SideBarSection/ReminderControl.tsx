@@ -143,7 +143,7 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
                 />
 
                 {(reminderSelector && eventReminder.length < 5) ?
-                    <div className="absolute w-full top-[34px] z-[1]  rounded bg-white dark:bg-[#0d1117] border border-gray-200 dark:border-gray-800">
+                    <div className="absolute w-full top-[34px] z-[1]  rounded bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800">
 
 
                         {(() => {
@@ -166,11 +166,11 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
                         })()}
                     </div> : ""}
             </div>
-            <div className="mt-2 overflow-x-hidden overflow-y-auto bg-transparent rounded outline-none border-gray-300 w-full dark:border-gray-800 font-semibold text-xs">
+            <div className="mt-2 rounded outline-none border-gray-300 w-full dark:border-gray-800 font-semibold text-xs">
                 <details className="space-y-2 mt-2">
                     <summary className="text-gray-500">리마인더 {eventReminder.length > 0 ? `${eventReminder.length}개 ` : '0개 '} 모두 보기</summary>
                     {eventReminder.map((reminder) => (
-                        <div className="border border-gray-200 dark:border-gray-800 group p-2 w-full rounded hover:bg-gray-950/10 dark:hover:bg-gray-600 flex items-center justify-between" key={`${reminder.id ?? "new"}-${reminder.seconds}`}>
+                        <div className="border border-gray-300 dark:border-gray-800 group p-2 w-full rounded hover:bg-gray-950/10 dark:hover:bg-gray-600 flex items-center justify-between" key={`${reminder.id ?? "new"}-${reminder.seconds}`}>
                             {reminderChangeKorean(reminder.seconds)}
                             <button onClick={async () => {
                                 await removeEventReminder(reminder);

@@ -1,9 +1,11 @@
 import axios from "axios";
 import React, {ReactNode, useEffect, useState, cloneElement, ReactElement, useContext} from "react";
+import { usePage } from "@inertiajs/react";
 import {EventsData, ReminderData} from "./Pages/Calenote/Sections/CalenoteSectionsData";
 import Reminder from "./Components/Elements/Reminder";
 import Alert from "./Components/Elements/Alert";
 import {GlobalUIContext} from "./Providers/GlobalUIContext";
+import Header from "./Components/Header/Header";
 
 interface RootProps {
     auth: any;
@@ -12,6 +14,7 @@ interface RootProps {
 }
 
 export default function Root({ auth, children, ...props }: RootProps) {
+    const { url } = usePage();
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -21,8 +24,11 @@ export default function Root({ auth, children, ...props }: RootProps) {
     const {
         alerts,
         setAlerts,
-        sideBar
+        sideBar,
+        sideBarToggle,
+        setSideBarToggle
     } = ui;
+    const isHome = url.split("?")[0] === "/";
 
     const [events, setEvents] = useState<EventsData[]>([]);
     const [reminders, setReminders] = useState<ReminderData[]>([]);
@@ -151,10 +157,6 @@ export default function Root({ auth, children, ...props }: RootProps) {
 
     return (
         <>
-            {React.isValidElement(children)
-                ? cloneElement(children as ReactElement, sharedProps)
-                : children}
-
             {(() => {
                 if(reminders.length <= 0) return;
 
@@ -238,6 +240,17 @@ export default function Root({ auth, children, ...props }: RootProps) {
                     </>
                 );
             })()}
+            <Header
+                auth={auth}
+                {...(!isHome && {
+                    toggle: sideBarToggle,
+                    setToggle: setSideBarToggle,
+                    check: sideBar < 230
+                })}
+            />
+            {React.isValidElement(children)
+                ? cloneElement(children as ReactElement, sharedProps)
+                : children}
         </>
     );
 }

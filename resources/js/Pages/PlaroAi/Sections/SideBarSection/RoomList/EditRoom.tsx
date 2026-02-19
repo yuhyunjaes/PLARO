@@ -2,12 +2,12 @@
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {faTrashCan, faPen, faFloppyDisk} from "@fortawesome/free-solid-svg-icons";
-import {RefObject} from "react";
+import {RefObject, useContext} from "react";
+import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
 
 interface EditRoomProps {
     EditTitle: () => void;
     editRoomRef: RefObject<HTMLDivElement | null>;
-    sideBar: number;
     toggle: string | null;
     deleteRoom: () => void;
     mdRoomList: boolean;
@@ -16,9 +16,19 @@ interface EditRoomProps {
     handleEditRoom: () => Promise<void>;
     temporaryEditTitle: string;
 }
-export default function EditRoom({ EditTitle, editRoomRef, sideBar, toggle, deleteRoom, mdRoomList, mdRoomListToggle, editStatus, handleEditRoom, temporaryEditTitle } : EditRoomProps) {
+export default function EditRoom({ EditTitle, editRoomRef, toggle, deleteRoom, mdRoomList, mdRoomListToggle, editStatus, handleEditRoom, temporaryEditTitle } : EditRoomProps) {
+    const ui = useContext(GlobalUIContext);
+
+    if (!ui) {
+        throw new Error("CalenoteLayout must be used within GlobalProvider");
+    }
+
+    const {
+        sideBar
+    } = ui;
+
     return (
-        <div ref={editRoomRef} className={`absolute z-[11] ${((sideBar > 50 && toggle) || (mdRoomList && mdRoomListToggle && toggle)) ? "block" : "hidden"} ${(mdRoomList && mdRoomListToggle && toggle) && "right-0 mt-5 rounded-3xl border"} ${(sideBar > 50 && toggle) && "left-[250px] border-t border-r border-b rounded-e-xl"} m-0  w-[200px] bg-white  dark:bg-gray-950 border-gray-200 dark:border-gray-900`}>
+        <div ref={editRoomRef} className={`absolute z-[11] ${((sideBar > 50 && toggle) || (mdRoomList && mdRoomListToggle && toggle)) ? "block" : "hidden"} ${(mdRoomList && mdRoomListToggle && toggle) && "left-[30px] border"} ${(sideBar > 50 && toggle) && "left-[230px]"}  w-[160px] bg-white  dark:bg-gray-950 border-gray-300 dark:border-gray-900 rounded`}>
             <div className="p-2">
                 {
                     (editStatus === "update") ? (

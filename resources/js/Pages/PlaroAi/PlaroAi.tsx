@@ -36,7 +36,9 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
         sideBar,
         setSideBar,
         saveWidth,
-        setSaveWidth
+        setSaveWidth,
+        sideBarToggle,
+        setSideBarToggle
     } = ui;
 
     const [chatId, setChatId] = useState<string | null>(roomId || null);
@@ -56,15 +58,14 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
 
     const [modal, setModal] = useState<boolean>(false);
 
-    const [mdRoomList, setMdRoomList] = useState<boolean>(window.innerWidth <= 768);
-    const [mdRoomListToggle, setMdRoomListToggle] = useState<boolean>(false);
+    const [mdRoomList, setMdRoomList] = useState<boolean>(window.innerWidth <= 767);
 
     // 사이드바 사이즈 조절
     useEffect(() => {
         const mdSideBar = () => {
-            setMdRoomList(window.innerWidth <= 768);
-            if (window.innerWidth <= 768) {
-                setMdRoomListToggle(false);
+            setMdRoomList(window.innerWidth <= 767);
+            if (window.innerWidth <= 767) {
+                setSideBarToggle(false);
                 setEditId("");
                 setEditStatus("");
                 setModal(false);
@@ -72,17 +73,17 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
         };
         window.addEventListener('resize', mdSideBar);
         return () => window.removeEventListener('resize', mdSideBar);
-    }, []);
+    }, [setSideBarToggle]);
 
     const handleResize = useCallback(() => {
-        setSideBar((prev) => {
-            if (window.innerWidth <= 768) {
-                return 0;
-            } else {
-                return prev === 0 ? saveWidth : prev;
-            }
-        });
-    }, [saveWidth]);
+        const isMobile = window.innerWidth <= 767;
+        if (isMobile) {
+            setSideBar(0);
+            return;
+        }
+
+        setSideBar(prev => (prev === 0 ? saveWidth : prev));
+    }, [saveWidth, setSideBar]);
 
     useEffect(() => {
         window.addEventListener('resize', handleResize);
@@ -95,7 +96,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
         if (sideBar > 0) {
             setSaveWidth(sideBar);
         }
-    }, [sideBar]);
+    }, [sideBar, setSaveWidth]);
 
     useEffect(() => {
         if (roomId) setChatId(roomId ? roomId : null);
@@ -202,7 +203,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                 setEditId("");
                 setEditStatus("");
                 setTemporaryEditTitle("");
-
+            } else {
                 const alertData:AlertsData = {
                     id: new Date(),
                     message: res.data.message,
@@ -249,14 +250,14 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                 setEditStatus("");
                 setEditId("");
                 setRooms((prevRooms) => prevRooms.filter(room => room.room_id !== editId));
-                setMessages([]);
+            } else {
+                const alertData:AlertsData = {
+                    id: new Date(),
+                    message: res.data.message,
+                    type: res.data.type
+                }
+                setAlerts(pre => [...pre, alertData]);
             }
-            const alertData:AlertsData = {
-                id: new Date(),
-                message: res.data.message,
-                type: res.data.type
-            }
-            setAlerts(pre => [...pre, alertData]);
         } catch (err) {
             console.error(err);
         } finally {
@@ -267,11 +268,10 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
     return (
         <>
             <Head title="PlaroAi" />
-            <Header auth={auth} setToggle={setMdRoomListToggle} toggle={mdRoomListToggle} check={mdRoomList} />
-            <div className="relative overflow-hidden flex h-[calc(100vh-70px)] transition-[width] duration-300">
-                <SideBarSection setMdRoomListToggle={setMdRoomListToggle} mdRoomListToggle={mdRoomListToggle} mdRoomList={mdRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} baseScroll={baseScroll} setBaseScroll={setBaseScroll} baseTop={baseTop} setBaseTop={setBaseTop} editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar} setSideBar={setSideBar}/>
-                <PlaroAiSection now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={sideBar}/>
-                <EditRoom temporaryEditTitle={temporaryEditTitle} handleEditRoom={handleEditRoom} editStatus={editStatus} mdRoomList={mdRoomList} mdRoomListToggle={mdRoomListToggle} EditTitle={EditTitle} deleteRoom={deleteRoom} editRoomRef={editRoomRef} sideBar={sideBar} toggle={editId} />
+            <div className="relative overflow-hidden flex h-[calc(100vh-70px)]">
+                <SideBarSection setMdRoomListToggle={setSideBarToggle} mdRoomListToggle={sideBarToggle} mdRoomList={mdRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} baseScroll={baseScroll} setBaseScroll={setBaseScroll} baseTop={baseTop} setBaseTop={setBaseTop} editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId}/>
+                <PlaroAiSection now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId}/>
+                <EditRoom temporaryEditTitle={temporaryEditTitle} handleEditRoom={handleEditRoom} editStatus={editStatus} mdRoomList={mdRoomList} mdRoomListToggle={sideBarToggle} EditTitle={EditTitle} deleteRoom={deleteRoom} editRoomRef={editRoomRef} toggle={editId} />
             </div>
             {modal && <Modal Title="채팅방 삭제" onClickEvent={handleDeleteRoom} setModal={setModal} setEditId={setEditId} setEditStatus={setEditStatus} Text={editId ? '"'+rooms.find(item => item.room_id === editId)?.title+'"' + " 채팅방을 정말 삭제 하시겠습니까?" : undefined} Position="top" CloseText="삭제" />}
         </>

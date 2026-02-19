@@ -6,7 +6,7 @@ import { faGithub, faInstagram } from "@fortawesome/free-brands-svg-icons";
 
 export default function Footer() {
     return (
-        <footer className="w-full h-auto py-16 bg-gray-300 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+        <footer className="w-full h-auto py-16 bg-gray-300 dark:bg-gray-950 border-t border-gray-300 dark:border-gray-800">
             <div className="px-5 sm:px-12">
                 <div className="h-[70px] flex justify-between items-center flex-wrap">
                     <Logo/>

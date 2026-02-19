@@ -114,10 +114,9 @@ export default function WeekAndDayCalendarSection({
         const activeEl = container.querySelector(".first") as HTMLElement | null;
         if (!activeEl) return;
 
-        activeEl.scrollIntoView({
+        container.scrollTo({
+            left: activeEl.offsetLeft,
             behavior: "auto",
-            inline: "start",
-            block: "nearest"
         });
     };
 
@@ -176,7 +175,7 @@ export default function WeekAndDayCalendarSection({
                 } else {
                     setActiveDay(newDay);
                 }
-                setTimeout(() => setIsScrolling(false), 300);
+                setTimeout(() => setIsScrolling(false), 100);
             } else if (scrollLeft + clientWidth > scrollWidth - threshold) {
                 setIsScrolling(true);
                 const newDay = currentActiveDay + 1;
@@ -190,7 +189,7 @@ export default function WeekAndDayCalendarSection({
                 } else {
                     setActiveDay(newDay);
                 }
-                setTimeout(() => setIsScrolling(false), 300);
+                setTimeout(() => setIsScrolling(false), 100);
             }
         }, 300);
     }, [isScrolling]);
@@ -647,9 +646,9 @@ export default function WeekAndDayCalendarSection({
 
                     return (
                         <div
-                            className="z-[999] absolute left-0 w-[calc((100%/7)*9)] h-[2px] bg-red-500/70 pointer-events-none flex justify-center items-center"
+                            className={`z-[1] absolute left-0 ${viewMode === "week" ? "w-[calc((100%/7)*9)]" : "w-[calc((100%)*3)]"} h-[2px] bg-red-500/70 pointer-events-none flex justify-center items-center`}
                             style={{ top: `${top}px` }}>
-                            <div className="size-8 bg-red-500/70 rounded absolute left-[calc(100%/9)] z-[999] flex items-center justify-center">
+                            <div className={`size-8 bg-red-500/70 rounded absolute ${viewMode === "week" ? "left-[calc(100%/9)]" : "left-[calc(100%/3)]"} z-[999] flex items-center justify-center`}>
                                 <span className="text-[0.5rem] font-semibold text-white">
                                     {(now.getHours() > 9) ? now.getHours() : `0${now.getHours()}`}:
                                     {(now.getMinutes() > 9) ? now.getMinutes() : `0${now.getMinutes()}`}

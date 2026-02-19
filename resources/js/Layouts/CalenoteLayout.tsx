@@ -2,10 +2,9 @@
 import React, {
     cloneElement,
     isValidElement, ReactElement,
-    ReactNode, RefObject,
+    ReactNode,
     useCallback,
-    useEffect, useRef,
-    useState,
+    useEffect,
 } from "react";
 import Header from "../Components/Header/Header";
 import SideBarSection from "../Pages/Calenote/Sections/SideBarSection";
@@ -43,22 +42,22 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
         sideBar,
         setSideBar,
         saveWidth,
-        setSaveWidth
+        setSaveWidth,
+        sideBarToggle,
+        setSideBarToggle
     } = ui;
-
-
-    const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
 
     // 반응형 처리
     const handleResize = useCallback((): void => {
-        setSideBar(prev => {
-            if (window.innerWidth <= 768) {
-                setSideBarToggle(false);
-                return 0;
-            }
-            return prev === 0 ? saveWidth : prev;
-        });
-    }, [saveWidth]);
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            setSideBarToggle(false);
+            setSideBar(0);
+            return;
+        }
+
+        setSideBar(prev => (prev === 0 ? saveWidth : prev));
+    }, [saveWidth, setSideBarToggle, setSideBar]);
 
     useEffect(() => {
         window.addEventListener("resize", handleResize);
@@ -70,16 +69,10 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
         if (sideBar > 0) {
             setSaveWidth(sideBar);
         }
-    }, [sideBar]);
+    }, [sideBar, setSaveWidth]);
 
     return (
         <>
-            <Header
-                toggle={sideBarToggle}
-                setToggle={setSideBarToggle}
-                check={sideBar < 230}
-                auth={auth}
-            />
 
             <div className="w-full h-[calc(100vh-70px)] flex">
                 <SideBarSection

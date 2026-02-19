@@ -20,8 +20,6 @@ export default function Home({ auth } : HomeProps) {
     return (
         <>
             <Head title="Home"></Head>
-            {/*헤더 영역*/}
-            <Header auth={auth} className="animate-opacityLoad"/>
 
             <div className="w-full overflow-x-hidden">
                 {/*메인 섹션 영역*/}

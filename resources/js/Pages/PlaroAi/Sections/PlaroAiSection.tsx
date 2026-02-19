@@ -15,7 +15,6 @@ interface PlaroAiSectionProps {
     getMessages: () => Promise<void>;
     handleDeleteChatCategories: (roomId: string) => Promise<void>;
     setNewChat: Dispatch<SetStateAction<boolean>>;
-    sideBar: number;
     chatId: string | null;
     setChatId: Dispatch<SetStateAction<string | null>>;
     setRooms: Dispatch<SetStateAction<Room[]>>;
@@ -31,7 +30,7 @@ interface PlaroAiSectionProps {
     setRoomCategories: Dispatch<SetStateAction<Categories[]>>;
 }
 
-export default function PlaroAiSection({ now, getMessages, handleDeleteChatCategories, setNewChat, sideBar, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories } : PlaroAiSectionProps) {
+export default function PlaroAiSection({ now, getMessages, handleDeleteChatCategories, setNewChat, chatId, setChatId, setRooms, auth, roomId, setMessages, messages, prompt, setPrompt, roomCategories, setRoomCategories } : PlaroAiSectionProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -40,7 +39,8 @@ export default function PlaroAiSection({ now, getMessages, handleDeleteChatCateg
 
     const {
         setAlerts,
-        setLoading
+        setLoading,
+        sideBar
     } = ui;
 
     const [category, setCategory] = useState<string>("");
@@ -97,7 +97,7 @@ export default function PlaroAiSection({ now, getMessages, handleDeleteChatCateg
     }, [category, saveMsg]);
 
     return (
-        <main className="bg-gray-100 relative dark:bg-gray-950 transition-[width] duration-300" style={{width: `calc(100% - ${sideBar}px`}}>
+        <main className="bg-gray-100 relative dark:bg-gray-950" style={{width: `calc(100% - ${sideBar}px`}}>
             {categoryToggle && (
                 <FormModal Submit={categorySubmit} toggle={categoryToggle} setToggle={setCategoryToggle} Title="메모장 저장" SubmitText="저장" Label="카테고리" Type="text" Name="category" Id="category" onChange={setCategory} Value={category}/>
             )}

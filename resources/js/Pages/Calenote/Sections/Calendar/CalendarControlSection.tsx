@@ -140,7 +140,7 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
             </div>
 
             <div className={`flex flex-col gap-2 items-center`}>
-                <div className="flex items-center bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded p-1 space-x-1 transition-[width] duration-150 user-select-none">
+                <div className="flex items-center bg-gray-50 dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded p-1 space-x-1 transition-[width] duration-150 user-select-none">
                     <button
                         type="button"
                         onClick={() => setContentMode("normal")}

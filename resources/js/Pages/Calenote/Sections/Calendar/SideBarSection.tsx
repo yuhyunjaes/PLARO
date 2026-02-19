@@ -102,7 +102,7 @@ export default function SideBarSection({ contentMode, setContentMode, eventUserC
     return (
         <div
             ref={sideBarRef}
-            className={`w-[250px] border-l overflow-y-auto overflow-x-hidden border-gray-300 dark:border-gray-800 duration-300 transition-[right] ${sideBar <= 0 ? (sideBarToggle ? "fixed h-full right-0 pointer-events-auto" : "-right-[100%] fixed pointer-events-none h-full") : "sticky top-0"} max-h-[calc(100vh-70px)] bg-white dark:bg-gray-950 normal-text user-select-none`}
+            className={`w-[250px] z-[2] border-l overflow-y-auto overflow-x-hidden border-gray-300 dark:border-gray-800 duration-300 transition-[right] ${sideBar <= 0 ? (sideBarToggle ? "fixed h-full right-0 pointer-events-auto" : "-right-[100%] fixed pointer-events-none h-full") : "sticky top-0"} max-h-[calc(100vh-70px)] bg-white dark:bg-gray-950 normal-text user-select-none`}
         >
             {
                 contentMode === "normal" ? (

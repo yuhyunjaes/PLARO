@@ -2,7 +2,6 @@
 
 import MessageActions from "./MessageActions";
 import { Message, Notepad } from "../../../../../Types/PlaroAiTypes";
-import {Dispatch, SetStateAction} from "react";
 import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 
 interface MessageBubbleProps {
@@ -21,8 +20,8 @@ export default function MessageBubble({ msg, handleNotepad } : MessageBubbleProp
             }`}
         >
             <div
-                className={`p-3 mx-0 rounded-[0.75rem] shadow-sm max-w-[70%] whitespace-pre-wrap break-words font-semibold ${
-                    isUser ? "bg-blue-500 text-white" : "bg-white dark:bg-gray-950 text-gray-950 dark:text-white border border-gray-200 dark:border-gray-800"
+                className={`p-3 mx-0 rounded-[0.75rem] max-w-[70%] whitespace-pre-wrap break-words font-semibold text-xs md:text-sm ${
+                    isUser ? "bg-blue-500 text-white" : "bg-white dark:bg-gray-950 text-gray-950 dark:text-white border border-gray-300 dark:border-gray-800"
                 }`}
             >
                 {msg.text}

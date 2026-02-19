@@ -29,12 +29,12 @@ export default function MessageActions({ msg, handleNotepad } : MessageActionsPr
                 title="복사"
                 onClick={() => {
                     navigator.clipboard.writeText(msg.text);
-                    const alertData:AlertsData = {
-                        id: new Date(),
-                        message: "복사가 완료되었습니다.",
-                        type: "success"
-                    }
-                    setAlerts(pre => [...pre, alertData]);
+                    // const alertData:AlertsData = {
+                    //     id: new Date(),
+                    //     message: "복사가 완료되었습니다.",
+                    //     type: "success"
+                    // }
+                    // setAlerts(pre => [...pre, alertData]);
                 }}
             >
                 <FontAwesomeIcon className="normal-text" icon={faCopy}/>

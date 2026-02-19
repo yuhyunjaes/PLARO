@@ -345,7 +345,7 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
     }, [handleDateMoveOut]);
 
     const checkMobile = useCallback(() => {
-        const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
+        const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
         setIsMobile(isMobileViewport);
     }, []);
 
@@ -665,7 +665,7 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
                 onScroll={handleScroll}
                 className="flex-1 hidden-scroll user-select-none overflow-x-hidden overflow-y-auto snap-y snap-mandatory"
             >
-                <div className="flex flex-col"
+                <div className={`flex flex-col transition-opacity duration-150 ease-out ${isScrolling ? "opacity-50" : "opacity-100"}`}
                      style={{maxHeight: `${(scrollRef.current) && scrollRef.current.clientHeight}px`}}>
                     {(() => {
                         const weeks:CalendarAtData[] [] = [];
@@ -804,7 +804,7 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
                                              ${isSelected ? "bg-blue-500/10" : (
                                                     dayData.isWeekend ? "bg-gray-100 dark:bg-[#0d1117]" : "bg-gray-50 dark:bg-gray-950"
                                                 ) }
-                                                count-${dayData.count} text-xs md:text-sm border-gray-200 dark:border-gray-800 cursor-pointer transition-colors ${dayData.isToday ? "today text-white font-semibold" : (dayData.isActive ? "normal-text font-semibold" : "text-gray-400 text-sm")} user-select-none`}
+                                                count-${dayData.count} text-xs md:text-sm border-gray-300 dark:border-gray-800 cursor-pointer transition-colors ${dayData.isToday ? "today text-white font-semibold" : (dayData.isActive ? "normal-text font-semibold" : "text-gray-400 text-sm")} user-select-none`}
                                                 >
                                                     {(dayData.day === 1) ?
                                                         <div className="flex justify-end">

@@ -116,7 +116,7 @@ export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, ch
                                 const sidebar = e.currentTarget.closest('.lifeBot-side-bar');
                                 const scrollY = sidebar?.scrollTop || 0;
 
-                                const y = e.currentTarget.getBoundingClientRect().top - (e.currentTarget.offsetHeight * 3);
+                                const y = e.currentTarget.getBoundingClientRect().top - (e.currentTarget.offsetHeight * 4);
 
                                 setTimeout(() => {
                                     if (editRoomRef.current) {
