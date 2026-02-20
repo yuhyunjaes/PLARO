@@ -51,7 +51,6 @@ export default function Status({ status, auth, message }: StatusProps) {
             <Head title={errorMessage} />
 
             <div className="flex flex-col h-screen bg-gray-100 dark:bg-[#0d1117]">
-                <Header auth={auth} />
 
                 <div className="w-full flex flex-col justify-center items-center flex-1 space-y-4">
                     <h1 className="text-6xl normal-text font-bold">{status}</h1>

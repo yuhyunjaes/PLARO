@@ -16,6 +16,7 @@ use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\EventUserController;
 use App\Http\Controllers\PlaroAiController;
 use App\Models\Notepad;
+use App\Models\Event;
 use Illuminate\Support\Facades\Session;
 
 /*
@@ -83,10 +84,6 @@ Route::middleware('web')->group(function () {
             return Inertia::render('Calenote/Dashboard');
         })->name('dashboard');
 
-        Route::get('/calenote/calendar', function () {
-            return Inertia::render('Calenote/Calendar');
-        })->name('calendar.index');
-
         Route::get('/calenote/calendar/{mode}/{year}/{month}/{day?}', function ($mode, $year = 0, $month = 0, $day = 0) {
             // mode 체크
             $modeTypes = ['month', 'week', 'day'];
@@ -123,8 +120,103 @@ Route::middleware('web')->group(function () {
             ]);
         })->name('calendar.mode');
 
-        Route::get('/calenote/calendar/{uuid}', function ($uuid) {
-            return Inertia::render('Calenote/Calendar', ['event' => $uuid]);
+        Route::get('/calenote/calendar/{type?}', function ($type = null) {
+            $modeTypes = [
+                'n' => 'normal',
+                'c' => 'challenge',
+                'd' => 'dday',
+            ];
+
+            if ($type === null) {
+                $type = 'normal';
+            } elseif (!array_key_exists($type, $modeTypes)) {
+                return Inertia::render('Status/Status', ['status' => 404]);
+            } else {
+                $type = $modeTypes[$type];
+            }
+
+            return Inertia::render('Calenote/Calendar', [
+                'type' => $type,
+            ]);
+        })->name('calendar.index');
+
+        Route::get('/calenote/calendar/{type}/{uuid}', function ($type, $uuid) {
+
+            $modeTypes = [
+                'n' => 'normal',
+                'c' => 'challenge',
+                'd' => 'dday',
+            ];
+
+            if (!array_key_exists($type, $modeTypes)) {
+                return Inertia::render('Status/Status', ['status' => 404]);
+            }
+
+            $canViewEvent = Event::where('uuid', $uuid)
+                ->whereHas('users', fn ($q) =>
+                $q->where('users.id', Auth::id())
+                )
+                ->first();
+
+            if(!$canViewEvent) {
+                return Inertia::render('Status/Status', ['status' => 403]);
+            }
+
+            $allType = $modeTypes[$type];
+
+            $event = Event::where('uuid', $uuid)
+                ->where('type', $allType)
+                ->with([
+                    'eventUsers.user:id,name,email',
+                    'invitations',
+                    'reminders' => fn ($q) => $q
+                        ->where('user_id', Auth::id())
+                        ->select('id', 'event_id', 'seconds'),
+                ])
+                ->first();
+
+            if(!$event) {
+                return Inertia::render('Status/Status', ['status' => 404]);
+            }
+
+            $activeEventParticipants = $event->eventUsers->map(function ($eu) use ($uuid) {
+                return [
+                    'user_name' => $eu->user->name,
+                    'user_id' => $eu->user->id,
+                    'event_id' => $uuid,
+                    'email' => $eu->user->email,
+                    'role' => $eu->role,
+                    'status' => null,
+                ];
+            })->merge(
+                $event->invitations
+                    ->whereIn('status', ['pending', 'declined', 'expired'])
+                    ->map(function ($inv) use ($uuid) {
+                        return [
+                            'user_name' => null,
+                            'user_id' => null,
+                            'invitation_id' => $inv->id,
+                            'event_id' => $uuid,
+                            'email' => $inv->email,
+                            'role' => null,
+                            'status' => $inv->status,
+                        ];
+                    })
+            )->values();
+
+            $activeEventReminder = $event->reminders->map(fn ($reminder) => [
+                'id' => $reminder->id,
+                'seconds' => $reminder->seconds,
+            ])->values();
+
+            return Inertia::render('Calenote/Calendar', [
+                'event' => $uuid,
+                'type' => $allType,
+                'activeEvent' => $event,
+                'activeEventParticipants' => $activeEventParticipants,
+                'activeEventReminder' => $activeEventReminder,
+            ]);
+
         })->name('calendar.event');
 
         Route::get('/calenote/notepad', function () {

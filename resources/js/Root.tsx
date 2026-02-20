@@ -30,9 +30,8 @@ export default function Root({ auth, children, ...props }: RootProps) {
     } = ui;
     const isHome = url.split("?")[0] === "/";
 
-    const [events, setEvents] = useState<EventsData[]>([]);
+    const [reminderEvents, setReminderEvents] = useState<EventsData[]>([]);
     const [reminders, setReminders] = useState<ReminderData[]>([]);
-    const [getEventDone, setGetEventDone] = useState<boolean>(false);
     const [now, setNow] = useState(new Date());
     useEffect(() => {
         const timer = setInterval(() => {
@@ -44,28 +43,25 @@ export default function Root({ auth, children, ...props }: RootProps) {
 
     useEffect(() => {
         if(!auth.user) {
-            setEvents([]);
+            setReminderEvents([]);
             setReminders([]);
-            setGetEventDone(false);
         } else {
-            getEvents();
+            getReminderEvents();
             getEventReminders();
         }
     }, [auth]);
 
-    const getEvents:()=>Promise<void> = async ():Promise<void> => {
+    const getReminderEvents:()=>Promise<void> = async ():Promise<void> => {
         if(!auth.user) return;
         try {
             const res = await axios.get("/api/events");
             if(res.data.success) {
                 const currentEvents = res.data.events;
                 if(currentEvents.length <= 0) return;
-                setEvents(currentEvents);
+                setReminderEvents(currentEvents);
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setGetEventDone(true);
         }
     }
 
@@ -84,12 +80,10 @@ export default function Root({ auth, children, ...props }: RootProps) {
 
     const sharedProps = {
         auth,
-        events,
-        setEvents,
+        reminderEvents,
+        setReminderEvents,
         reminders,
         setReminders,
-        getEventDone,
-        setGetEventDone,
         now,
         setNow,
         ...props
@@ -164,7 +158,7 @@ export default function Root({ auth, children, ...props }: RootProps) {
 
                 const filterReminders = reminders
                     .filter(reminder => {
-                        const event = events.find(event => event.uuid === reminder.event_uuid);
+                        const event = reminderEvents.find(event => event.uuid === reminder.event_uuid);
                         if (!event) return false;
                         if (reminder.read) return false;
 
@@ -197,9 +191,9 @@ export default function Root({ auth, children, ...props }: RootProps) {
 
                 return (
                     <>
-                        <div className="fixed pointer-events-none right-5 top-[calc(70px+1.25rem)] z-[1] w-[200px] sm:w-[250px] md:w-[300px] space-y-2">
+                        <div className="fixed pointer-events-none right-5 top-[calc(70px+1.25rem)] z-[5] w-[200px] sm:w-[250px] md:w-[300px] space-y-2">
                             {filterReminders.map((reminder) => {
-                                const event = events.find(event => event.uuid === reminder.event_uuid);
+                                const event = reminderEvents.find(event => event.uuid === reminder.event_uuid);
                                 if (!event) return null;
 
                                 const title = `${event.title ? (event.title.length > 3 ? event.title.substring(0, 12)+"..." : event.title) : ""}${event.title ? "<br>" : ""}이벤트 시작 ${reminderChangeKorean(reminder.seconds)}`;

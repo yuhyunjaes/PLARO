@@ -115,14 +115,22 @@ export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, ch
                                 setEditId(room.room_id);
                                 const sidebar = e.currentTarget.closest('.lifeBot-side-bar');
                                 const scrollY = sidebar?.scrollTop || 0;
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const margin = 8;
 
-                                const y = e.currentTarget.getBoundingClientRect().top - (e.currentTarget.offsetHeight * 4);
+                                // align menu top with ellipsis button top
+                                const y = rect.top;
 
-                                setTimeout(() => {
-                                    if (editRoomRef.current) {
-                                        editRoomRef.current.style.top = `${y}px`;
-                                    }
-                                }, 0);
+                                // place menu to the right of ellipsis button
+                                const x = Math.max(
+                                    margin,
+                                    Math.min(rect.right + margin, window.innerWidth - 160 - margin)
+                                );
+
+                                if (editRoomRef.current) {
+                                    editRoomRef.current.style.top = `${y}px`;
+                                    editRoomRef.current.style.left = `${x}px`;
+                                }
 
                                 setBaseTop(y);
                                 setBaseScroll(scrollY);

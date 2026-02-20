@@ -73,9 +73,8 @@ export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatI
 
     return (
         <>
-            <aside ref={sidebarRef} className={`bg-white border-r border-gray-300 dark:border-gray-800 dark:bg-gray-950 overflow-x-hidden overflow-y-auto transition-transform duration-150 md:transition-[width] ${mdRoomList ? "fixed top-[70px] left-0 z-10 h-[calc(100vh-70px)]" : "relative"} ${mdRoomList ? (mdRoomListToggle ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none") : "translate-x-0 pointer-events-auto"}`} style={mdRoomList ? {width: "230px"} : {width: sideBar+'px'}} onScroll={(e) => {
+            <aside ref={sidebarRef} className={`lifeBot-side-bar bg-white border-r border-gray-300 dark:border-gray-800 dark:bg-gray-950 overflow-x-hidden overflow-y-auto transition-transform duration-150 md:transition-[width] ${mdRoomList ? "fixed top-[70px] left-0 z-10 h-[calc(100vh-70px)]" : "relative"} ${mdRoomList ? (mdRoomListToggle ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none") : "translate-x-0 pointer-events-auto"}`} style={mdRoomList ? {width: "230px"} : {width: sideBar+'px'}} onScroll={(e) => {
                 if (!editRoomRef.current) return;
-                if (mdRoomList) return;
                 const target = e.target as HTMLElement;
                 const delta = target.scrollTop - baseScroll;
                 editRoomRef.current.style.top = `${baseTop - delta}px`;
@@ -102,6 +101,7 @@ export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatI
                     </button>
                 </div>
                 <RoomList setMdRoomListToggle={setMdRoomListToggle} mdRoomListToggle={mdRoomListToggle} mdRoomList={mdRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setBaseScroll={setBaseScroll} setBaseTop={setBaseTop} editRoomRef={editRoomRef} setEditId={setEditId} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={(sideBar > 50)} editId={editId}/>
+                <div className="h-[70px] sticky bottom-0 w-full bg-white dark:bg-gray-950 border-t border-t-gray-300 dark:border-t-gray-800"></div>
             </aside>
         </>
     );

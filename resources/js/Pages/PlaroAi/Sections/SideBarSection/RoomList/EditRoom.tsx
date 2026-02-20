@@ -23,12 +23,10 @@ export default function EditRoom({ EditTitle, editRoomRef, toggle, deleteRoom, m
         throw new Error("CalenoteLayout must be used within GlobalProvider");
     }
 
-    const {
-        sideBar
-    } = ui;
+    const { sideBar } = ui;
 
     return (
-        <div ref={editRoomRef} className={`absolute z-[11] ${((sideBar > 50 && toggle) || (mdRoomList && mdRoomListToggle && toggle)) ? "block" : "hidden"} ${(mdRoomList && mdRoomListToggle && toggle) && "left-[30px] border"} ${(sideBar > 50 && toggle) && "left-[230px]"}  w-[160px] bg-white  dark:bg-gray-950 border-gray-300 dark:border-gray-900 rounded`}>
+        <div ref={editRoomRef} className={`fixed z-[11] ${((sideBar > 50 && toggle) || (mdRoomList && mdRoomListToggle && toggle)) ? "block" : "hidden"} w-[160px] bg-white border dark:bg-gray-950 border-gray-300 dark:border-gray-800 rounded`}>
             <div className="p-2">
                 {
                     (editStatus === "update") ? (

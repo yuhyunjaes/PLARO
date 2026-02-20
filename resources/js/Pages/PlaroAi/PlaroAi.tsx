@@ -196,6 +196,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
 
     const getMessages = useCallback(async () => {
         if (!chatId || newChat) return;
+
         setLoading(true);
         try {
             const res = await axios.get(`/api/messages/${chatId}`);

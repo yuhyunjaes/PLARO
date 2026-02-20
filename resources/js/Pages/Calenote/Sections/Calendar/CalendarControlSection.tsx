@@ -83,7 +83,7 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
 
                                     setFirstCenter(true);
                                 }} className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer text-base md:text-xl">
-                                    <FontAwesomeIcon icon={contentMode === "normal" ? faAngleUp : faAngleLeft} />
+                                    <FontAwesomeIcon icon={faAngleUp} />
                                 </button>
 
                                 <button onClick={() => {
@@ -91,7 +91,7 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
 
                                     setFirstCenter(true);
                                 }}  className="text-gray-500 hover:text-gray-400 transition-colors duration-150 cursor-pointer text-base md:text-xl">
-                                    <FontAwesomeIcon icon={contentMode === "normal" ? faAngleDown : faAngleRight} />
+                                    <FontAwesomeIcon icon={faAngleDown} />
                                 </button>
                             </>
                         ) : (
@@ -175,7 +175,7 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
                         D-day
                     </button>
 
-                    {contentMode === "normal" ? (<div className="relative flex items-center">
+                    <div className="relative flex items-center">
                         <select
                             name="category"
                             id="category"
@@ -230,7 +230,7 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
                             )}
                         </select>
                         <FontAwesomeIcon className="normal-text absolute end-0 pointer-events-none pe-2 text-xs" icon={faChevronDown}/>
-                    </div>) : ""}
+                    </div>
                 </div>
             </div>
         </div>

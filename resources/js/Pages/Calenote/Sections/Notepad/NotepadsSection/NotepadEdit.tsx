@@ -55,7 +55,7 @@ export default function NotepadEdit({ deleteId, setDeleteId, editId, setEditId, 
                 <div
                     ref={menuRef}
                     className={`
-                        w-[160px] absolute p-2 bg-gray-50 dark:bg-[#0d1117] shadow shadow-gray-300 dark:shadow-gray-800 top-[100%] rounded
+                        w-[160px] absolute p-2 bg-gray-50 dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 top-[100%] rounded
                         ${isLastInRow ? "right-0" : "left-0"}
                     `}
                 >

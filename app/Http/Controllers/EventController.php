@@ -26,6 +26,7 @@ class EventController extends Controller
             'start_at' => ['required'],
             'end_at' => ['required'],
             'color' => ['nullable', 'string', 'max:255'],
+            'type' => ['nullable', 'in:normal,challenge,dday'],
         ], [
             'title.required' => '이벤트 제목을 입력해주세요.',
             'title.max' => '이벤트 제목은 최대 255자까지 가능합니다.',
@@ -58,6 +59,7 @@ class EventController extends Controller
                     'title' => $request->title,
                     'start_at' => $startAt,
                     'end_at' => $endAt,
+                    'type' => $request->type ?? 'normal',
                     'description' => $request->description,
                     'color' => $eventSwitch ? "bg-blue-500" : $request->color,
                 ]);
@@ -177,11 +179,18 @@ class EventController extends Controller
 
     public function GetEvents()
     {
-        $events = Event::whereIn('id', function ($query) {
+        $query = Event::whereIn('id', function ($query) {
             $query->select('event_id')
                 ->from('event_users')
                 ->where('user_id', Auth::id());
-        })->get();
+        });
+
+        $type = request('type');
+        if (in_array($type, ['normal', 'challenge', 'dday'], true)) {
+            $query->where('type', $type);
+        }
+
+        $events = $query->get();
 
         return response()->json([
             'success' => true,

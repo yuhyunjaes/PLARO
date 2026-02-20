@@ -134,7 +134,7 @@ class AuthController extends Controller
 
                 Session::forget(['invitation_token', 'invitation_email']);
 
-                return Inertia::location("/calenote/calendar/{$invitation->event->uuid}");
+                return Inertia::location("/calenote/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
             } catch (\Throwable $e) {
                 return Inertia::location('/');
             }
@@ -208,7 +208,7 @@ class AuthController extends Controller
 
                     Session::forget(['invitation_token', 'invitation_email']);
 
-                    return inertia::location("/calenote/calendar/{$invitation->event->uuid}");
+                    return inertia::location("/calenote/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
                 }
 
                 return Inertia::location('/');

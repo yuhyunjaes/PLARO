@@ -26,24 +26,25 @@ import Modal from "../../Components/Elements/Modal";
 
 interface CalendarProps {
     event: string | null;
+    activeEvent?: EventsData | null;
+    activeEventParticipants?: ParticipantsData[];
+    activeEventReminder?: EventReminderItem[];
     auth: {
         user: AuthUser | null;
     };
+    type: "normal" | "challenge" | "dday";
     mode: "month" | "week" | "day";
     year: number | null;
     month: number | null;
     day: number | null;
-    events: EventsData[];
-    setEvents: Dispatch<SetStateAction<EventsData[]>>;
+    setReminderEvents: Dispatch<SetStateAction<EventsData[]>>;
     reminders: ReminderData[];
     setReminders: Dispatch<SetStateAction<ReminderData[]>>;
-    getEventDone: boolean;
-    setGetEventDone: Dispatch<SetStateAction<boolean>>;
     now: Date;
     setNow: Dispatch<SetStateAction<Date>>;
 }
 
-export default function Calendar({ event, auth, mode, year, month, day, events, setEvents, reminders, setReminders, now, getEventDone, setGetEventDone } : CalendarProps) {
+export default function Calendar({ event, activeEvent, activeEventParticipants, activeEventReminder, auth, type, mode, year, month, day, setReminderEvents, reminders, setReminders, now } : CalendarProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -56,7 +57,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         loading
     } = ui;
 
-    const [contentMode, setContentMode] = useState<"normal" | "challenge" | "dday">("normal");
+    const [contentMode, setContentMode] = useState<"normal" | "challenge" | "dday">(type ?? "normal");
+    const [events, setEvents] = useState<EventsData[]>([]);
+    const setEventsWithReminder = useCallback((updater: SetStateAction<EventsData[]>) => {
+        setEvents(updater);
+        setReminderEvents(updater);
+    }, []);
     const sideBarToggleRef:RefObject<HTMLButtonElement | null> = useRef<HTMLButtonElement | null>(null);
 
     const [modal, setModal] = useState<boolean>(false);
@@ -121,6 +127,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
         const res = await axios.post("/api/events", {
             eventSwitch: "normal",
+            type: contentMode,
             title: eventTitle,
             start_at: startAt,
             end_at: endAt,
@@ -140,7 +147,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
         const event = res.data.event;
 
-        setEvents(pre => [...pre, event]);
+        setEventsWithReminder(pre => [...pre, event]);
 
         if (eventReminder.length > 0 && event.uuid) {
             for (const reminder of eventReminder) {
@@ -160,7 +167,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
         setEventParticipants([participantsData]);
 
-        router.visit(`/calenote/calendar/${event.uuid}`, {
+        router.visit(`/calenote/calendar/${contentMode[0]}/${event.uuid}`, {
             method: "get",
             preserveState: true,
             preserveScroll: true,
@@ -168,7 +175,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         setEventId(event.uuid);
 
         return event.uuid;
-    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventReminder]);
+    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventReminder, contentMode, setEventsWithReminder]);
 
     const addEventReminderBySecond = useCallback(async (eventUuid: string, seconds: number): Promise<void> => {
         if (!eventUuid) return;
@@ -266,7 +273,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             });
 
             if (res.data.success) {
-                setEvents(pre =>
+                setEventsWithReminder(pre =>
                     pre.map(event =>
                         event.uuid === eventId
                             ? {
@@ -284,7 +291,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         } catch (err) {
             console.error(err);
         }
-    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone, isRemoteUpdate]);
+    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone, isRemoteUpdate, setEventsWithReminder]);
 
     useEffect(() => {
         if (!isDragging) {
@@ -301,21 +308,8 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
                 setReminders(pre => pre.filter(item => item.event_uuid !== eventId));
 
-                setEvents(pre => pre.filter(item => item.uuid !== eventId));
-                setEventId(null);
-                setEventTitle("");
-                setEventReminder([]);
-                setEventParticipants([]);
-                setEventDescription("");
-                setEventColor("bg-blue-500");
-                setStartAt(null);
-                setEndAt(null);
-
-                router.visit(`/calenote/calendar`, {
-                    method: "get",
-                    preserveState: true,
-                    preserveScroll: true,
-                });
+                setEventsWithReminder(pre => pre.filter(item => item.uuid !== eventId));
+                resetEvent();
 
             } else {
                 const alertData:AlertsData = {
@@ -328,7 +322,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         } catch (err) {
             console.error(err);
         }
-    }, [eventId]);
+    }, [eventId, setEventsWithReminder]);
 
     const [firstCenter, setFirstCenter] = useState<boolean>(false);
     const [getDone, setGetDone] = useState<boolean>(false);
@@ -337,6 +331,42 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
     const getActiveEvent:()=>Promise<void> = async ():Promise<void> => {
         if(!event) {
+            setGetDone(true);
+            return;
+        }
+
+        if (activeEvent && activeEvent.uuid === event) {
+            if (activeEventReminder) {
+                setEventReminder(activeEventReminder);
+            } else {
+                await getActiveEventReminder(activeEvent.uuid);
+            }
+
+            if (activeEventParticipants) {
+                setEventParticipants(activeEventParticipants);
+            } else {
+                await getActiveEventParticipants(activeEvent.uuid);
+            }
+
+            setEventTitle(activeEvent.title);
+            const resStartAt = new Date(activeEvent.start_at);
+
+            const newActiveAt = new Date(resStartAt.getFullYear(), resStartAt.getMonth(), 1);
+            const IsSameActiveAt:boolean = newActiveAt.getTime() !== At.getTime();
+
+            if (IsSameActiveAt) {
+                setActiveAt(newActiveAt);
+            }
+
+            setStartAt(resStartAt);
+            setEndAt(new Date(activeEvent.end_at));
+            setEventDescription(activeEvent.description);
+            setEventColor(activeEvent.color);
+
+            if (IsSameActiveAt) {
+                setFirstCenter(true);
+            }
+
             setGetDone(true);
             return;
         }
@@ -436,12 +466,30 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         }
     }
 
+    const getEventsByType = useCallback(async (targetType: "normal" | "challenge" | "dday"): Promise<void> => {
+        try {
+            const res = await axios.get("/api/events", {
+                params: { type: targetType }
+            });
+
+            if (res.data.success) {
+                setEvents(res.data.events || []);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }, []);
+
     useEffect(() => {
         getActiveEvent();
     }, []);
 
+    useEffect(() => {
+        getEventsByType(contentMode);
+    }, [contentMode, getEventsByType]);
+
     const updateEventReminderReadReset = useCallback(async () => {
-        if(!eventId || !eventIdChangeDone || !getEventDone || !getDone) return;
+        if(!eventId || !eventIdChangeDone || !getDone) return;
 
         try {
             const res = await axios.put(`/api/event/${eventId}/reminders`);
@@ -463,7 +511,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         } catch (err) {
             console.error(err);
         }
-    }, [eventId, eventIdChangeDone, getEventDone, getDone]);
+    }, [eventId, eventIdChangeDone, getDone]);
 
     useEffect(() => {
         if(!startAt || !endAt) return;
@@ -474,17 +522,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         if (!eventId || !getDone) return;
 
         if (!startAt && !endAt) {
-            router.visit(`/calenote/calendar`, {
-                method: "get",
-                preserveState: true,
-                preserveScroll: true,
-            });
-            setEventId(null);
-            setEventTitle("");
-            setEventReminder([]);
-            setEventParticipants([]);
-            setEventDescription("");
-            setEventColor("bg-blue-500");
+            resetEvent();
         }
     }, [eventId, startAt, endAt, getDone]);
 
@@ -596,7 +634,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             setStartAt(startAt);
             setEndAt(new Date(Event.end_at));
 
-            router.visit(`/calenote/calendar/${Event.uuid}`, {
+            router.visit(`/calenote/calendar/${contentMode[0]}/${Event.uuid}`, {
                 method: "get",
                 preserveState: true,
                 preserveScroll: true,
@@ -606,7 +644,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
         } finally {
             setLoading(false);
         }
-    }, [viewMode, activeAt, eventId]);
+    }, [viewMode, activeAt, eventId, contentMode]);
 
     useEffect(() => {
         if (!window.Echo || !getDone || events.length <= 0) return;
@@ -631,7 +669,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             }
 
             // 전체 이벤트 목록 동기화
-            setEvents(prev =>
+            setEventsWithReminder(prev =>
                 prev.map(e =>
                     e.uuid === event.uuid
                         ? {
@@ -654,26 +692,13 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
             if (delete_by === auth.user?.id) return;
 
-            setEvents(prev =>
+            setEventsWithReminder(prev =>
                 prev.filter(e => e.uuid !== event_uuid)
             );
 
             // 현재 보고 있는 이벤트가 삭제된 경우
             if (eventId === event_uuid) {
-                setEventId(null);
-                setEventTitle("");
-                setEventReminder([]);
-                setEventParticipants([]);
-                setEventDescription("");
-                setEventColor("bg-blue-500");
-                setStartAt(null);
-                setEndAt(null);
-
-                router.visit(`/calenote/calendar`, {
-                    method: "get",
-                    preserveState: true,
-                    preserveScroll: true,
-                });
+                resetEvent();
 
                 const alertData:AlertsData = {
                     id: new Date(),
@@ -692,7 +717,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             channel.stopListening('.event.deleted');
             window.Echo.leave(`user.${auth.user?.id}.events`);
         };
-    }, [getDone, eventId, auth.user?.id, events]);
+    }, [getDone, eventId, auth.user?.id, events, setEventsWithReminder]);
 
     useEffect(() => {
         if (!window.Echo || !getDone || !eventId) return;
@@ -781,25 +806,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
             if(user_id !== auth.user?.id) return;
 
-            setEvents(prev =>
+            setEventsWithReminder(prev =>
                 prev.filter(e => e.uuid !== event_uuid)
             );
 
             if (eventId === event_uuid) {
-                setEventId(null);
-                setEventTitle("");
-                setEventReminder([]);
-                setEventParticipants([]);
-                setEventDescription("");
-                setEventColor("bg-blue-500");
-                setStartAt(null);
-                setEndAt(null);
-
-                router.visit(`/calenote/calendar`, {
-                    method: "get",
-                    preserveState: true,
-                    preserveScroll: true,
-                });
+                resetEvent();
                 const alertData:AlertsData = {
                     id: new Date(),
                     message: "해당 이벤트에서 추방되었습니다.",
@@ -816,7 +828,7 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
             window.Echo.leave(`user.${auth.user?.id}.events.participants`);
         };
 
-    }, [getDone, auth.user?.id, eventId]);
+    }, [getDone, auth.user?.id, eventId, setEventsWithReminder]);
 
     useEffect(() => {
         if (!window.Echo || !getDone || !eventId) {
@@ -897,6 +909,12 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
     }, [contentMode]);
 
     useEffect(() => {
+        if (type && type !== contentMode) {
+            setContentMode(type);
+        }
+    }, [type]);
+
+    useEffect(() => {
         if(viewMode === "month") {
             setActiveDay(null);
         }
@@ -948,6 +966,58 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
 
     }, [activeAt, viewMode]);
 
+    const contentModeMap: Record<string, string> = {
+        normal: "n",
+        challenge: "c",
+        dday: "d",
+    };
+
+    const clearCurrentEventState = () => {
+        setEventId(null);
+        setEventTitle("");
+        setEventReminder([]);
+        setEventParticipants([]);
+        setEventDescription("");
+        setEventColor("bg-blue-500");
+        setStartAt(null);
+        setEndAt(null);
+    }
+
+    const resetEvent = () => {
+        clearCurrentEventState();
+        router.visit(`/calenote/calendar/${contentModeMap[contentMode]}`, {
+            method: "get",
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }
+
+    const changeContentTypeUrl = useCallback(() => {
+        if(!contentMode) return;
+
+        const eventTypeSame = events.some(event => (event.uuid === eventId && event.type === contentMode));
+
+        if(!eventTypeSame) {
+            clearCurrentEventState();
+        }
+
+        router.visit(`/calenote/calendar/${contentModeMap[contentMode]}${eventTypeSame ? `/${eventId}` : ""}`, {
+            method: "get",
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, [contentMode, eventId, events]);
+
+    const firstRockChangeContentTypeUrl = useRef<boolean>(false);
+
+    useEffect(() => {
+        if(!firstRockChangeContentTypeUrl.current) {
+            firstRockChangeContentTypeUrl.current = true;
+            return;
+        }
+        changeContentTypeUrl();
+    }, [contentMode]);
+
     return (
         <>
             <Head title="Calendar"/>
@@ -956,20 +1026,16 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                     <div className={`flex-1 flex flex-col`}>
                         <CalendarControlSection getWeekWednesday={getWeekWednesday} activeAtToToday={activeAtToToday} contentMode={contentMode} setContentMode={setContentMode} setFirstCenter={setFirstCenter} setMonths={setMonths} setTemporaryYear={setTemporaryYear} setTemporaryMonth={setTemporaryMonth} setTemporaryDay={setTemporaryDay} setIsDragging={setIsDragging} startAt={startAt} activeAt={activeAt} setActiveAt={setActiveAt} viewMode={viewMode} setViewMode={setViewMode} activeDay={activeDay} setActiveDay={setActiveDay}/>
 
-                        {contentMode === "normal" ? (
-                            <>
-                                {
-                                    viewMode === "month" && (
-                                        <MonthCalendarSection allDates={allDates} setAllDates={setAllDates} handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} events={events} firstCenter={firstCenter} setFirstCenter={setFirstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
-                                    )
-                                }
-                                {
-                                    (viewMode === "week" || viewMode === "day") && (
-                                        <WeekAndDayCalendarSection now={now} handleEventClick={handleEventClick} events={events} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
-                                    )
-                                }
-                            </>
-                        ) : ""}
+                        {
+                            viewMode === "month" && (
+                                <MonthCalendarSection allDates={allDates} setAllDates={setAllDates} handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} events={events} firstCenter={firstCenter} setFirstCenter={setFirstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                            )
+                        }
+                        {
+                            (viewMode === "week" || viewMode === "day") && (
+                                <WeekAndDayCalendarSection now={now} handleEventClick={handleEventClick} events={events} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
+                            )
+                        }
                     </div>
 
                     <button ref={sideBarToggleRef} onClick={() => {
@@ -977,7 +1043,47 @@ export default function Calendar({ event, auth, mode, year, month, day, events, 
                     }} className={`fixed z-[2] block sm:hidden bottom-0 duration-300 transition-[right] cursor-pointer ${sideBarToggle ? 'right-[240px]' : 'right-0'}  bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-12 rounded-full text-white font-semibold m-[25px] sm:m-[50px]`}>
                         <FontAwesomeIcon icon={sideBarToggle ? faAngleRight : faAngleLeft} />
                     </button>
-                    <SideBarSection contentMode={contentMode} setContentMode={setContentMode} eventUserControl={eventUserControl} setEventUserControl={setEventUserControl} setModalType={setModalType} setModalTitle={setModalTitle} setModalMessage={setModalMessage} setModal={setModal} sideBarToggleRef={sideBarToggleRef} onlineParticipantIds={onlineParticipantIds} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} sideBarToggle={sideBarToggle} setSideBarToggle={setSideBarToggle} handleEventClick={handleEventClick} reminders={reminders} now={now} events={events} setEvents={setEvents} eventReminder={eventReminder} setEventReminder={setEventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} updateEvent={updateEvent} eventId={eventId} setEventId={setEventId} saveEvent={saveEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} eventColor={eventColor} setEventColor={setEventColor} eventTitle={eventTitle} setEventTitle={setEventTitle} viewMode={viewMode} sideBar={sideBar} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                    <SideBarSection
+                        contentMode={contentMode}
+                        resetEvent={resetEvent}
+                        eventUserControl={eventUserControl}
+                        setEventUserControl={setEventUserControl}
+                        setModalType={setModalType}
+                        setModalTitle={setModalTitle}
+                        setModalMessage={setModalMessage}
+                        setModal={setModal}
+                        sideBarToggleRef={sideBarToggleRef}
+                        onlineParticipantIds={onlineParticipantIds}
+                        eventParticipants={eventParticipants}
+                        setEventParticipants={setEventParticipants}
+                        auth={auth}
+                        sideBarToggle={sideBarToggle}
+                        setSideBarToggle={setSideBarToggle}
+                        handleEventClick={handleEventClick}
+                        reminders={reminders}
+                        now={now}
+                        events={events}
+                        setEvents={setEventsWithReminder}
+                        eventReminder={eventReminder}
+                        setEventReminder={setEventReminder}
+                        addEventReminder={addEventReminder}
+                        removeEventReminder={removeEventReminder}
+                        updateEvent={updateEvent}
+                        eventId={eventId}
+                        setEventId={setEventId}
+                        saveEvent={saveEvent}
+                        eventDescription={eventDescription}
+                        setEventDescription={setEventDescription}
+                        eventColor={eventColor}
+                        setEventColor={setEventColor}
+                        eventTitle={eventTitle}
+                        setEventTitle={setEventTitle}
+                        viewMode={viewMode}
+                        sideBar={sideBar}
+                        startAt={startAt}
+                        setStartAt={setStartAt}
+                        endAt={endAt}
+                        setEndAt={setEndAt} />
                 </div>
 
                 {modal ? <Modal custom={true} Title={modalTitle} onClickEvent={modalType === "delete" ? deleteEvent : removeParticipantsAll} setModal={setModal} setEditId={setModalTitle} setEditStatus={setModalMessage} Text={`${events.find(event => event.uuid === eventId)?.title || ""} ${modalMessage}`} Position="top" CloseText="삭제" /> : ""}
