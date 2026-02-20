@@ -13,6 +13,7 @@ import {Notepads, Category} from "../../../../Types/CalenoteTypes";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 import {AlertsData} from "../../../../Components/Elements/ElementsData";
+import {DateUtils} from "../../../../Utils/dateUtils";
 
 interface NotepadsSectionProps {
     deleteId: string;
@@ -93,7 +94,7 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
                 updateLikeState(uuid, true);
             } else {
                 setAlerts(prev => [...prev, {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type,
                 }]);
@@ -117,7 +118,7 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
                 updateLikeState(uuid, false, tab === "liked");
             } else {
                 setAlerts(prev => [...prev, {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type,
                 }]);
@@ -174,7 +175,7 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
                 setTemporaryEditTitle("");
             } else {
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }

@@ -12,6 +12,7 @@ import {faHeart as faHeartRegular} from "@fortawesome/free-regular-svg-icons";
 import axios from "axios";
 import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
+import {DateUtils} from "../../../../../Utils/dateUtils";
 
 interface ControlSectionProps {
     currentCategory: string;
@@ -63,7 +64,7 @@ export default function ControlSection({ currentCategory, setCurrentCategory, no
             });
             if(!res.data.success) {
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }
@@ -87,7 +88,7 @@ export default function ControlSection({ currentCategory, setCurrentCategory, no
             });
             if(!res.data.success) {
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }

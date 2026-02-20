@@ -9,8 +9,14 @@ class Event extends Model
 {
     use HasFactory;
 
-    public function user() {
-        return $this->belongsTo(User::class, 'creator_id', 'id'); // owner
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'creator_id', 'id');
+    }
+
+    public function challenge()
+    {
+        return $this->belongsTo(Challenge::class, 'challenge_id', 'id');
     }
 
     public function users()
@@ -20,15 +26,18 @@ class Event extends Model
             ->withTimestamps();
     }
 
-    public function reminders() {
+    public function reminders()
+    {
         return $this->hasMany(EventReminder::class, 'event_id', 'id');
     }
 
-    public function eventUsers() {
+    public function eventUsers()
+    {
         return $this->hasMany(EventUser::class, 'event_id', 'id');
     }
 
-    public function invitations() {
+    public function invitations()
+    {
         return $this->hasMany(EventInvitation::class, 'event_id', 'id');
     }
 
@@ -36,12 +45,23 @@ class Event extends Model
         'uuid',
         'chat_id',
         'creator_id',
+        'challenge_id',
+        'day_number',
         'title',
         'start_at',
         'end_at',
         'type',
         'status',
         'description',
-        'color'
+        'color',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_at' => 'datetime',
+            'end_at' => 'datetime',
+            'day_number' => 'integer',
+        ];
+    }
 }

@@ -9,6 +9,7 @@ import Modal from "../../../../Components/Elements/Modal";
 import {AlertsData} from "../../../../Components/Elements/ElementsData";
 import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 import Share from "./NotepadWriteSection/Share";
+import {DateUtils} from "../../../../Utils/dateUtils";
 
 interface NotepadWriteSectionProps {
     content: string;
@@ -70,7 +71,7 @@ export default function NotepadWriteSection({ content, uuid, title, liked, categ
                 });
 
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }

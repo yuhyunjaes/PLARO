@@ -9,31 +9,55 @@ use Illuminate\Support\Facades\Session;
 
 class ClearInvitationSession
 {
+    private const INVITATION_SESSION_TTL_SECONDS = 1800; // 30 minutes
+
     public function handle($request, Closure $next)
     {
         if (!Session::has('invitation_token')) {
             return $next($request);
         }
 
-        $routeName = $request->route()?->getName();
-        $method = $request->method();
+        $issuedAt = Session::get('invitation_session_started_at');
+        $isExpired = !is_numeric($issuedAt)
+            || ((int) $issuedAt + self::INVITATION_SESSION_TTL_SECONDS) < now()->timestamp;
 
-        if ($method === 'GET' && in_array($routeName, ['login', 'register'])) {
-
-            if (Session::get('invitation_active') !== true) {
-                Session::forget([
-                    'invitation_token',
-                    'invitation_email',
-                    'invitation_active',
-                ]);
-            }
-
-            Session::put('invitation_active', false);
+        if ($isExpired) {
+            Session::forget([
+                'invitation_token',
+                'invitation_email',
+                'invitation_active',
+                'invitation_session_started_at',
+            ]);
 
             return $next($request);
         }
 
-        if ($method === 'POST' || $routeName === 'checkId' || $routeName === 'invitations.show') {
+        $routeName = $request->route()?->getName();
+        $method = strtoupper($request->method());
+
+        $invitationFlowRoutes = [
+            'login',
+            'register',
+            'login.submit',
+            'register.submit',
+            'checkId',
+            'sendEmail',
+            'checkEmail',
+            'invitations.show',
+            'invitations.accept',
+            'invitations.accept.session.store',
+            'invitations.decline',
+            'social.redirect',
+            'social.callback',
+            'social.complete.form',
+            'social.complete.submit',
+        ];
+
+        if (in_array($routeName, $invitationFlowRoutes, true)) {
+            return $next($request);
+        }
+
+        if ($method === 'POST') {
             return $next($request);
         }
 
@@ -41,9 +65,9 @@ class ClearInvitationSession
             'invitation_token',
             'invitation_email',
             'invitation_active',
+            'invitation_session_started_at',
         ]);
 
         return $next($request);
     }
 }
-

@@ -118,6 +118,14 @@ class InvitationController extends Controller
                 return Inertia::render('Status/Status', ['status' => 403]);
             }
 
+            if (Auth::user()?->needsSocialProfileCompletion()) {
+                return response()->json([
+                    'success' => false,
+                    'redirect' => route('social.complete.form'),
+                    'message' => '기본 정보 입력이 필요합니다.',
+                ], 409);
+            }
+
             $event = null;
             $user = Auth::user();
 
@@ -195,6 +203,7 @@ class InvitationController extends Controller
                 'invitation_token' => $token,
                 'invitation_email' => $invitation->email,
                 'invitation_active' => true,
+                'invitation_session_started_at' => now()->timestamp,
             ]);
 
             $existsUser = User::where('email', $invitation->email)->exists();

@@ -9,6 +9,7 @@ import { Dispatch, SetStateAction, RefObject } from 'react';
 import { Categories, AuthUser, Message, Room} from "../../../Types/PlaroAiTypes";
 import {AlertsData} from "../../../Components/Elements/ElementsData";
 import {GlobalUIContext} from "../../../Providers/GlobalUIContext";
+import {DateUtils} from "../../../Utils/dateUtils";
 
 interface PlaroAiSectionProps {
     now: Date;
@@ -73,7 +74,7 @@ export default function PlaroAiSection({ now, getMessages, handleDeleteChatCateg
             })
             if(res.data.success) {
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: '메모장에 저장되었습니다.',
                     type: "success"
                 }

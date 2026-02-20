@@ -10,7 +10,7 @@ export default function GlobalProvider({ children }: GlobalProviderProps) {
     const [loading, setLoading] = useState(false);
     const [alerts, setAlerts] = useState<AlertsData[]>([]);
     const [sideBar, setSideBar] = useState<number>(() =>
-        window.innerWidth <= 768 ? 0 : 230
+        window.innerWidth < 768 ? 0 : 230
     );
     const [saveWidth, setSaveWidth] = useState<number>(230);
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);

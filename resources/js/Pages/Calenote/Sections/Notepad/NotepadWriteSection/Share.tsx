@@ -4,6 +4,7 @@ import {faEnvelope, faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
+import {DateUtils} from "../../../../../Utils/dateUtils";
 
 interface ShareProps {
     uuid: string;
@@ -28,7 +29,7 @@ const Share = forwardRef<HTMLDivElement, ShareProps>(
         try {
             const res = await axios.post(`/api/notepads/${uuid}/share/email`);
             const alertData:AlertsData = {
-                id: new Date(),
+                id: DateUtils.now(),
                 message: res.data.message,
                 type: res.data.type
             }

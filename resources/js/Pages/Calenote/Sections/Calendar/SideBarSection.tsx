@@ -82,63 +82,66 @@ export default function SideBarSection({ contentMode, resetEvent, eventUserContr
         return () => document.removeEventListener("click", handleClickOutside);
     }, []);
 
+    const IsEditAuthority: "owner" | "editor" | "viewer" | null | undefined = eventParticipants.find(eventParticipant => eventParticipant.user_id === auth.user!.id)?.role;
+
     return (
         <div
             ref={sideBarRef}
             className={`w-[250px] z-[2] border-l overflow-y-auto overflow-x-hidden border-gray-300 dark:border-gray-800 duration-300 transition-[right] ${sideBar <= 0 ? (sideBarToggle ? "fixed h-full right-0 pointer-events-auto" : "-right-[100%] fixed pointer-events-none h-full") : "sticky top-0"} max-h-[calc(100vh-70px)] bg-white dark:bg-gray-950 normal-text user-select-none`}
         >
-            {contentMode === "challenge" ? (
-                <>
-                </>
-            ) : (
-                (() => {
-                    const IsEditAuthority: "owner" | "editor" | "viewer" | null | undefined = eventParticipants.find(eventParticipant => eventParticipant.user_id === auth.user!.id)?.role;
+            {
+                (eventId || (startAt && endAt)) ? (
+                    <>
+                        {
+                            contentMode === "normal" ? (
+                                <>
+                                    <div className="space-y-5">
+                                        <EventTitleControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventTitle={eventTitle} setEventTitle={setEventTitle} />
+                                        <EventDateViewAndControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
+                                        <ParticipantControl setModalType={setModalType} setModalTitle={setModalTitle} setModalMessage={setModalMessage} setModal={setModal} eventUserControl={eventUserControl} setEventUserControl={setEventUserControl} onlineParticipantIds={onlineParticipantIds} setEvents={setEvents} resetEvent={resetEvent} IsEditAuthority={IsEditAuthority} disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
+                                        <EventDescriptionControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
+                                        <EventColorControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} eventColor={eventColor} setEventColor={setEventColor} />
+                                        <ReminderControl eventReminder={eventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} />
+                                    </div>
+                                    <div className="sticky bottom-0 bg-white dark:bg-gray-950 p-5">
+                                        {
+                                            ((!eventId && !onlyOneClick)) ? (
+                                                <button onClick={async () => {
+                                                    const data = await saveEvent();
 
-                    return (
-                        (eventId || (startAt && endAt)) ? (
-                            <>
-                                <div className="space-y-5">
-                                    <EventTitleControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventTitle={eventTitle} setEventTitle={setEventTitle} />
-                                    <EventDateViewAndControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} />
-                                    <ParticipantControl setModalType={setModalType} setModalTitle={setModalTitle} setModalMessage={setModalMessage} setModal={setModal} eventUserControl={eventUserControl} setEventUserControl={setEventUserControl} onlineParticipantIds={onlineParticipantIds} setEvents={setEvents} resetEvent={resetEvent} IsEditAuthority={IsEditAuthority} disabled={(!!eventId && !(IsEditAuthority === "owner"))} saveEvent={saveEvent} eventId={eventId} eventParticipants={eventParticipants} setEventParticipants={setEventParticipants} auth={auth} />
-                                    <EventDescriptionControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} updateEvent={updateEvent} eventDescription={eventDescription} setEventDescription={setEventDescription} />
-                                    <EventColorControl disabled={(!!eventId &&!(IsEditAuthority === "owner" || IsEditAuthority === "editor"))} eventColor={eventColor} setEventColor={setEventColor} />
-                                    <ReminderControl eventReminder={eventReminder} addEventReminder={addEventReminder} removeEventReminder={removeEventReminder} />
-                                </div>
-                                <div className="sticky bottom-0 bg-white dark:bg-gray-950 p-5">
-                                    {
-                                        ((!eventId && !onlyOneClick)) ? (
-                                            <button onClick={async () => {
-                                                const data = await saveEvent();
+                                                    if(data !== undefined) {
+                                                        setOnlyOneClick(true);
+                                                    }
+                                                }} className="btn text-xs bg-blue-500 text-white w-full">
+                                                    생성
+                                                </button>
+                                            ) : (IsEditAuthority === "owner" ? (<button onClick={() => {
+                                                    setModalType("delete");
+                                                    setModalTitle("이벤트 삭제");
+                                                    setModalMessage("이벤트를 정말 삭제 하시겠습니까?");
+                                                    setModal(true);
+                                                }} className="btn text-xs bg-red-500 text-white w-full">
+                                                    삭제
+                                                </button>) : ""
+                                            )
+                                        }
+                                    </div>
+                                </>
+                            ) : ""
+                        }
 
-                                                if(data !== undefined) {
-                                                    setOnlyOneClick(true);
-                                                }
-                                            }} className="btn text-xs bg-blue-500 text-white w-full">
-                                                생성
-                                            </button>
-                                        ) : (IsEditAuthority === "owner" ? (<button onClick={() => {
-                                                setModalType("delete");
-                                                setModalTitle("이벤트 삭제");
-                                                setModalMessage("이벤트를 정말 삭제 하시겠습니까?");
-                                                setModal(true);
-                                            }} className="btn text-xs bg-red-500 text-white w-full">
-                                                삭제
-                                            </button>) : ""
-                                        )
-                                    }
-                                </div>
-                            </>
-                        ) : (
-                            <div className="p-5 space-y-5 h-full overflow-y-auto overflow-x-hidden relative flex flex-col">
-                                <ReminderView handleEventClick={handleEventClick} events={events} now={now} reminders={reminders} />
-                            </div>
-                        )
-                    );
-                })()
-            )}
-
-
+                        {
+                            contentMode === "challenge" ? (
+                                <></>
+                            ) : ""
+                        }
+                    </>
+                ) : (
+                    <div className="p-5 space-y-5 h-full overflow-y-auto overflow-x-hidden relative flex flex-col">
+                        <ReminderView handleEventClick={handleEventClick} events={events} now={now} reminders={reminders} />
+                    </div>
+                )
+            }
         </div>
     );
 }

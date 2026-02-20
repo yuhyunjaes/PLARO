@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('nationality', 2)->nullable();
             $table->string('timezone')->nullable();
+            $table->string('google_id')->nullable()->unique();
+            $table->string('facebook_id')->nullable()->unique();
+            $table->string('kakao_id')->nullable()->unique();
             $table->enum('role', ['admin', 'user'])->default('user');
             $table->index('nationality');
             $table->timestamps();

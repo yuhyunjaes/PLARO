@@ -6,6 +6,7 @@ import Reminder from "./Components/Elements/Reminder";
 import Alert from "./Components/Elements/Alert";
 import {GlobalUIContext} from "./Providers/GlobalUIContext";
 import Header from "./Components/Header/Header";
+import {DateUtils} from "./Utils/dateUtils";
 
 interface RootProps {
     auth: any;
@@ -14,7 +15,7 @@ interface RootProps {
 }
 
 export default function Root({ auth, children, ...props }: RootProps) {
-    const { url } = usePage();
+    const { url, component } = usePage();
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -28,35 +29,42 @@ export default function Root({ auth, children, ...props }: RootProps) {
         sideBarToggle,
         setSideBarToggle
     } = ui;
-    const isHome = url.split("?")[0] === "/";
+    const path = url.split("?")[0] ?? "";
+    const isAuthPage = path === "/login" || path === "/register";
+    const isCalenoteOrPlaroAi = component.startsWith("Calenote/") || component.startsWith("PlaroAi/");
 
     const [reminderEvents, setReminderEvents] = useState<EventsData[]>([]);
     const [reminders, setReminders] = useState<ReminderData[]>([]);
-    const [now, setNow] = useState(new Date());
+    const [now, setNow] = useState(DateUtils.now());
     useEffect(() => {
+        DateUtils.setUserTimezone(auth?.user?.timezone);
         const timer = setInterval(() => {
-            setNow(new Date());
+            setNow(DateUtils.now());
         }, 1000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [auth?.user?.timezone]);
 
     useEffect(() => {
-        if(!auth.user) {
+        if(!auth.user || !isCalenoteOrPlaroAi) {
             setReminderEvents([]);
             setReminders([]);
         } else {
             getReminderEvents();
             getEventReminders();
         }
-    }, [auth]);
+    }, [auth, isCalenoteOrPlaroAi]);
 
     const getReminderEvents:()=>Promise<void> = async ():Promise<void> => {
         if(!auth.user) return;
         try {
             const res = await axios.get("/api/events");
             if(res.data.success) {
-                const currentEvents = res.data.events;
+                const currentEvents = (res.data.events as EventsData[]).map((event) => ({
+                    ...event,
+                    start_at: DateUtils.parseServerDate(event.start_at),
+                    end_at: DateUtils.parseServerDate(event.end_at),
+                }));
                 if(currentEvents.length <= 0) return;
                 setReminderEvents(currentEvents);
             }
@@ -152,6 +160,7 @@ export default function Root({ auth, children, ...props }: RootProps) {
     return (
         <>
             {(() => {
+                if (!isCalenoteOrPlaroAi) return;
                 if(reminders.length <= 0) return;
 
                 const excludedReminders: ReminderData[] = [];
@@ -163,7 +172,7 @@ export default function Root({ auth, children, ...props }: RootProps) {
                         if (reminder.read) return false;
 
                         const nowMin = Math.floor(now.getTime() / 60000);
-                        const startAtMin = Math.floor(new Date(event.start_at).getTime() / 60000);
+                        const startAtMin = Math.floor(DateUtils.parseServerDate(event.start_at).getTime() / 60000);
                         const remindAtMin = startAtMin - Math.floor(reminder.seconds / 60);
 
                         return nowMin >= remindAtMin && nowMin <= startAtMin;
@@ -198,8 +207,8 @@ export default function Root({ auth, children, ...props }: RootProps) {
 
                                 const title = `${event.title ? (event.title.length > 3 ? event.title.substring(0, 12)+"..." : event.title) : ""}${event.title ? "<br>" : ""}이벤트 시작 ${reminderChangeKorean(reminder.seconds)}`;
 
-                                const startDate = formatDate(new Date(event.start_at));
-                                const endDate = formatDate(new Date(event.end_at));
+                                const startDate = formatDate(DateUtils.parseServerDate(event.start_at));
+                                const endDate = formatDate(DateUtils.parseServerDate(event.end_at));
 
                                 const message =
                                     startDate === endDate
@@ -234,14 +243,16 @@ export default function Root({ auth, children, ...props }: RootProps) {
                     </>
                 );
             })()}
-            <Header
-                auth={auth}
-                {...(!isHome && {
-                    toggle: sideBarToggle,
-                    setToggle: setSideBarToggle,
-                    check: sideBar < 230
-                })}
-            />
+            {!isAuthPage && (
+                <Header
+                    auth={auth}
+                    {...(isCalenoteOrPlaroAi && {
+                        toggle: sideBarToggle,
+                        setToggle: setSideBarToggle,
+                        check: sideBar < 230
+                    })}
+                />
+            )}
             {React.isValidElement(children)
                 ? cloneElement(children as ReactElement, sharedProps)
                 : children}

@@ -33,6 +33,14 @@ class User extends Authenticatable
         return $this->hasMany(ChatRoom::class);
     }
 
+    public function challengeTemplatesOwned() {
+        return $this->hasMany(ChallengeTemplate::class, 'owner_id', 'id');
+    }
+
+    public function challenges() {
+        return $this->hasMany(Challenge::class, 'user_id', 'id');
+    }
+
     public function likedNotepads() {
         return $this->hasMany(NotepadLike::class);
     }
@@ -44,6 +52,9 @@ class User extends Authenticatable
         'email',
         'nationality',
         'timezone',
+        'google_id',
+        'facebook_id',
+        'kakao_id',
         'role',
     ];
 
@@ -68,5 +79,44 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function isSocialAccount(): bool
+    {
+        return !empty($this->google_id) || !empty($this->facebook_id) || !empty($this->kakao_id);
+    }
+
+    public function needsSocialProfileCompletion(): bool
+    {
+        if (!$this->isSocialAccount()) {
+            return false;
+        }
+
+        $missingEmail = $this->hasPlaceholderEmail();
+        $missingNationality = empty($this->nationality);
+
+        return $missingEmail || $missingNationality;
+    }
+
+    public function hasPlaceholderEmail(): bool
+    {
+        return str_ends_with((string) $this->email, '@social.local');
+    }
+
+    public function socialProvider(): string
+    {
+        if (!empty($this->kakao_id)) {
+            return 'kakao';
+        }
+
+        if (!empty($this->google_id)) {
+            return 'google';
+        }
+
+        if (!empty($this->facebook_id)) {
+            return 'facebook';
+        }
+
+        return 'social';
     }
 }

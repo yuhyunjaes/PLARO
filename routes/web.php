@@ -15,6 +15,7 @@ use App\Http\Controllers\EventInvitationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\EventUserController;
 use App\Http\Controllers\PlaroAiController;
+use App\Http\Controllers\SocialAuthController;
 use App\Models\Notepad;
 use App\Models\Event;
 use Illuminate\Support\Facades\Session;
@@ -49,6 +50,7 @@ Route::middleware('web')->group(function () {
             $email = Session::get('invitation_email', null);
             return Inertia::render('Auth/Login', [
                 'sessionEmail' => $email,
+                'socialError' => Session::pull('social_error', null),
             ]);
         })->name('login');
 
@@ -62,6 +64,8 @@ Route::middleware('web')->group(function () {
 
         Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
         Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+        Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
+        Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
 
         Route::get('/check-id/{id}', [AuthController::class, 'checkId'])->name('checkId');
         Route::post('/send-email-code', [AuthController::class, 'sendEmail'])->name('sendEmail');
@@ -72,6 +76,11 @@ Route::middleware('web')->group(function () {
     // Authenticated routes
     // --------------------
     Route::middleware('auth')->group(function () {
+        Route::get('/auth/social/complete-profile', [SocialAuthController::class, 'showCompleteProfile'])->name('social.complete.form');
+        Route::post('/auth/social/complete-profile', [SocialAuthController::class, 'completeProfile'])->name('social.complete.submit');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+        Route::middleware('social.profile.complete')->group(function () {
         Route::get('/plaroai', function () {
             return Inertia::render('PlaroAi/PlaroAi');
         })->name('plaroai');
@@ -249,8 +258,6 @@ Route::middleware('web')->group(function () {
             ]);
         })->name('notepad.write');
 
-        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
         // --------------------
         // Notepad API
         // --------------------
@@ -317,6 +324,7 @@ Route::middleware('web')->group(function () {
         Route::post('/api/plaroai/chat', [PlaroAiController::class, 'chat'])->name('plaroai.chat');
 
     });
+});
 });
 
 // --------------------

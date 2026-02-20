@@ -12,6 +12,7 @@ import Loading from "../../Components/Elements/Loading";
 import Header from "../../Components/Header/Header";
 import {AlertsData} from "../../Components/Elements/ElementsData";
 import {GlobalUIContext} from "../../Providers/GlobalUIContext";
+import {DateUtils} from "../../Utils/dateUtils";
 
 interface PlaroAiProps {
     auth: {
@@ -148,7 +149,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
 
             if (res.data.success) {
                 const alertData: AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message ?? "대화 설정이 저장되었습니다.",
                     type: "success"
                 };
@@ -212,7 +213,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                 });
                 setChatId(null);
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }
@@ -294,7 +295,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                 setTemporaryEditTitle("");
             } else {
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }
@@ -341,7 +342,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                 setRooms((prevRooms) => prevRooms.filter(room => room.room_id !== editId));
             } else {
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }

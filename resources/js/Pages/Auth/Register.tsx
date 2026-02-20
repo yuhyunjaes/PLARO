@@ -6,6 +6,7 @@ import { Head, Link, router } from "@inertiajs/react";
 import Loading from "../../Components/Elements/Loading";
 import FormInput from "../../Components/Elements/FormInput";
 import FormInputWithButton from "../../Components/Elements/FormInputWithButton";
+import SocialLoginButtons from "../../Components/Auth/SocialLoginButtons";
 
 interface RegisterProps {
     sessionEmail: string | null;
@@ -285,6 +286,8 @@ export default function Register({ sessionEmail }:RegisterProps) {
                     >
                         회원가입
                     </button>
+                    <p className="text-center text-xs font-semibold text-gray-500 my-3">또는</p>
+                    <SocialLoginButtons />
                     <div className="text-center">
                         <Link href="/login" className="normal-text font-semibold text-xs">로그인</Link>
                     </div>

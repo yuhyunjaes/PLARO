@@ -1,6 +1,7 @@
 import {EventsData, ReminderData} from "../../CalenoteSectionsData";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faClock} from "@fortawesome/free-solid-svg-icons";
+import {DateUtils} from "../../../../../Utils/dateUtils";
 
 interface ReminderViewProps {
     handleEventClick: (Event:EventsData) => Promise<void>;
@@ -20,7 +21,7 @@ export default function ReminderView({ handleEventClick, events, now, reminders 
     ];
 
     const afterNowEvents: EventsData[] = events.filter(event => {
-        const eventDate = new Date(event.start_at);
+        const eventDate = DateUtils.parseServerDate(event.start_at);
         const today = new Date(now);
 
         eventDate.setHours(0, 0, 0, 0);
@@ -53,7 +54,7 @@ export default function ReminderView({ handleEventClick, events, now, reminders 
                 ) : ""}
                 {(() => {
                     const eventStartAtDates: Date[] = afterNowEvents
-                        .map(e => new Date(e.start_at))
+                        .map(e => DateUtils.parseServerDate(e.start_at))
                         .filter((date, index, self) =>
                                 index === self.findIndex(d =>
                                     d.getFullYear() === date.getFullYear() &&
@@ -72,7 +73,7 @@ export default function ReminderView({ handleEventClick, events, now, reminders 
                             const sameYear = eventStartAtDate.getFullYear() === now.getFullYear();
 
                             const eventStartIncludeAfterNowEvents:EventsData[] = afterNowEvents.filter(afterNowEvent => {
-                                const startAt = new Date(afterNowEvent.start_at);
+                                const startAt = DateUtils.parseServerDate(afterNowEvent.start_at);
 
                                 startAt.setHours(0, 0, 0, 0);
                                 const eventDate = new Date(eventStartAtDate);
@@ -85,8 +86,8 @@ export default function ReminderView({ handleEventClick, events, now, reminders 
                                 <div key={index} className="space-y-2">
                                     <p className="text-xs font-semibold normal-text">{today ? "오늘" : (sameYear ? `${(eventStartAtDate.getMonth()+1 > 9) ? eventStartAtDate.getMonth()+1 : `0${eventStartAtDate.getMonth()+1}`} ${(eventStartAtDate.getDate() > 9) ? eventStartAtDate.getDate() : `0${eventStartAtDate.getDate()}`}(${koreanDate[eventStartAtDate.getDay()]})` : `${eventStartAtDate.getFullYear()} ${(eventStartAtDate.getMonth()+1 > 9) ? eventStartAtDate.getMonth()+1 : `0${eventStartAtDate.getMonth()+1}`} ${(eventStartAtDate.getDate() > 9) ? eventStartAtDate.getDate() : `0${eventStartAtDate.getDate()}`}`)}</p>
                                     {eventStartIncludeAfterNowEvents.map((eventStartIncludeAfterNowEvent, index) => {
-                                        const startAt = new Date(eventStartIncludeAfterNowEvent.start_at);
-                                        const endAt = new Date(eventStartIncludeAfterNowEvent.end_at);
+                                        const startAt = DateUtils.parseServerDate(eventStartIncludeAfterNowEvent.start_at);
+                                        const endAt = DateUtils.parseServerDate(eventStartIncludeAfterNowEvent.end_at);
 
                                         const eventStartIncludeAfterNowEventReminder:ReminderData[] = reminders.filter(reminder => reminder.event_uuid === eventStartIncludeAfterNowEvent.uuid).sort((a, b) => b.seconds - a.seconds);
 

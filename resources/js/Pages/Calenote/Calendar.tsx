@@ -22,6 +22,7 @@ import {faAngleLeft, faAngleRight, faPlus} from "@fortawesome/free-solid-svg-ico
 import Echo from 'laravel-echo';
 import {AlertsData} from "../../Components/Elements/ElementsData";
 import Modal from "../../Components/Elements/Modal";
+import {DateUtils} from "../../Utils/dateUtils";
 
 
 interface CalendarProps {
@@ -70,7 +71,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     const [modalMessage, setModalMessage] = useState<string>("");
     const [modalType, setModalType] = useState<"" | "delete" | "removeUser">("");
 
-    const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth <= 640 ? 0 : 250));
+    const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth < 768 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
 
     const [startAt, setStartAt] = useState<Date | null>(null);
@@ -82,7 +83,8 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     const [temporaryMonth, setTemporaryMonth] = useState<number | null>(month);
     const [temporaryDay, setTemporaryDay] = useState<number | null>(day);
 
-    const today = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const nowByTz = DateUtils.now();
+    const today = new Date(nowByTz.getFullYear(), nowByTz.getMonth(), 1);
     const At:Date = (temporaryYear && temporaryMonth) ? new Date(temporaryYear, temporaryMonth-1, 1) : today;
     const [activeAt, setActiveAt] = useState<Date>(At);
 
@@ -117,6 +119,10 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     const [eventIdChangeDone, setEventIdChangeDone] = useState<boolean>(true);
 
     useEffect(() => {
+        DateUtils.setUserTimezone(auth?.user?.timezone);
+    }, [auth?.user?.timezone]);
+
+    useEffect(() => {
         if(event) {
             setEventIdChangeDone(true);
         }
@@ -129,8 +135,8 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             eventSwitch: "normal",
             type: contentMode,
             title: eventTitle,
-            start_at: startAt,
-            end_at: endAt,
+            start_at: DateUtils.toApiDateTime(startAt),
+            end_at: DateUtils.toApiDateTime(endAt),
             description: eventDescription,
             color: eventColor,
         });
@@ -145,7 +151,11 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             return;
         }
 
-        const event = res.data.event;
+        const event = {
+            ...res.data.event,
+            start_at: DateUtils.parseServerDate(res.data.event.start_at),
+            end_at: DateUtils.parseServerDate(res.data.event.end_at),
+        };
 
         setEventsWithReminder(pre => [...pre, event]);
 
@@ -266,8 +276,8 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         try {
             const res = await axios.put(`/api/events/${eventId}`, {
                 title: eventTitle,
-                start_at: startAt,
-                end_at: endAt,
+                start_at: DateUtils.toApiDateTime(startAt),
+                end_at: DateUtils.toApiDateTime(endAt),
                 description: eventDescription,
                 color: eventColor,
             });
@@ -349,7 +359,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             }
 
             setEventTitle(activeEvent.title);
-            const resStartAt = new Date(activeEvent.start_at);
+            const resStartAt = DateUtils.parseServerDate(activeEvent.start_at);
 
             const newActiveAt = new Date(resStartAt.getFullYear(), resStartAt.getMonth(), 1);
             const IsSameActiveAt:boolean = newActiveAt.getTime() !== At.getTime();
@@ -359,7 +369,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             }
 
             setStartAt(resStartAt);
-            setEndAt(new Date(activeEvent.end_at));
+            setEndAt(DateUtils.parseServerDate(activeEvent.end_at));
             setEventDescription(activeEvent.description);
             setEventColor(activeEvent.color);
 
@@ -383,7 +393,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                 await getActiveEventParticipants(activeEvent.uuid);
 
                 setEventTitle(activeEvent.title);
-                const resStartAt = new Date(activeEvent.start_at);
+                const resStartAt = DateUtils.parseServerDate(activeEvent.start_at);
 
                 // startAt의 달을 기준으로 activeAt을 설정
                 const newActiveAt = new Date(resStartAt.getFullYear(), resStartAt.getMonth(), 1);
@@ -395,7 +405,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                 }
 
                 setStartAt(resStartAt);
-                setEndAt(new Date(activeEvent.end_at));
+                setEndAt(DateUtils.parseServerDate(activeEvent.end_at));
                 setEventDescription(activeEvent.description);
                 setEventColor(activeEvent.color);
 
@@ -473,7 +483,12 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             });
 
             if (res.data.success) {
-                setEvents(res.data.events || []);
+                const normalizedEvents = (res.data.events || []).map((event: EventsData) => ({
+                    ...event,
+                    start_at: DateUtils.parseServerDate(event.start_at),
+                    end_at: DateUtils.parseServerDate(event.end_at),
+                }));
+                setEvents(normalizedEvents);
             }
         } catch (err) {
             console.error(err);
@@ -537,7 +552,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
 
     useEffect(() => {
         const handleResize = () => {
-            setSideBar(window.innerWidth <= 640 ? 0 : 250);
+            setSideBar(window.innerWidth < 768 ? 0 : 250);
         }
 
         window.addEventListener('resize', handleResize);
@@ -605,7 +620,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         setEventIdChangeDone(false);
 
         try {
-            const startAt = new Date(Event.start_at);
+            const startAt = DateUtils.parseServerDate(Event.start_at);
             if (isNaN(startAt.getTime())) return;
 
             const usuallyActiveAt = new Date(activeAt.getFullYear(), activeAt.getMonth(), 1);
@@ -632,7 +647,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             setEventDescription(Event.description);
             setEventColor(Event.color);
             setStartAt(startAt);
-            setEndAt(new Date(Event.end_at));
+            setEndAt(DateUtils.parseServerDate(Event.end_at));
 
             router.visit(`/calenote/calendar/${contentMode[0]}/${Event.uuid}`, {
                 method: "get",
@@ -647,7 +662,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     }, [viewMode, activeAt, eventId, contentMode]);
 
     useEffect(() => {
-        if (!window.Echo || !getDone || events.length <= 0) return;
+        if (!window.Echo || !getDone || events.length <= 0 || contentMode !== "normal") return;
 
         const channel = window.Echo.private(`user.${auth.user?.id}.events`);
 
@@ -664,8 +679,8 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                 setEventTitle(event.title);
                 setEventDescription(event.description);
                 setEventColor(event.color);
-                setStartAt(new Date(event.start_at));
-                setEndAt(new Date(event.end_at));
+                setStartAt(DateUtils.parseServerDate(event.start_at));
+                setEndAt(DateUtils.parseServerDate(event.end_at));
             }
 
             // 전체 이벤트 목록 동기화
@@ -676,8 +691,8 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                             ...e,
                             title: event.title,
                             description: event.description,
-                            start_at: new Date(event.start_at),
-                            end_at: new Date(event.end_at),
+                            start_at: DateUtils.parseServerDate(event.start_at),
+                            end_at: DateUtils.parseServerDate(event.end_at),
                             color: event.color,
                             start_area: e.start_area,
                             end_area: e.end_area,
@@ -717,10 +732,10 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             channel.stopListening('.event.deleted');
             window.Echo.leave(`user.${auth.user?.id}.events`);
         };
-    }, [getDone, eventId, auth.user?.id, events, setEventsWithReminder]);
+    }, [getDone, eventId, auth.user?.id, events, setEventsWithReminder, contentMode]);
 
     useEffect(() => {
-        if (!window.Echo || !getDone || !eventId) return;
+        if (!window.Echo || !getDone || !eventId || contentMode !== "normal") return;
 
         const channel = window.Echo.private(`event.${eventId}.participants`);
 
@@ -797,7 +812,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     }, [getDone, eventId, auth.user?.id]);
 
     useEffect(() => {
-        if (!window.Echo || !getDone || !auth.user?.id) return;
+        if (!window.Echo || !getDone || !auth.user?.id || contentMode !== "normal") return;
 
         const channel = window.Echo.private(`user.${auth.user?.id}.events.participants`);
 
@@ -828,10 +843,10 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             window.Echo.leave(`user.${auth.user?.id}.events.participants`);
         };
 
-    }, [getDone, auth.user?.id, eventId, setEventsWithReminder]);
+    }, [getDone, auth.user?.id, eventId, setEventsWithReminder, contentMode]);
 
     useEffect(() => {
-        if (!window.Echo || !getDone || !eventId) {
+        if (!window.Echo || !getDone || !eventId || contentMode !== "normal") {
             setOnlineParticipantIds([]);
             return;
         }
@@ -870,7 +885,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             window.Echo.leave(`event.${eventId}.online`);
             setOnlineParticipantIds([]);
         };
-    }, [getDone, eventId]);
+    }, [getDone, eventId, contentMode]);
 
     const [eventUserControl, setEventUserControl] = useState<boolean>(false);
 
@@ -931,7 +946,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     }
 
     const activeAtToToday = useCallback(() => {
-        const today = new Date();
+        const today = DateUtils.now();
 
         if (viewMode === "month") {
             if (
@@ -1040,7 +1055,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
 
                     <button ref={sideBarToggleRef} onClick={() => {
                         setSideBarToggle(!sideBarToggle);
-                    }} className={`fixed z-[2] block sm:hidden bottom-0 duration-300 transition-[right] cursor-pointer ${sideBarToggle ? 'right-[240px]' : 'right-0'}  bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-12 rounded-full text-white font-semibold m-[25px] sm:m-[50px]`}>
+                    }} className={`fixed z-[2] block md:hidden bottom-0 duration-300 transition-[right] cursor-pointer ${sideBarToggle ? 'right-[240px]' : 'right-0'}  bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transition-colors duration-150 size-12 rounded-full text-white font-semibold m-[25px] md:m-[50px]`}>
                         <FontAwesomeIcon icon={sideBarToggle ? faAngleRight : faAngleLeft} />
                     </button>
                     <SideBarSection

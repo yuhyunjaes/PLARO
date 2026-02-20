@@ -3,12 +3,14 @@
 import {Head, Link, router} from '@inertiajs/react';
 import {useState} from "react";
 import FormInput from "../../Components/Elements/FormInput";
+import SocialLoginButtons from "../../Components/Auth/SocialLoginButtons";
 
 interface LoginProps {
     sessionEmail: string | null;
+    socialError?: string | null;
 }
 
-export default function Login({ sessionEmail }:LoginProps) {
+export default function Login({ sessionEmail, socialError }:LoginProps) {
     const [login, setLogin] = useState<string>(sessionEmail ?? "");
     const [password, setPassword] = useState<string>("");
     const  handleSubmit = (e :any) => {
@@ -73,6 +75,13 @@ export default function Login({ sessionEmail }:LoginProps) {
                     >
                         로그인
                     </button>
+                    {socialError && (
+                        <p className="text-xs font-semibold text-red-500 text-center mt-2">
+                            {socialError}
+                        </p>
+                    )}
+                    <p className="text-center text-xs font-semibold text-gray-500 my-3">또는</p>
+                    <SocialLoginButtons />
                     <div className="text-center">
                         <Link href="/register" className="normal-text font-semibold text-xs">회원가입</Link>
                     </div>

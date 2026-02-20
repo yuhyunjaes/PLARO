@@ -49,7 +49,7 @@ export default function CalenoteLayout({ children, auth, ...props }: CalenoteLay
 
     // 반응형 처리
     const handleResize = useCallback((): void => {
-        const isMobile = window.innerWidth <= 768;
+        const isMobile = window.innerWidth < 768;
         if (isMobile) {
             setSideBarToggle(false);
             setSideBar(0);

@@ -74,9 +74,23 @@ export default function Accept({ auth, mode, event, inviter, invitation }:Status
                                             preserveState: true,
                                             preserveScroll: true,
                                         });
+                                    } else if (res.data.redirect) {
+                                        router.visit(res.data.redirect, {
+                                            method: "get",
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
                                     }
                                 } catch (err) {
-                                    console.error(err);
+                                    if (axios.isAxiosError(err) && err.response?.data?.redirect) {
+                                        router.visit(err.response.data.redirect, {
+                                            method: "get",
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                    } else {
+                                        console.error(err);
+                                    }
                                 } finally {
                                     setLoading(false);
                                 }

@@ -6,6 +6,7 @@ import axios from "axios";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
 import {AlertsData} from "../../../../../Components/Elements/ElementsData";
+import {DateUtils} from "../../../../../Utils/dateUtils";
 
 interface NotepadShareProps {
     notepadId: string;
@@ -45,7 +46,7 @@ export default function NotepadShare({ notepadId, shareId, setShareId, isLastInR
         try {
             const res = await axios.post(`/api/notepads/${notepad}/share/email`);
             const alertData:AlertsData = {
-                id: new Date(),
+                id: DateUtils.now(),
                 message: res.data.message,
                 type: res.data.type
             }

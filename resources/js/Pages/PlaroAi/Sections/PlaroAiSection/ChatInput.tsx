@@ -11,6 +11,7 @@ import {Room, Message, AuthUser, Notepad, Categories} from "../../../../Types/Pl
 import axios from "axios";
 import {AlertsData} from "../../../../Components/Elements/ElementsData";
 import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
+import {DateUtils} from "../../../../Utils/dateUtils";
 
 interface ChatInputProps {
     now: Date;
@@ -291,7 +292,7 @@ export default function ChatInput({
                             });
 
                             const alertData:AlertsData = {
-                                id: new Date(),
+                                id: DateUtils.now(),
                                 message: "연결이 원활하지 않습니다,",
                                 type: "danger"
                             }
@@ -313,7 +314,7 @@ export default function ChatInput({
                 });
 
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: "연결이 원활하지 않습니다,",
                     type: "danger"
                 }
@@ -404,7 +405,7 @@ export default function ChatInput({
             });
 
             const alertData:AlertsData = {
-                id: new Date(),
+                id: DateUtils.now(),
                 message: res.data.message,
                 type: res.data.type
             }

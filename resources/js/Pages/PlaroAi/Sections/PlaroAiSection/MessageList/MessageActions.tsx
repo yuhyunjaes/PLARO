@@ -6,6 +6,7 @@ import {Message, Notepad} from "../../../../../Types/PlaroAiTypes";
 import {Dispatch, SetStateAction, useContext} from "react";
 import {AlertsData} from "../../../../../Components/Elements/ElementsData";
 import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
+import {DateUtils} from "../../../../../Utils/dateUtils";
 
 interface MessageActionsProps {
     msg: Message;
@@ -30,7 +31,7 @@ export default function MessageActions({ msg, handleNotepad } : MessageActionsPr
                 onClick={() => {
                     navigator.clipboard.writeText(msg.text);
                     // const alertData:AlertsData = {
-                    //     id: new Date(),
+                    //     id: DateUtils.now(),
                     //     message: "복사가 완료되었습니다.",
                     //     type: "success"
                     // }
@@ -45,7 +46,7 @@ export default function MessageActions({ msg, handleNotepad } : MessageActionsPr
                 onClick={() => {
                     if (!msg.id) {
                         const alertData:AlertsData = {
-                            id: new Date(),
+                            id: DateUtils.now(),
                             message: "아이디가 존재하지 않아 저장할 수 없습니다.",
                             type: "danger"
                         }

@@ -2,6 +2,7 @@ import {useState, useRef, useEffect, RefObject, useCallback} from "react";
 import { Dispatch, SetStateAction } from "react";
 import {CalendarAtData, EventReminderItem, ParticipantsData} from "../CalenoteSectionsData";
 import {EventsData} from "../CalenoteSectionsData";
+import {DateUtils} from "../../../../Utils/dateUtils";
 
 interface SideBarSectionProps {
     allDates: CalendarAtData[];
@@ -521,8 +522,8 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
         const result: (EventsData & { start_area: number; end_area: number })[] = [];
 
         for (const event of events) {
-            const eventStartDate = new Date(event.start_at);
-            const eventEndDate = new Date(event.end_at);
+            const eventStartDate = DateUtils.parseServerDate(event.start_at);
+            const eventEndDate = DateUtils.parseServerDate(event.end_at);
 
             const eventStart = eventStartDate.getTime();
             const eventEnd = eventEndDate.getTime();

@@ -1,5 +1,6 @@
 import {Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
 import {CalendarAtData, EventReminderItem, EventsData, ParticipantsData} from "../CalenoteSectionsData";
+import {DateUtils} from "../../../../Utils/dateUtils";
 
 interface WeekCalendarSectionProps {
     now: Date;
@@ -460,8 +461,8 @@ export default function WeekAndDayCalendarSection({
         const result: (EventsData & { start_area: number; end_area: number })[] = [];
 
         for (const event of events) {
-            const eventStartDate = new Date(event.start_at);
-            const eventEndDate = new Date(event.end_at);
+            const eventStartDate = DateUtils.parseServerDate(event.start_at);
+            const eventEndDate = DateUtils.parseServerDate(event.end_at);
 
             const eventStart = eventStartDate.getTime();
             const eventEnd = eventEndDate.getTime();
@@ -732,7 +733,7 @@ export default function WeekAndDayCalendarSection({
 
                 {days.map((day, index) => {
                     const WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-                    const today = new Date();
+                    const today = DateUtils.now();
                     const IsToday = (day.getFullYear() === today.getFullYear()) && (day.getMonth() === today.getMonth()) && (day.getDate() === today.getDate());
                     return (
                         <div

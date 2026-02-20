@@ -132,7 +132,12 @@ class AuthController extends Controller
                     ]
                 ))->toOthers();
 
-                Session::forget(['invitation_token', 'invitation_email']);
+                Session::forget([
+                    'invitation_token',
+                    'invitation_email',
+                    'invitation_active',
+                    'invitation_session_started_at',
+                ]);
 
                 return Inertia::location("/calenote/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
             } catch (\Throwable $e) {
@@ -206,7 +211,12 @@ class AuthController extends Controller
                         ]
                     ))->toOthers();
 
-                    Session::forget(['invitation_token', 'invitation_email']);
+                    Session::forget([
+                        'invitation_token',
+                        'invitation_email',
+                        'invitation_active',
+                        'invitation_session_started_at',
+                    ]);
 
                     return inertia::location("/calenote/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
                 }

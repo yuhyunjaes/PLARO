@@ -13,6 +13,7 @@ import NotepadFilterSection from "./Sections/Notepad/NotepadFilterSection";
 import { useContext } from "react";
 import {GlobalUIContext} from "../../Providers/GlobalUIContext";
 import {AlertsData} from "../../Components/Elements/ElementsData";
+import {DateUtils} from "../../Utils/dateUtils";
 
 
 interface NotepadProps {
@@ -87,7 +88,7 @@ export default function Notepad({ auth } : NotepadProps) {
             });
             if(!res.data.success) {
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }
@@ -136,7 +137,7 @@ export default function Notepad({ auth } : NotepadProps) {
                 );
             } else {
                 setAlerts(pre => [...pre, {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }]);
@@ -187,7 +188,7 @@ export default function Notepad({ auth } : NotepadProps) {
                 setDeleteId("");
             } else {
                 const alertData:AlertsData = {
-                    id: new Date(),
+                    id: DateUtils.now(),
                     message: res.data.message,
                     type: res.data.type
                 }
