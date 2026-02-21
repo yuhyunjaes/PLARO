@@ -10,7 +10,7 @@ import {AlertsData} from "../../../../../../Components/Elements/ElementsData";
 interface ParticipantControlProps {
     participantControl: string;
     setParticipantControl: Dispatch<SetStateAction<string>>;
-    setModalType: Dispatch<SetStateAction<"" | "delete" | "removeUser" | "deleteChallenge" | "deleteTemplate">>;
+    setModalType: Dispatch<SetStateAction<"" | "delete" | "removeUser" | "deleteChallenge" | "deleteTemplate" | "deleteDday">>;
     setModalTitle: Dispatch<SetStateAction<string>>;
     setModalMessage: Dispatch<SetStateAction<string>>;
     setModal: Dispatch<SetStateAction<boolean>>;

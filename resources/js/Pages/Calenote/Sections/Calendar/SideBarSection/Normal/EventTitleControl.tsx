@@ -28,7 +28,7 @@ setEventTitle
     }, [eventTitle]);
 
     return (
-        <div className="px-5 pt-5">
+        <div className="px-5">
             <input
                 disabled={disabled}
                 autoFocus

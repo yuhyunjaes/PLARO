@@ -5,6 +5,7 @@ import {DateUtils} from "../../../../../../Utils/dateUtils";
 
 interface EventDateViewProps {
     disabled: boolean;
+    contentMode?: "normal" | "challenge" | "dday";
     startAt: Date | null;
     setStartAt: Dispatch<SetStateAction<Date | null>>;
     endAt: Date | null;
@@ -19,7 +20,7 @@ function formatTime(date: Date): string {
     return DateUtils.formatTime(date);
 }
 
-export default function EventDateViewAndControl({ disabled, startAt, setStartAt, endAt, setEndAt }:EventDateViewProps) {
+export default function EventDateViewAndControl({ disabled, contentMode = "normal", startAt, setStartAt, endAt, setEndAt }:EventDateViewProps) {
     const [editType, setEditType] = useState<"startDate" | "startTime" | "endDate" | "endTime" | null>(null);
     const EditDateAreaRef = useRef<HTMLDivElement>(null);
 
@@ -106,6 +107,16 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
             );
 
             if(!newDate) return;
+            if (contentMode === "dday") {
+                const today = DateUtils.now();
+                const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+                const newDateStart = new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate()).getTime();
+                if (newDateStart < todayStart) {
+                    resetDates();
+                    setEditType(null);
+                    return;
+                }
+            }
 
             isStartDate ? setStartAt(newDate) : setEndAt(newDate);
             setEditType(null);
@@ -145,7 +156,7 @@ export default function EventDateViewAndControl({ disabled, startAt, setStartAt,
             setEditType(null);
         }
 
-    }, [startAtDate, startAtTime, endAtDate, endAtTime, startAt, endAt]);
+    }, [startAtDate, startAtTime, endAtDate, endAtTime, startAt, endAt, contentMode]);
 
     const resetDates = useCallback(() => {
         setStartAtDate((startAt && endAt) ? formatDate(new Date(Math.min(startAt.getTime(), endAt.getTime()))) : "");

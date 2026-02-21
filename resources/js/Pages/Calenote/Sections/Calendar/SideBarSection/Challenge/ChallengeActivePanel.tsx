@@ -172,7 +172,7 @@ export default function ChallengeActivePanel({
     const doneCount = selectedDayTasks.filter((task) => task.is_done).length;
 
     return (
-        <div className="space-y-5 p-5">
+        <div className="space-y-5 px-5 pb-5">
             <div className="rounded border border-gray-300 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-3">
                 <div className="flex items-center gap-2">
                     <div className="size-8 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 flex items-center justify-center text-sm shrink-0 normal-text">
@@ -354,8 +354,8 @@ export default function ChallengeActivePanel({
                                 <button
                                     type="button"
                                     key={`challenge-task-${task.id}`}
-                                    onClick={() => onToggleTask(task.id, !task.is_done)}
-                                    disabled={taskUpdating || loading || !canEditTasks || isCompleted}
+                                    onClick={() => onToggleTask(task.id, true)}
+                                    disabled={taskUpdating || loading || !canEditTasks || isCompleted || task.is_done}
                                     className={`w-full rounded border text-left p-3 transition-colors ${task.is_done
                                         ? "border-blue-400 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/20"
                                         : "border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950 hover:bg-gray-100 hover:dark:bg-gray-900"}`}

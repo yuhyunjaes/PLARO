@@ -184,3 +184,35 @@ export interface ActiveChallengeData {
     days: ChallengeDayGroupItem[];
     daily_logs: ChallengeDailyLogItem[];
 }
+
+export interface DdayCheckItem {
+    id: number;
+    check_date: string;
+    is_done: boolean;
+    checked_at: string | null;
+}
+
+export interface ActiveDdayData {
+    id: number;
+    uuid: string;
+    title: string | null;
+    status: "active" | "completed" | "cancelled";
+    start_date: string | null;
+    target_date: string | null;
+    duration_days: number;
+    current_day: number;
+    unlocked_day: number;
+    checked_days: number;
+    checked_until_today: number;
+    elapsed_days: number;
+    total_days: number;
+    missed_days_count: number;
+    streak_count: number;
+    achievement_rate: number;
+    can_retry: boolean;
+    can_extend: boolean;
+    last_check_date: string | null;
+    color: string | null;
+    event_uuid: string | null;
+    checks: DdayCheckItem[];
+}

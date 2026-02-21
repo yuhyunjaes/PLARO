@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Events\EventDeleted;
 use App\Models\EventUser;
+use App\Models\Dday;
 use Illuminate\Http\Request;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,43 @@ use Illuminate\Support\Facades\Validator;
 class EventController extends Controller
 {
     use EventPermission;
+
+    private function normalizeDdayRange(Carbon $startAtInput, Carbon $endAtInput): array
+    {
+        $startDate = $startAtInput->copy()->startOfDay();
+        $today = Carbon::now(config('app.timezone'))->startOfDay();
+
+        if ($startDate->lt($today)) {
+            throw new \RuntimeException('D-day 시작일은 오늘보다 이전일 수 없습니다.');
+        }
+
+        $targetDate = $endAtInput->copy();
+
+        // Month view stores day selections as [start, end) at 00:00.
+        // For D-day, treat that as inclusive end-date selection.
+        if (
+            $targetDate->hour === 0
+            && $targetDate->minute === 0
+            && $targetDate->second === 0
+            && $targetDate->greaterThan($startDate)
+        ) {
+            $targetDate->subDay();
+        }
+
+        $targetDate = $targetDate->startOfDay();
+
+        if ($targetDate->lt($startDate)) {
+            throw new \RuntimeException('D-day 목표일은 시작일보다 빠를 수 없습니다.');
+        }
+
+        return [
+            'start_date' => $startDate,
+            'target_date' => $targetDate,
+            'event_start_at' => $startDate->copy()->startOfDay()->format('Y-m-d H:i:s'),
+            'event_end_at' => $targetDate->copy()->endOfDay()->format('Y-m-d H:i:s'),
+            'duration_days' => $startDate->diffInDays($targetDate) + 1,
+        ];
+    }
 
     public function StoreEvents(Request $request)
     {
@@ -42,24 +80,49 @@ class EventController extends Controller
 
         try {
             $eventSwitch = $request->eventSwitch === 'chat';
+            $eventType = $request->type ?? 'normal';
+            $startAtInput = Carbon::parse($request->start_at)->setTimezone(config('app.timezone'));
+            $endAtInput = Carbon::parse($request->end_at)->setTimezone(config('app.timezone'));
 
-            $startAt = Carbon::parse($request->start_at)
-                ->setTimezone(config('app.timezone'))
-                ->format('Y-m-d H:i:s');
+            $startAt = $startAtInput->format('Y-m-d H:i:s');
+            $endAt = $endAtInput->format('Y-m-d H:i:s');
+            $ddayRange = null;
+            if ($eventType === 'dday') {
+                $ddayRange = $this->normalizeDdayRange($startAtInput, $endAtInput);
+                $startAt = $ddayRange['event_start_at'];
+                $endAt = $ddayRange['event_end_at'];
+            }
 
-            $endAt = Carbon::parse($request->end_at)
-                ->setTimezone(config('app.timezone'))
-                ->format('Y-m-d H:i:s');
+            $event = DB::transaction(function () use ($request, $startAt, $endAt, $eventSwitch, $eventType, $ddayRange) {
+                $dday = null;
 
-            $event = DB::transaction(function () use ($request, $startAt, $endAt, $eventSwitch) {
+                if ($eventType === 'dday') {
+                    $dday = Dday::create([
+                        'uuid' => Str::uuid()->toString(),
+                        'user_id' => Auth::id(),
+                        'title' => $request->title,
+                        'status' => 'active',
+                        'start_date' => $ddayRange['start_date']->toDateString(),
+                        'target_date' => $ddayRange['target_date']->toDateString(),
+                        'duration_days' => max(1, (int)$ddayRange['duration_days']),
+                        'current_day' => 1,
+                        'streak_count' => 0,
+                        'achievement_rate' => 0,
+                        'last_check_date' => null,
+                        'restart_count' => 0,
+                        'color' => $eventSwitch ? "bg-blue-500" : $request->color,
+                    ]);
+                }
+
                 $event = Event::create([
                     'uuid' => Str::uuid()->toString(),
                     'chat_id' => $eventSwitch ? $request->chat_id : null,
                     'creator_id' => Auth::id(),
+                    'dday_id' => $dday?->id,
                     'title' => $request->title,
                     'start_at' => $startAt,
                     'end_at' => $endAt,
-                    'type' => $request->type ?? 'normal',
+                    'type' => $eventType,
                     'description' => $request->description,
                     'color' => $eventSwitch ? "bg-blue-500" : $request->color,
                 ]);
@@ -83,7 +146,7 @@ class EventController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => '이벤트 생성중 문제가 발생하였습니다.',
+                'message' => $e->getMessage() ?: '이벤트 생성중 문제가 발생하였습니다.',
                 'type' => 'danger',
             ]);
         }
@@ -108,13 +171,17 @@ class EventController extends Controller
             ]);
         }
 
-        $startAt = Carbon::parse($request->start_at)
-            ->setTimezone(config('app.timezone'))
-            ->format('Y-m-d H:i:s');
+        $startAtInput = Carbon::parse($request->start_at)->setTimezone(config('app.timezone'));
+        $endAtInput = Carbon::parse($request->end_at)->setTimezone(config('app.timezone'));
 
-        $endAt = Carbon::parse($request->end_at)
-            ->setTimezone(config('app.timezone'))
-            ->format('Y-m-d H:i:s');
+        $startAt = $startAtInput->format('Y-m-d H:i:s');
+        $endAt = $endAtInput->format('Y-m-d H:i:s');
+        $ddayRange = null;
+        if ($event->type === 'dday') {
+            $ddayRange = $this->normalizeDdayRange($startAtInput, $endAtInput);
+            $startAt = $ddayRange['event_start_at'];
+            $endAt = $ddayRange['event_end_at'];
+        }
 
         $event->fill([
             'title' => $request->title,
@@ -133,6 +200,20 @@ class EventController extends Controller
         }
 
         $event->save();
+
+        if ($event->type === 'dday' && $event->dday_id && $ddayRange) {
+            $dday = Dday::query()->find($event->dday_id);
+            if ($dday) {
+                $dday->fill([
+                    'title' => $request->title,
+                    'start_date' => $ddayRange['start_date']->toDateString(),
+                    'target_date' => $ddayRange['target_date']->toDateString(),
+                    'duration_days' => max(1, (int)$ddayRange['duration_days']),
+                    'color' => $request->color,
+                ]);
+                $dday->save();
+            }
+        }
 
         broadcast(new EventUpdated(
             $event->uuid,
@@ -218,7 +299,13 @@ class EventController extends Controller
                 ->pluck('user_id')
                 ->toArray();
 
-            $event->delete();
+            DB::transaction(function () use ($event) {
+                if ($event->dday_id) {
+                    $event->dday()?->delete();
+                    return;
+                }
+                $event->delete();
+            });
 
             broadcast(new EventDeleted(
                 eventUuid: $eventUuid,

@@ -15,6 +15,7 @@ import WeekAndDayCalendarSection from "./Sections/Calendar/WeekAndDayCalendarSec
 import axios from "axios";
 import {
     ActiveChallengeData,
+    ActiveDdayData,
     CalendarAtData, ChallengeTemplateItem,
     EventReminderItem,
     EventsData,
@@ -70,6 +71,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     const [templates, setTemplates] = useState<ChallengeTemplateItem[]>([]);
     const [activeTemplate, setActiveTemplate] = useState<null | string>(null);
     const [activeChallenge, setActiveChallenge] = useState<ActiveChallengeData | null>(null);
+    const [activeDday, setActiveDday] = useState<ActiveDdayData | null>(null);
     const [challengeLoading, setChallengeLoading] = useState<boolean>(false);
     const [challengeStarting, setChallengeStarting] = useState<boolean>(false);
     const [challengeTaskUpdating, setChallengeTaskUpdating] = useState<boolean>(false);
@@ -80,6 +82,11 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     const [challengeColorUpdating, setChallengeColorUpdating] = useState<boolean>(false);
     const [challengeAiSummarizing, setChallengeAiSummarizing] = useState<boolean>(false);
     const [challengeAiSummary, setChallengeAiSummary] = useState<string>("");
+    const [ddayLoading, setDdayLoading] = useState<boolean>(false);
+    const [ddayChecking, setDdayChecking] = useState<boolean>(false);
+    const [ddayRetrying, setDdayRetrying] = useState<boolean>(false);
+    const [ddayExtending, setDdayExtending] = useState<boolean>(false);
+    const [ddayDeleting, setDdayDeleting] = useState<boolean>(false);
     const [templatesLoading, setTemplatesLoading] = useState<boolean>(false);
     const [templatesError, setTemplatesError] = useState<string>("");
     const [editingTemplate, setEditingTemplate] = useState<ChallengeTemplateEditFormData | null>(null);
@@ -105,7 +112,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     const [modal, setModal] = useState<boolean>(false);
     const [modalTitle, setModalTitle] = useState<string>("");
     const [modalMessage, setModalMessage] = useState<string>("");
-    const [modalType, setModalType] = useState<"" | "delete" | "removeUser" | "deleteChallenge" | "deleteTemplate">("");
+    const [modalType, setModalType] = useState<"" | "delete" | "removeUser" | "deleteChallenge" | "deleteTemplate" | "deleteDday">("");
 
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth < 768 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
@@ -188,6 +195,24 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             challengeColorSyncRef.current = null;
         } finally {
             setChallengeLoading(false);
+        }
+    }, []);
+
+    const fetchDdayByEvent = useCallback(async (eventUuid: string): Promise<void> => {
+        if (!eventUuid) return;
+        setDdayLoading(true);
+
+        try {
+            const res = await axios.get(`/api/ddays/event/${eventUuid}`);
+            if (res.data?.success) {
+                setActiveDday(res.data.dday as ActiveDdayData);
+            } else {
+                setActiveDday(null);
+            }
+        } catch (e) {
+            setActiveDday(null);
+        } finally {
+            setDdayLoading(false);
         }
     }, []);
 
@@ -360,11 +385,22 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                             : event
                     )
                 );
+
+                if (contentMode === "dday") {
+                    setActiveDday(prev => {
+                        if (!prev || prev.event_uuid !== eventId) return prev;
+                        return {
+                            ...prev,
+                            title: eventTitle,
+                            color: eventColor,
+                        };
+                    });
+                }
             }
         } catch (err) {
             console.error(err);
         }
-    }, [eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone, isRemoteUpdate, setEventsWithReminder]);
+    }, [contentMode, eventTitle, eventDescription, eventColor, startAt, endAt, eventId, eventIdChangeDone, isRemoteUpdate, setEventsWithReminder]);
 
     useEffect(() => {
         if (!isDragging) {
@@ -437,8 +473,14 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             setEventColor(activeEvent.color);
             if (activeEvent.type === "challenge") {
                 await fetchChallengeByEvent(activeEvent.uuid);
+                setActiveDday(null);
+            } else if (activeEvent.type === "dday") {
+                await fetchDdayByEvent(activeEvent.uuid);
+                setActiveChallenge(null);
+                setChallengeAiSummary("");
             } else {
                 setActiveChallenge(null);
+                setActiveDday(null);
             }
 
             if (IsSameActiveAt) {
@@ -478,8 +520,14 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                 setEventColor(activeEvent.color);
                 if (activeEvent.type === "challenge") {
                     await fetchChallengeByEvent(activeEvent.uuid);
+                    setActiveDday(null);
+                } else if (activeEvent.type === "dday") {
+                    await fetchDdayByEvent(activeEvent.uuid);
+                    setActiveChallenge(null);
+                    setChallengeAiSummary("");
                 } else {
                     setActiveChallenge(null);
+                    setActiveDday(null);
                 }
 
                 // firstCenter를 true로 설정하여 MonthCalendarSection에서 center() 호출
@@ -724,8 +772,14 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             setEndAt(DateUtils.parseServerDate(Event.end_at));
             if (Event.type === "challenge") {
                 await fetchChallengeByEvent(Event.uuid);
+                setActiveDday(null);
+            } else if (Event.type === "dday") {
+                await fetchDdayByEvent(Event.uuid);
+                setActiveChallenge(null);
+                setChallengeAiSummary("");
             } else {
                 setActiveChallenge(null);
+                setActiveDday(null);
             }
 
             router.visit(`/calenote/calendar/${contentMode[0]}/${Event.uuid}`, {
@@ -738,7 +792,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         } finally {
             setLoading(false);
         }
-    }, [viewMode, activeAt, eventId, contentMode, fetchChallengeByEvent]);
+    }, [viewMode, activeAt, eventId, contentMode, fetchChallengeByEvent, fetchDdayByEvent]);
 
     useEffect(() => {
         if (!window.Echo || !getDone || events.length <= 0 || contentMode !== "normal") return;
@@ -1076,6 +1130,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         setStartAt(null);
         setEndAt(null);
         setActiveChallenge(null);
+        setActiveDday(null);
         setParticipantControl("");
     }
 
@@ -1208,12 +1263,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             setChallengeTemplateCreateModal(false);
             setChallengeTemplateModal({ status: true, templateType: "mine" });
 
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "템플릿이 생성되었습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
         } catch (e) {
             const alertData: AlertsData = {
                 id: new Date(),
@@ -1252,12 +1301,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             setChallengeTemplateCreateModal(false);
             setChallengeTemplateModal({ status: true, templateType: "mine" });
 
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "템플릿이 수정되었습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
         } catch (e) {
             const alertData: AlertsData = {
                 id: new Date(),
@@ -1343,12 +1386,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             }
             setTemplateDaysReloadKey((prev) => prev + 1);
 
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "템플릿이 삭제되었습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
         } catch (e) {
             const alertData: AlertsData = {
                 id: new Date(),
@@ -1430,13 +1467,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             challengeColorSyncRef.current = challenge?.color ?? null;
             setChallengeTemplateModal({ status: false, templateType: null });
 
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "챌린지가 시작되었습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
-
             router.visit(`/calenote/calendar/c/${createdEvent.uuid}`, {
                 method: "get",
                 preserveState: true,
@@ -1508,12 +1538,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             }
 
             setActiveChallenge(res.data.challenge as ActiveChallengeData);
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "챌린지 일지를 저장했습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
         } catch (e) {
             const alertData: AlertsData = {
                 id: new Date(),
@@ -1563,12 +1587,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                 }));
             }
 
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "챌린지를 재도전으로 다시 시작했습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
         } catch (e) {
             const alertData: AlertsData = {
                 id: new Date(),
@@ -1614,12 +1632,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                 }));
             }
 
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "챌린지를 템플릿 1회분 연장했습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
         } catch (e) {
             const alertData: AlertsData = {
                 id: new Date(),
@@ -1659,12 +1671,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             challengeColorSyncRef.current = null;
             resetEvent();
 
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "챌린지를 삭제했습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
         } catch (e) {
             const alertData: AlertsData = {
                 id: new Date(),
@@ -1700,12 +1706,6 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             } else {
                 setActiveChallenge(prev => prev ? { ...prev, ai_summary: nextSummary } : prev);
             }
-            const alertData: AlertsData = {
-                id: new Date(),
-                message: "AI 요약이 생성되었습니다.",
-                type: "success",
-            };
-            setAlerts(pre => [...pre, alertData]);
         } catch (e) {
             const alertData: AlertsData = {
                 id: new Date(),
@@ -1717,6 +1717,157 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             setChallengeAiSummarizing(false);
         }
     }, [activeChallenge, challengeAiSummarizing, setAlerts]);
+
+    const toggleDdayTodayCheck = useCallback(async (nextDone: boolean): Promise<void> => {
+        if (!activeDday || ddayChecking) return;
+        setDdayChecking(true);
+
+        try {
+            const res = await axios.patch(`/api/ddays/${activeDday.uuid}/today-check`, {
+                is_done: nextDone,
+            });
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "오늘 체크 업데이트에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setActiveDday(res.data.dday as ActiveDdayData);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "오늘 체크 업데이트에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setDdayChecking(false);
+        }
+    }, [activeDday, ddayChecking, setAlerts]);
+
+    const retryDday = useCallback(async (): Promise<void> => {
+        if (!activeDday || ddayRetrying) return;
+        setDdayRetrying(true);
+
+        try {
+            const res = await axios.post(`/api/ddays/${activeDday.uuid}/retry`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "D-day 재도전에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setActiveDday(res.data.dday as ActiveDdayData);
+            const eventData = res.data?.event;
+            if (eventData) {
+                const startAtDate = DateUtils.parseServerDate(eventData.start_at);
+                const endAtDate = DateUtils.parseServerDate(eventData.end_at);
+                setStartAt(startAtDate);
+                setEndAt(endAtDate);
+                setEventsWithReminder(prev => prev.map(item => item.uuid === eventData.uuid ? {
+                    ...item,
+                    start_at: startAtDate,
+                    end_at: endAtDate,
+                    status: eventData.status ?? item.status,
+                } : item));
+            }
+
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "D-day 재도전에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setDdayRetrying(false);
+        }
+    }, [activeDday, ddayRetrying, setAlerts, setEventsWithReminder]);
+
+    const extendDday = useCallback(async (): Promise<void> => {
+        if (!activeDday || ddayExtending) return;
+        setDdayExtending(true);
+
+        try {
+            const res = await axios.post(`/api/ddays/${activeDday.uuid}/extend`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "D-day 연장에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setActiveDday(res.data.dday as ActiveDdayData);
+            const eventData = res.data?.event;
+            if (eventData) {
+                const endAtDate = DateUtils.parseServerDate(eventData.end_at);
+                setEndAt(endAtDate);
+                setEventsWithReminder(prev => prev.map(item => item.uuid === eventData.uuid ? {
+                    ...item,
+                    end_at: endAtDate,
+                    status: eventData.status ?? item.status,
+                } : item));
+            }
+
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "D-day 연장에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setDdayExtending(false);
+        }
+    }, [activeDday, ddayExtending, setAlerts, setEventsWithReminder]);
+
+    const deleteDday = useCallback(async (): Promise<void> => {
+        if (!activeDday || ddayDeleting) return;
+        setDdayDeleting(true);
+
+        try {
+            const res = await axios.delete(`/api/ddays/${activeDday.uuid}`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "D-day 삭제에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            const deletedEventUuid = (res.data?.event_uuid as string | null) ?? activeDday.event_uuid ?? eventId;
+            if (deletedEventUuid) {
+                setEventsWithReminder(prev => prev.filter(item => item.uuid !== deletedEventUuid));
+                setReminders(prev => prev.filter(item => item.event_uuid !== deletedEventUuid));
+            }
+
+            setActiveDday(null);
+            resetEvent();
+
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "D-day 삭제에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setDdayDeleting(false);
+        }
+    }, [activeDday, ddayDeleting, eventId, resetEvent, setAlerts, setEventsWithReminder, setReminders]);
 
     const updateChallengeColor = useCallback(async (color: "bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500"): Promise<void> => {
         if (!activeChallenge || challengeColorUpdating) return;
@@ -1768,16 +1919,41 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         setModal(true);
     }, [activeChallenge]);
 
+    const openDdayDeleteModal = useCallback(async (): Promise<void> => {
+        if (!activeDday) return;
+        setModalType("deleteDday");
+        setModalTitle("D-day 삭제");
+        setModalMessage("D-day를 정말 삭제하시겠습니까?");
+        setModal(true);
+    }, [activeDday]);
+
     useEffect(() => {
         if (contentMode !== "challenge") {
             setActiveChallenge(null);
             setChallengeAiSummary("");
             return;
         }
-        if (eventId) {
+        const selectedEvent = eventId ? events.find((item) => item.uuid === eventId) : null;
+        if (eventId && selectedEvent?.type === "challenge") {
             fetchChallengeByEvent(eventId);
+            return;
         }
-    }, [contentMode, eventId, fetchChallengeByEvent]);
+        setActiveChallenge(null);
+        setChallengeAiSummary("");
+    }, [contentMode, eventId, events, fetchChallengeByEvent]);
+
+    useEffect(() => {
+        if (contentMode !== "dday") {
+            setActiveDday(null);
+            return;
+        }
+        const selectedEvent = eventId ? events.find((item) => item.uuid === eventId) : null;
+        if (eventId && selectedEvent?.type === "dday") {
+            fetchDdayByEvent(eventId);
+            return;
+        }
+        setActiveDday(null);
+    }, [contentMode, eventId, events, fetchDdayByEvent]);
 
     return (
         <>
@@ -1812,6 +1988,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                         setChallengeTemplateCreateModal={setChallengeTemplateCreateModal}
                         activeTemplate={activeTemplate}
                         activeChallenge={activeChallenge}
+                        activeDday={activeDday}
                         challengeLoading={challengeLoading}
                         challengeStarting={challengeStarting}
                         challengeTaskUpdating={challengeTaskUpdating}
@@ -1822,6 +1999,11 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                         challengeColorUpdating={challengeColorUpdating}
                         challengeAiSummarizing={challengeAiSummarizing}
                         challengeAiSummary={challengeAiSummary}
+                        ddayLoading={ddayLoading}
+                        ddayChecking={ddayChecking}
+                        ddayRetrying={ddayRetrying}
+                        ddayExtending={ddayExtending}
+                        ddayDeleting={ddayDeleting}
                         startChallengeFromTemplate={startChallengeFromTemplate}
                         toggleChallengeTask={toggleChallengeTask}
                         saveChallengeDailyLog={saveChallengeDailyLog}
@@ -1829,6 +2011,10 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                         extendChallenge={extendChallenge}
                         deleteChallenge={openChallengeDeleteModal}
                         summarizeChallengeWithAi={summarizeChallengeWithAi}
+                        toggleDdayTodayCheck={toggleDdayTodayCheck}
+                        retryDday={retryDday}
+                        extendDday={extendDday}
+                        deleteDday={openDdayDeleteModal}
 
                         contentMode={contentMode}
                         resetEvent={resetEvent}
@@ -1909,6 +2095,8 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                                 ? deleteEvent
                                 : modalType === "deleteChallenge"
                                     ? deleteChallenge
+                                    : modalType === "deleteDday"
+                                        ? deleteDday
                                     : modalType === "deleteTemplate"
                                         ? deleteTemplate
                                         : removeParticipantsAll
@@ -1918,6 +2106,8 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                         setEditStatus={setModalMessage}
                         Text={`${modalType === "deleteChallenge"
                             ? activeChallenge?.title || ""
+                            : modalType === "deleteDday"
+                                ? activeDday?.title || "D-day"
                             : modalType === "deleteTemplate"
                                 ? templateDeleteTarget?.title || ""
                                 : events.find(event => event.uuid === eventId)?.title || ""

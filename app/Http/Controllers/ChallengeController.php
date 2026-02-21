@@ -245,6 +245,13 @@ class ChallengeController extends Controller
             }
 
             $nextDone = (bool)$validated['is_done'];
+            if ((bool)$task->is_done && !$nextDone) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '완료한 할 일은 취소할 수 없습니다.',
+                    'type' => 'warning',
+                ], 422);
+            }
             $task->is_done = $nextDone;
             $task->done_at = $nextDone ? Carbon::now(config('app.timezone')) : null;
             $task->save();

@@ -251,6 +251,13 @@ export default function MonthCalendarSection({ resetEvent, allDates, setAllDates
 
         return new Date(dayData.year, dayData.month, dayData.day);
     }
+    const isPastBlockedInDday = useCallback((date: Date): boolean => {
+        if (contentMode !== "dday") return false;
+        const today = DateUtils.now();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+        const targetStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+        return targetStart < todayStart;
+    }, [contentMode]);
 
     const eventAtSetting = useCallback((date:Date | null): Date | null => {
         if(!date) return date;
@@ -264,7 +271,7 @@ export default function MonthCalendarSection({ resetEvent, allDates, setAllDates
     }, [startAt]);
 
     const handleDateStart = useCallback((dayData: CalendarAtData): void => {
-        if (contentMode !== "normal") {
+        if (contentMode === "challenge") {
             resetEvent();
             return;
         }
@@ -289,35 +296,38 @@ export default function MonthCalendarSection({ resetEvent, allDates, setAllDates
 
         const date = formatDate(dayData);
         if (!date) return;
+        if (isPastBlockedInDday(date)) return;
 
         setStartAt(date);
         setEndAt(eventAtSetting(date));
-    }, [startAt, isMobile, eventId, contentMode]);
+    }, [startAt, isMobile, eventId, contentMode, isPastBlockedInDday]);
 
     const handleDateMove = useCallback((dayData: CalendarAtData): void => {
-        if (contentMode !== "normal") {
+        if (contentMode === "challenge") {
             return;
         }
         if (!isDragging || isMobile) return;
 
         const date = formatDate(dayData);
         if (!date) return;
+        if (isPastBlockedInDday(date)) return;
 
         setEndAt(eventAtSetting(date));
-    }, [isDragging, isMobile, contentMode]);
+    }, [isDragging, isMobile, contentMode, isPastBlockedInDday]);
 
     const handleDateEnd = useCallback((dayData: CalendarAtData): void => {
-        if (contentMode !== "normal") {
+        if (contentMode === "challenge") {
             return;
         }
         if (!isDragging || isMobile) return;
 
         const date = formatDate(dayData);
         if (!date) return;
+        if (isPastBlockedInDday(date)) return;
 
         setEndAt(eventAtSetting(date));
         setIsDragging(false);
-    }, [isDragging, isMobile, contentMode]);
+    }, [isDragging, isMobile, contentMode, isPastBlockedInDday]);
 
     const handleDateMoveOut = useCallback((e: MouseEvent, interval = false) => {
         if(!isDragging || !scrollRef.current || scrollRef.current.contains(e.target as Node)) return;
@@ -345,11 +355,12 @@ export default function MonthCalendarSection({ resetEvent, allDates, setAllDates
 
                 if (year !== undefined && month !== undefined && day !== undefined) {
                     const date = new Date(year, month, day);
+                    if (isPastBlockedInDday(date)) return;
                     setEndAt(eventAtSetting(date));
                 }
             }
         });
-    }, [isDragging]);
+    }, [isDragging, isPastBlockedInDday]);
 
     useEffect(() => {
         document.addEventListener("mousemove", handleDateMoveOut);
@@ -391,7 +402,7 @@ export default function MonthCalendarSection({ resetEvent, allDates, setAllDates
     };
 
     const handleMobileDateClick = useCallback((dayData: CalendarAtData): void => {
-        if (contentMode !== "normal") {
+        if (contentMode === "challenge") {
             resetEvent();
             return;
         }
@@ -399,6 +410,7 @@ export default function MonthCalendarSection({ resetEvent, allDates, setAllDates
 
         const dateStr = formatDate(dayData);
         if (!dateStr) return;
+        if (isPastBlockedInDday(dateStr)) return;
 
         if (!startAt) {
             setStartAt(dateStr);
@@ -419,7 +431,7 @@ export default function MonthCalendarSection({ resetEvent, allDates, setAllDates
                 setEventColor("bg-blue-500");
             }
         }
-    }, [isMobile, startAt, endAt, eventId, contentMode]);
+    }, [isMobile, startAt, endAt, eventId, contentMode, isPastBlockedInDday]);
 
     const intervalRef = useRef<any | null>(null);
     const directionRef = useRef<-1 | 0 | 1>(0);

@@ -35,33 +35,40 @@ interface EventWithLayout extends EventsData {
 }
 
 export default function WeekAndDayCalendarSection({
-    resetEvent,
-    now,
-    handleEventClick,
-    events,
-    setEventParticipants,
-    setEventReminder,
-    eventId,
-    setEventDescription,
-    setEventColor,
-    setEventTitle,
-    contentMode,
-    viewMode,
-    isDragging,
-    setIsDragging,
-    startAt,
-    setStartAt,
-    endAt,
-    setEndAt,
-    activeAt,
-    setActiveAt,
-    activeDay,
-    setActiveDay
-}: WeekCalendarSectionProps) {
+                                                      resetEvent,
+                                                      now,
+                                                      handleEventClick,
+                                                      events,
+                                                      setEventParticipants,
+                                                      setEventReminder,
+                                                      eventId,
+                                                      setEventDescription,
+                                                      setEventColor,
+                                                      setEventTitle,
+                                                      contentMode,
+                                                      viewMode,
+                                                      isDragging,
+                                                      setIsDragging,
+                                                      startAt,
+                                                      setStartAt,
+                                                      endAt,
+                                                      setEndAt,
+                                                      activeAt,
+                                                      setActiveAt,
+                                                      activeDay,
+                                                      setActiveDay
+                                                  }: WeekCalendarSectionProps) {
     const [days, setDays] = useState<Date[]>([]);
     const [isMobile, setIsMobile] = useState<boolean>(false);
     const [baseDate, setBaseDate] = useState<null | Date>(null);
     const [isScrolling, setIsScrolling] = useState<boolean>(false);
+    const isPastBlockedInDday = useCallback((date: Date): boolean => {
+        if (contentMode !== "dday") return false;
+        const today = DateUtils.now();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+        const targetStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+        return targetStart < todayStart;
+    }, [contentMode]);
 
     const scrollRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
     const timeZoneRef: RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
@@ -211,7 +218,7 @@ export default function WeekAndDayCalendarSection({
     }, []);
 
     const handleDateStart = useCallback((e: any):void => {
-        if (contentMode !== "normal") {
+        if (contentMode === "challenge") {
             resetEvent();
             return;
         }
@@ -234,41 +241,44 @@ export default function WeekAndDayCalendarSection({
 
         setIsDragging(true);
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
+        if (dateStr && isPastBlockedInDday(dateStr)) return;
         if(dateStr) {
             setStartAt(dateStr);
             setEndAt(add15Minutes(dateStr));
         }
-    }, [startAt, isMobile, eventId, contentMode]);
+    }, [startAt, isMobile, eventId, contentMode, isPastBlockedInDday]);
 
     const handleDateMove = useCallback((e: any):void => {
-        if (contentMode !== "normal") {
+        if (contentMode === "challenge") {
             return;
         }
         if (!isDragging || isMobile) return;
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
         if(!dateStr) return;
+        if (isPastBlockedInDday(dateStr)) return;
 
         setEndAt(add15Minutes(dateStr));
-    }, [isDragging, isMobile, contentMode]);
+    }, [isDragging, isMobile, contentMode, isPastBlockedInDday]);
 
     const handleDateEnd = useCallback((e: any) => {
-        if (contentMode !== "normal") {
+        if (contentMode === "challenge") {
             return;
         }
         if (!isDragging || isMobile) return;
 
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
         if(!dateStr) return;
+        if (isPastBlockedInDday(dateStr)) return;
 
         setEndAt(add15Minutes(dateStr));
         setIsDragging(false);
-    }, [isDragging, isMobile, contentMode]);
+    }, [isDragging, isMobile, contentMode, isPastBlockedInDday]);
 
     const isInitialRange = (start: Date, end: Date) =>
         end.getTime() === add15Minutes(start).getTime();
 
     const handleMobileDateClick = useCallback((e: any) => {
-        if (contentMode !== "normal") {
+        if (contentMode === "challenge") {
             resetEvent();
             return;
         }
@@ -276,6 +286,7 @@ export default function WeekAndDayCalendarSection({
 
         const date = new Date(e.target.dataset.date);
         if (!date) return;
+        if (isPastBlockedInDday(date)) return;
 
         if (!startAt) {
             setStartAt(date);
@@ -300,7 +311,7 @@ export default function WeekAndDayCalendarSection({
             setEventDescription("");
             setEventColor("bg-blue-500");
         }
-    }, [isMobile, startAt, endAt, eventId, contentMode]);
+    }, [isMobile, startAt, endAt, eventId, contentMode, isPastBlockedInDday]);
 
 
     useEffect(() => {
@@ -360,9 +371,10 @@ export default function WeekAndDayCalendarSection({
 
         const dateStr:Date | void = (XSwitch === "right" && viewMode === "day") ? subtractDay(new Date(slot.dataset.date)) :new Date(slot.dataset.date);
         if(!dateStr) return;
+        if (isPastBlockedInDday(dateStr)) return;
 
         setEndAt(add15Minutes(dateStr));
-    }, [isDragging, viewMode]);
+    }, [isDragging, viewMode, isMobile, isPastBlockedInDday]);
 
     const startInterval = useCallback(() => {
         if (intervalRef.current !== null) return;
@@ -760,7 +772,7 @@ export default function WeekAndDayCalendarSection({
                             className={`${viewMode === "week" ? "w-[calc(100%/7)]" : "w-[calc(100%)]"} h-full flex flex-col snap-start flex-shrink-0 ${
                                 day.toDateString() === baseDate?.toDateString() ? "active" : ""
                             } ${index === 1 ? "first" : ""}`}
-                            >
+                        >
                             <div className="py-2 text-center text-sm bg-white dark:bg-gray-950 max-h-[36px] lg:max-h-[72px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
                                 <p className={`text-xs ${(IsToday ? "today text-white" : "text-gray-500")} flex flex-col lg:flex-row gap-1`}>
                                     <span className="px-2">{WEEK_DAYS[day.getDay()]} {day.getDate()}</span>

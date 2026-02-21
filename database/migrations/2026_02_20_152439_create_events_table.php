@@ -29,6 +29,10 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('challenges')
                 ->cascadeOnDelete();
+            $table->foreignId('dday_id')
+                ->nullable()
+                ->constrained('ddays')
+                ->cascadeOnDelete();
 
             $table->string('title')->nullable();
 
@@ -50,6 +54,7 @@ return new class extends Migration
             $table->index(['start_at', 'end_at']);
             $table->index(['creator_id', 'type', 'start_at']);
             $table->unique(['challenge_id']);
+            $table->unique(['dday_id']);
 
             $table->timestamps();
         });

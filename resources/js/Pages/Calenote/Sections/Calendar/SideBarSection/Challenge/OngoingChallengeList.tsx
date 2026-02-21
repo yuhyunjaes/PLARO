@@ -1,3 +1,4 @@
+import {useMemo} from "react";
 import {EventsData} from "../../../CalenoteSectionsData";
 
 interface OngoingChallengeListProps {
@@ -5,6 +6,10 @@ interface OngoingChallengeListProps {
     eventId: string | null;
     loading: boolean;
     onSelect: (event: EventsData) => Promise<void>;
+    sectionTitle?: string;
+    emptyMessage?: string;
+    fallbackTitle?: string;
+    dateLabel?: string;
 }
 
 const toDateLabel = (date: Date): string => {
@@ -13,49 +18,97 @@ const toDateLabel = (date: Date): string => {
     const d = String(date.getDate()).padStart(2, "0");
     return `${y}.${m}.${d}`;
 };
+const koreanDate: string[] = ["일", "월", "화", "수", "목", "금", "토"];
 
 export default function OngoingChallengeList({
     challengeEvents,
     eventId,
     loading,
     onSelect,
+    sectionTitle = "진행중 챌린지",
+    emptyMessage = "진행중인 챌린지가 없습니다.",
+    fallbackTitle = "챌린지 이벤트",
+    dateLabel = "종료일",
 }: OngoingChallengeListProps) {
+    const groupedByStartDate = useMemo(() => {
+        const map = new Map<string, EventsData[]>();
+        for (const event of challengeEvents) {
+            const startAt = new Date(event.start_at);
+            const key = toDateLabel(startAt);
+            const bucket = map.get(key) ?? [];
+            bucket.push(event);
+            map.set(key, bucket);
+        }
+
+        return Array.from(map.entries())
+            .sort((a, b) => {
+                const aDate = a[1][0] ? new Date(a[1][0].start_at).getTime() : 0;
+                const bDate = b[1][0] ? new Date(b[1][0].start_at).getTime() : 0;
+                return aDate - bDate;
+            })
+            .map(([key, list]) => ({ key, list }));
+    }, [challengeEvents]);
+
+    const getDurationLabel = (event: EventsData): string => {
+        const startAt = new Date(event.start_at);
+        const endAt = new Date(event.end_at);
+        const startDate = new Date(startAt.getFullYear(), startAt.getMonth(), startAt.getDate()).getTime();
+        const endDate = new Date(endAt.getFullYear(), endAt.getMonth(), endAt.getDate()).getTime();
+        const diff = Math.max(1, Math.floor((endDate - startDate) / 86400000) + 1);
+        return event.type === "dday" ? `${diff}일 D-day` : `${diff}일 챌린지`;
+    };
+
     return (
         <div className="space-y-2">
             <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-600 dark:text-gray-300">진행중 챌린지</p>
+                <p className="text-xs text-gray-600 dark:text-gray-300">{sectionTitle}</p>
                 <span className="text-[11px] text-gray-500 dark:text-gray-400">{challengeEvents.length}개</span>
             </div>
 
-            <div className="max-h-[200px] overflow-y-auto hidden-scroll space-y-2 pr-1">
+            <div className="max-h-[240px] overflow-y-auto hidden-scroll space-y-3 pr-1">
                 {challengeEvents.length === 0 ? (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 rounded border border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950 p-3">
-                        진행중인 챌린지가 없습니다.
+                    <p className="text-xs text-gray-500 dark:text-gray-400 py-6 text-center">
+                        {emptyMessage}
                     </p>
                 ) : (
-                    challengeEvents.map((event) => {
-                        const isActive = event.uuid === eventId;
-                        const endAt = new Date(event.end_at);
-                        return (
-                            <button
-                                key={event.uuid}
-                                type="button"
-                                onClick={() => onSelect(event)}
-                                disabled={loading}
-                                className={`w-full rounded-lg border text-left p-3 transition-colors ${isActive
-                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
-                                    : "border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950 hover:bg-gray-100 hover:dark:bg-gray-900"}`}
-                            >
-                                <p className="text-xs font-semibold normal-text truncate">{event.title || "챌린지 이벤트"}</p>
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                    종료일 {toDateLabel(endAt)}
-                                </p>
-                            </button>
-                        );
-                    })
+                    groupedByStartDate.map((group) => (
+                        <div key={`ongoing-group-${group.key}`} className="space-y-1.5">
+                            <p className="text-xs font-semibold normal-text">
+                                {(() => {
+                                    const startAt = new Date(group.list[0].start_at);
+                                    return `${group.key}(${koreanDate[startAt.getDay()]})`;
+                                })()}
+                            </p>
+
+                            {group.list.map((event) => {
+                                const isActive = event.uuid === eventId;
+                                return (
+                                    <div
+                                        key={event.uuid}
+                                        onClick={async () => {
+                                            if (loading) return;
+                                            await onSelect(event);
+                                        }}
+                                        className={`flex flex-row py-2 cursor-pointer rounded transition-colors ${isActive
+                                            ? "bg-blue-100/60 dark:bg-blue-950/30"
+                                            : "hover:bg-gray-200/40 dark:hover:bg-gray-800/40"}`}
+                                    >
+                                        <div className={`w-[4px] ${event.color} rounded shrink-0`}></div>
+                                        <div className="flex-1 pl-2">
+                                            <p className={`text-sm font-semibold ${(event.title || "").trim().length > 0 ? "normal-text" : "text-gray-500"} truncate`}>
+                                                {event.title || fallbackTitle}
+                                            </p>
+                                            <p className="text-gray-500 text-xs font-semibold">
+                                                {getDurationLabel(event)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))
                 )}
             </div>
         </div>
     );
 }
-

@@ -19,6 +19,11 @@ class Event extends Model
         return $this->belongsTo(Challenge::class, 'challenge_id', 'id');
     }
 
+    public function dday()
+    {
+        return $this->belongsTo(Dday::class, 'dday_id', 'id');
+    }
+
     public function users()
     {
         return $this->belongsToMany(User::class, 'event_users')
@@ -46,6 +51,7 @@ class Event extends Model
         'chat_id',
         'creator_id',
         'challenge_id',
+        'dday_id',
         'title',
         'start_at',
         'end_at',
