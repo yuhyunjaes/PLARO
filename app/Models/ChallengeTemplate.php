@@ -14,12 +14,14 @@ class ChallengeTemplate extends Model
         'owner_id',
         'title',
         'description',
+        'icon',
         'category',
         'duration_days',
         'visibility',
         'is_system',
         'is_active',
         'usage_count',
+        'like_count',
     ];
 
     protected function casts(): array
@@ -29,6 +31,7 @@ class ChallengeTemplate extends Model
             'is_system' => 'boolean',
             'is_active' => 'boolean',
             'usage_count' => 'integer',
+            'like_count' => 'integer',
         ];
     }
 
@@ -45,5 +48,16 @@ class ChallengeTemplate extends Model
     public function challenges()
     {
         return $this->hasMany(Challenge::class, 'template_id', 'id');
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(ChallengeTemplateLike::class, 'template_id', 'id');
+    }
+
+    public function likedUsers()
+    {
+        return $this->belongsToMany(User::class, 'challenge_template_likes', 'template_id', 'user_id')
+            ->withTimestamps();
     }
 }

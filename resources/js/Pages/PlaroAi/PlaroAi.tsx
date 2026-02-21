@@ -62,6 +62,7 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
     const [summaryModal, setSummaryModal] = useState<boolean>(false);
     const [summaryLoading, setSummaryLoading] = useState<boolean>(false);
     const [summaryText, setSummaryText] = useState<string>("");
+    const [summaryUpdatedAt, setSummaryUpdatedAt] = useState<string | null>(null);
     const [roomPromptProfile, setRoomPromptProfile] = useState<string>("");
     const [useHistory, setUseHistory] = useState<boolean>(true);
 
@@ -114,6 +115,11 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
         setRoomCategories([]);
     }, [chatId]);
 
+    useEffect(() => {
+        setSummaryText("");
+        setSummaryUpdatedAt(null);
+    }, [chatId]);
+
     const getRoomSettings = useCallback(async () => {
         if (!chatId) {
             setRoomPromptProfile("");
@@ -138,7 +144,16 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
     }, [getRoomSettings]);
 
     const saveRoomSettings = useCallback(async () => {
-        if (!chatId) return;
+        if (!chatId) {
+            const alertData: AlertsData = {
+                id: DateUtils.now(),
+                message: "대화 설정이 임시 저장되었습니다. 첫 메시지 전송 후 채팅방에 자동 저장됩니다.",
+                type: "success"
+            };
+            setAlerts(prev => [...prev, alertData]);
+            setSettingsModal(false);
+            return;
+        }
 
         setLoading(true);
         try {
@@ -161,11 +176,33 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
         } finally {
             setLoading(false);
         }
-    }, [chatId, roomPromptProfile, useHistory]);
+    }, [chatId, roomPromptProfile, useHistory, setAlerts, setLoading]);
+
+    const getSavedSummary = useCallback(async (): Promise<string> => {
+        if (!chatId) return "";
+
+        try {
+            const res = await axios.get(`/api/rooms/${chatId}/summary`);
+            if (res.data.success) {
+                const saved = String(res.data.summary ?? "").trim();
+                setSummaryText(saved);
+                setSummaryUpdatedAt(res.data.summary_updated_at ?? null);
+                return saved;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        return "";
+    }, [chatId]);
 
     const generateSummary = useCallback(async () => {
         if (messages.length <= 0) {
             setSummaryText("요약할 대화가 없습니다.");
+            return;
+        }
+        if (!chatId) {
+            setSummaryText("채팅방 정보가 없습니다.");
             return;
         }
 
@@ -186,14 +223,25 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
             });
 
             const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-            setSummaryText(text || "요약을 생성하지 못했습니다.");
+            if (!text) {
+                setSummaryText("요약을 생성하지 못했습니다.");
+                return;
+            }
+
+            const saveRes = await axios.post(`/api/rooms/${chatId}/summary`, {
+                summary: text,
+            });
+
+            const savedText = saveRes.data?.summary?.trim?.() ?? text;
+            setSummaryText(savedText);
+            setSummaryUpdatedAt(saveRes.data?.summary_updated_at ?? null);
         } catch (err) {
             console.error(err);
             setSummaryText("요약 생성 중 오류가 발생했습니다.");
         } finally {
             setSummaryLoading(false);
         }
-    }, [messages]);
+    }, [messages, chatId]);
 
     const getMessages = useCallback(async () => {
         if (!chatId || newChat) return;
@@ -368,7 +416,10 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                                 onClick={async () => {
                                     if (!canUseRoomActions) return;
                                     setSummaryModal(true);
-                                    await generateSummary();
+                                    const saved = await getSavedSummary();
+                                    if (!saved) {
+                                        await generateSummary();
+                                    }
                                 }}
                                 className={`btn text-xs border normal-text ${
                                     canUseRoomActions
@@ -386,24 +437,13 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                         </div>
                         <div className="relative group">
                             <button
-                                disabled={!canUseRoomActions}
                                 onClick={() => {
-                                    if (!canUseRoomActions) return;
                                     setSettingsModal(true);
                                 }}
-                                className={`btn text-xs border normal-text ${
-                                    canUseRoomActions
-                                        ? "bg-white dark:bg-gray-950 border-gray-300 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900"
-                                        : "bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-800 text-gray-400 cursor-not-allowed"
-                                }`}
+                                className="btn text-xs border normal-text bg-white dark:bg-gray-950 border-gray-300 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900"
                             >
                                 대화 설정
                             </button>
-                            {!canUseRoomActions && (
-                                <span className="pointer-events-none absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-gray-900 text-white text-[11px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                    채팅방 선택 후 사용 가능
-                                </span>
-                            )}
                         </div>
                     </div>
                     <PlaroAiSection now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} roomPromptProfile={roomPromptProfile} useHistory={useHistory}/>
@@ -414,6 +454,11 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                 <div className="fixed inset-0 z-[999] bg-black/30 flex justify-center items-center px-5" onClick={() => setSettingsModal(false)}>
                     <div className="w-full max-w-[560px] rounded bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
                         <h2 className="normal-text text-lg font-semibold">대화 설정</h2>
+                        {!chatId && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                채팅방이 없어도 설정을 미리 저장할 수 있습니다. 첫 메시지를 보내면 새 채팅방에 자동 적용됩니다.
+                            </p>
+                        )}
                         <div className="space-y-2">
                             <label className="text-xs text-gray-600 dark:text-gray-300 block">대화 설명 (사용자 맞춤 지시)</label>
                             <textarea
@@ -447,7 +492,12 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                 <div className="fixed inset-0 z-[999] bg-black/30 flex justify-center items-center px-5" onClick={() => setSummaryModal(false)}>
                     <div className="w-full max-w-[640px] rounded bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-700 p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between">
-                            <h2 className="normal-text text-lg font-semibold">대화 요약</h2>
+                            <div>
+                                <h2 className="normal-text text-lg font-semibold">대화 요약</h2>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                                    마지막 업데이트: {summaryUpdatedAt ? DateUtils.formatDateTime(DateUtils.parseServerDate(summaryUpdatedAt)) : "없음"}
+                                </p>
+                            </div>
                             <button onClick={generateSummary} className="btn text-xs bg-blue-500 hover:bg-blue-600 text-white">다시 생성</button>
                         </div>
                         <div className="max-h-[60vh] overflow-y-auto bg-white dark:bg-gray-950 border border-gray-300 dark:border-gray-800 rounded p-3">

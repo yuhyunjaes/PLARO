@@ -1,6 +1,7 @@
 import {Dispatch, SetStateAction, useCallback, useEffect, useRef, useState} from "react";
 import {faFloppyDisk} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {DateUtils} from "../../../../../../Utils/dateUtils";
 
 interface EventDateViewProps {
     disabled: boolean;
@@ -11,17 +12,11 @@ interface EventDateViewProps {
 }
 
 function formatDate(date: Date): string {
-    return date.getFullYear() + "-" +
-        String(date.getMonth() + 1).padStart(2, '0') + "-" +
-        String(date.getDate()).padStart(2, '0');
+    return DateUtils.formatDate(date);
 }
 
 function formatTime(date: Date): string {
-    return date.toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-    });
+    return DateUtils.formatTime(date);
 }
 
 export default function EventDateViewAndControl({ disabled, startAt, setStartAt, endAt, setEndAt }:EventDateViewProps) {

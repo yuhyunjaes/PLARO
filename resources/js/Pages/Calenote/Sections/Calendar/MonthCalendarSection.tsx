@@ -5,6 +5,7 @@ import {EventsData} from "../CalenoteSectionsData";
 import {DateUtils} from "../../../../Utils/dateUtils";
 
 interface SideBarSectionProps {
+    resetEvent: () => void;
     allDates: CalendarAtData[];
     setAllDates: Dispatch<SetStateAction<CalendarAtData[]>>;
     handleEventClick: (Event:EventsData) => Promise<void>;
@@ -31,6 +32,7 @@ interface SideBarSectionProps {
     sideBar: number;
     viewMode: "month" | "week" | "day";
     setViewMode: Dispatch<SetStateAction<"month" | "week" | "day">>;
+    contentMode: "normal" | "challenge" | "dday";
     now: Date;
     activeAt: Date;
     setActiveAt: Dispatch<SetStateAction<Date>>;
@@ -43,7 +45,7 @@ interface EventWithLayout extends EventsData {
     column: number;
 }
 
-export default function MonthCalendarSection({ allDates, setAllDates, handleEventClick, getActiveEventReminder, setEventParticipants, setEventReminder, setEventIdChangeDone, events, firstCenter, setFirstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
+export default function MonthCalendarSection({ resetEvent, allDates, setAllDates, handleEventClick, getActiveEventReminder, setEventParticipants, setEventReminder, setEventIdChangeDone, events, firstCenter, setFirstCenter, eventId, setEventId, setEventDescription,setEventColor, setEventTitle, isDragging, setIsDragging, months, setMonths, sideBar, activeAt, setActiveAt, viewMode, setViewMode, contentMode, now, startAt, setStartAt, endAt, setEndAt }: SideBarSectionProps) {
     const scrollRef:RefObject<HTMLDivElement | null> = useRef<HTMLDivElement | null>(null);
 
     const [isScrolling, setIsScrolling] = useState<boolean>(false);
@@ -262,6 +264,10 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
     }, [startAt]);
 
     const handleDateStart = useCallback((dayData: CalendarAtData): void => {
+        if (contentMode !== "normal") {
+            resetEvent();
+            return;
+        }
         if (isMobile) return;
 
         if(eventId && startAt) {
@@ -286,18 +292,24 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
 
         setStartAt(date);
         setEndAt(eventAtSetting(date));
-    }, [startAt, isMobile, eventId]);
+    }, [startAt, isMobile, eventId, contentMode]);
 
     const handleDateMove = useCallback((dayData: CalendarAtData): void => {
+        if (contentMode !== "normal") {
+            return;
+        }
         if (!isDragging || isMobile) return;
 
         const date = formatDate(dayData);
         if (!date) return;
 
         setEndAt(eventAtSetting(date));
-    }, [isDragging, isMobile]);
+    }, [isDragging, isMobile, contentMode]);
 
     const handleDateEnd = useCallback((dayData: CalendarAtData): void => {
+        if (contentMode !== "normal") {
+            return;
+        }
         if (!isDragging || isMobile) return;
 
         const date = formatDate(dayData);
@@ -305,7 +317,7 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
 
         setEndAt(eventAtSetting(date));
         setIsDragging(false);
-    }, [isDragging, isMobile]);
+    }, [isDragging, isMobile, contentMode]);
 
     const handleDateMoveOut = useCallback((e: MouseEvent, interval = false) => {
         if(!isDragging || !scrollRef.current || scrollRef.current.contains(e.target as Node)) return;
@@ -379,6 +391,10 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
     };
 
     const handleMobileDateClick = useCallback((dayData: CalendarAtData): void => {
+        if (contentMode !== "normal") {
+            resetEvent();
+            return;
+        }
         if (!isMobile) return;
 
         const dateStr = formatDate(dayData);
@@ -403,7 +419,7 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
                 setEventColor("bg-blue-500");
             }
         }
-    }, [isMobile, startAt, endAt, eventId]);
+    }, [isMobile, startAt, endAt, eventId, contentMode]);
 
     const intervalRef = useRef<any | null>(null);
     const directionRef = useRef<-1 | 0 | 1>(0);
@@ -747,7 +763,7 @@ export default function MonthCalendarSection({ allDates, setAllDates, handleEven
                                                         >
                                                             <div className={`w-[4px] ${includeEvent.color}`}></div>
                                                             <div className={`${eventId === includeEvent.uuid ? includeEvent.color : bodyColor} flex-1 flex justify-start items-center`}>
-                                                                <p className={`text-[0.5rem] md:text-xs pl-1 truncate ${eventId === includeEvent.uuid ? "text-white" : "text-gray-950"}`}>{includeEvent.title}</p>
+                                                                <p className={`text-[0.5rem] md:text-xs pl-1 truncate ${eventId === includeEvent.uuid ? "text-white" : "text-gray-950"}`}>{String(includeEvent.title ?? "").slice(0, 10)}</p>
                                                             </div>
                                                         </div>
                                                     </div>

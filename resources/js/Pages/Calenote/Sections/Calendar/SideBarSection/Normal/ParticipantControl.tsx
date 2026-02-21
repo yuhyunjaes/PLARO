@@ -1,14 +1,16 @@
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faEye, faPen, faEllipsis, faX, faArrowRightFromBracket, faUser} from "@fortawesome/free-solid-svg-icons";
 import {Dispatch, SetStateAction, useCallback, useContext, useEffect, useRef, useState} from "react";
-import {AuthUser} from "../../../../../Types/CalenoteTypes";
-import {EventsData, ParticipantsData} from "../../CalenoteSectionsData";
+import {AuthUser} from "../../../../../../Types/CalenoteTypes";
+import {EventsData, ParticipantsData} from "../../../CalenoteSectionsData";
 import axios from "axios";
-import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
-import {AlertsData} from "../../../../../Components/Elements/ElementsData";
+import {GlobalUIContext} from "../../../../../../Providers/GlobalUIContext";
+import {AlertsData} from "../../../../../../Components/Elements/ElementsData";
 
 interface ParticipantControlProps {
-    setModalType: Dispatch<SetStateAction<"" | "delete" | "removeUser">>;
+    participantControl: string;
+    setParticipantControl: Dispatch<SetStateAction<string>>;
+    setModalType: Dispatch<SetStateAction<"" | "delete" | "removeUser" | "deleteChallenge" | "deleteTemplate">>;
     setModalTitle: Dispatch<SetStateAction<string>>;
     setModalMessage: Dispatch<SetStateAction<string>>;
     setModal: Dispatch<SetStateAction<boolean>>;
@@ -28,7 +30,7 @@ interface ParticipantControlProps {
     };
 }
 
-export default function ParticipantControl({ setModalTitle, setModalType, setModal, setModalMessage, eventUserControl, setEventUserControl, onlineParticipantIds, setEvents, resetEvent, IsEditAuthority, disabled, saveEvent, eventId, eventParticipants, setEventParticipants, auth }:ParticipantControlProps) {
+export default function ParticipantControl({ participantControl, setParticipantControl, setModalTitle, setModalType, setModal, setModalMessage, eventUserControl, setEventUserControl, onlineParticipantIds, setEvents, resetEvent, IsEditAuthority, disabled, saveEvent, eventId, eventParticipants, setEventParticipants, auth }:ParticipantControlProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
@@ -43,8 +45,6 @@ export default function ParticipantControl({ setModalTitle, setModalType, setMod
 
     const [IsParticipantFocus, setIsParticipantFocus] = useState<boolean>(false);
     const [IsParticipantEmail, setIsParticipantEmail] = useState<boolean>(false);
-
-    const [participantControl, setParticipantControl] = useState<string>("");
 
     const activeEventParticipantAreaRef = useRef<HTMLDivElement>(null);
     const activeEventUserAreaRef = useRef<HTMLDivElement>(null);
@@ -414,7 +414,7 @@ export default function ParticipantControl({ setModalTitle, setModalType, setMod
                                         await eventInvite(participantControl, "viewer", localEventId);
                                         setParticipantControl("");
                                     }
-                                    }} className="cursor-pointer block md:hidden group-hover:block hover:text-gray-300">
+                                    }} className="cursor-pointer block md:hidden group-hover:block hover:text-gray-500">
                                             <FontAwesomeIcon icon={faEye} />
                                         </button>
                                         <button disabled={loading} onMouseDown={async () => {
@@ -426,7 +426,7 @@ export default function ParticipantControl({ setModalTitle, setModalType, setMod
                                         await eventInvite(participantControl, "editor", localEventId);
                                         setParticipantControl("");
                                     }
-                                    }} className="cursor-pointer block md:hidden group-hover:block hover:text-gray-300">
+                                    }} className="cursor-pointer block md:hidden group-hover:block hover:text-gray-500">
                                             <FontAwesomeIcon icon={faPen} />
                                         </button>
                                     </div>

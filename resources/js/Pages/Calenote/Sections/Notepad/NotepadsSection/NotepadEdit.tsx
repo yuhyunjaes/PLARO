@@ -44,7 +44,7 @@ export default function NotepadEdit({ deleteId, setDeleteId, editId, setEditId, 
             e.stopPropagation();
             setDeleteId(notepadId);
         }}
-             className={`transition-colors duration-300 relative ${
+             className={`transition-colors duration-150 relative ${
                  deleteId === notepadId
                      ? "text-blue-700"
                      : "text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
@@ -55,7 +55,7 @@ export default function NotepadEdit({ deleteId, setDeleteId, editId, setEditId, 
                 <div
                     ref={menuRef}
                     className={`
-                        w-[160px] absolute p-2 bg-gray-50 dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 top-[100%] rounded
+                        w-[160px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 top-[100%] rounded
                         ${isLastInRow ? "right-0" : "left-0"}
                     `}
                 >
@@ -63,7 +63,7 @@ export default function NotepadEdit({ deleteId, setDeleteId, editId, setEditId, 
                     <button onClick={(e) => {
                         e.stopPropagation();
                         deleteNotepad();
-                    }} className="btn text-xs transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-red-500 hover:text-red-50 hover:bg-red-500/80 space-x-1">
+                    }} className="btn text-xs transition-colors duration-150 w-full flex justify-start items-center px-0 py-2 text-red-500 hover:text-red-50 hover:bg-red-500/80 space-x-1">
                         <FontAwesomeIcon icon={faTrashCan}/>
                         <span>
                             삭제

@@ -15,6 +15,7 @@ class ChallengeDayTask extends Model
         'task_order',
         'title',
         'description',
+        'is_required',
         'is_done',
         'done_at',
     ];
@@ -24,6 +25,7 @@ class ChallengeDayTask extends Model
         return [
             'day_number' => 'integer',
             'task_order' => 'integer',
+            'is_required' => 'boolean',
             'is_done' => 'boolean',
             'done_at' => 'datetime',
         ];

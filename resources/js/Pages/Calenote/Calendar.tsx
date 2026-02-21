@@ -1,5 +1,10 @@
 // 캘린더 영역
 import SideBarSection from "./Sections/Calendar/SideBarSection";
+import ChallengeTemplateModal from "./Sections/Calendar/Challenge/ChallengeTemplateModal";
+import ChallengeTemplateCreateModal, {
+    ChallengeTemplateCreatePayload,
+    ChallengeTemplateEditFormData
+} from "./Sections/Calendar/Challenge/ChallengeTemplateCreateModal";
 import MonthCalendarSection from "./Sections/Calendar/MonthCalendarSection";
 import { Head } from '@inertiajs/react';
 import {AuthUser} from "../../Types/CalenoteTypes";
@@ -9,7 +14,8 @@ import CalendarControlSection from "./Sections/Calendar/CalendarControlSection";
 import WeekAndDayCalendarSection from "./Sections/Calendar/WeekAndDayCalendarSection";
 import axios from "axios";
 import {
-    CalendarAtData,
+    ActiveChallengeData,
+    CalendarAtData, ChallengeTemplateItem,
     EventReminderItem,
     EventsData,
     ParticipantsData,
@@ -58,6 +64,36 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         loading
     } = ui;
 
+    const [challengeTemplateModal, setChallengeTemplateModal] = useState<{status: boolean, templateType: "mine" | "every" | null}>({status: false, templateType: null});
+    const [challengeTemplateCreateModal, setChallengeTemplateCreateModal] = useState<boolean>(false);
+    const [creatingTemplate, setCreatingTemplate] = useState<boolean>(false);
+    const [templates, setTemplates] = useState<ChallengeTemplateItem[]>([]);
+    const [activeTemplate, setActiveTemplate] = useState<null | string>(null);
+    const [activeChallenge, setActiveChallenge] = useState<ActiveChallengeData | null>(null);
+    const [challengeLoading, setChallengeLoading] = useState<boolean>(false);
+    const [challengeStarting, setChallengeStarting] = useState<boolean>(false);
+    const [challengeTaskUpdating, setChallengeTaskUpdating] = useState<boolean>(false);
+    const [challengeLogSaving, setChallengeLogSaving] = useState<boolean>(false);
+    const [challengeRetrying, setChallengeRetrying] = useState<boolean>(false);
+    const [challengeExtending, setChallengeExtending] = useState<boolean>(false);
+    const [challengeDeleting, setChallengeDeleting] = useState<boolean>(false);
+    const [challengeColorUpdating, setChallengeColorUpdating] = useState<boolean>(false);
+    const [challengeAiSummarizing, setChallengeAiSummarizing] = useState<boolean>(false);
+    const [challengeAiSummary, setChallengeAiSummary] = useState<string>("");
+    const [templatesLoading, setTemplatesLoading] = useState<boolean>(false);
+    const [templatesError, setTemplatesError] = useState<string>("");
+    const [editingTemplate, setEditingTemplate] = useState<ChallengeTemplateEditFormData | null>(null);
+    const [templateDeleteTarget, setTemplateDeleteTarget] = useState<ChallengeTemplateItem | null>(null);
+    const [templateDaysReloadKey, setTemplateDaysReloadKey] = useState<number>(0);
+    const sortTemplates = useCallback((list: ChallengeTemplateItem[]) => {
+        return [...list].sort((a, b) => {
+            if (Number(b.liked) !== Number(a.liked)) return Number(b.liked) - Number(a.liked);
+            if (b.like_count !== a.like_count) return b.like_count - a.like_count;
+            if (b.usage_count !== a.usage_count) return b.usage_count - a.usage_count;
+            return a.title.localeCompare(b.title);
+        });
+    }, []);
+
     const [contentMode, setContentMode] = useState<"normal" | "challenge" | "dday">(type ?? "normal");
     const [events, setEvents] = useState<EventsData[]>([]);
     const setEventsWithReminder = useCallback((updater: SetStateAction<EventsData[]>) => {
@@ -69,7 +105,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     const [modal, setModal] = useState<boolean>(false);
     const [modalTitle, setModalTitle] = useState<string>("");
     const [modalMessage, setModalMessage] = useState<string>("");
-    const [modalType, setModalType] = useState<"" | "delete" | "removeUser">("");
+    const [modalType, setModalType] = useState<"" | "delete" | "removeUser" | "deleteChallenge" | "deleteTemplate">("");
 
     const [sideBar, setSideBar] = useState<number>((): 0 | 250 => (window.innerWidth < 768 ? 0 : 250));
     const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
@@ -90,6 +126,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
 
     const [activeDay, setActiveDay] = useState<number | null>(viewMode !== "month" ? temporaryDay : null);
     const [allDates, setAllDates] = useState<CalendarAtData[]>([]);
+    const challengeColorSyncRef = useRef<string | null>(null);
 
     useEffect(() => {
         if (viewMode !== "month" && temporaryDay) {
@@ -111,6 +148,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
     const [eventDescription, setEventDescription] = useState<string>("");
     const [eventColor, setEventColor] = useState<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">("bg-blue-500");
     const [eventReminder, setEventReminder] = useState<EventReminderItem[]>([]);
+    const [participantControl, setParticipantControl] = useState<string>("");
     const [eventParticipants, setEventParticipants] = useState<ParticipantsData[]>([]);
     const [onlineParticipantIds, setOnlineParticipantIds] = useState<number[]>([]);
 
@@ -127,6 +165,31 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             setEventIdChangeDone(true);
         }
     }, [event]);
+
+    const fetchChallengeByEvent = useCallback(async (eventUuid: string): Promise<void> => {
+        if (!eventUuid) return;
+        setChallengeLoading(true);
+
+        try {
+            const res = await axios.get(`/api/challenges/event/${eventUuid}`);
+            if (res.data?.success) {
+                const challenge = res.data.challenge as ActiveChallengeData;
+                setActiveChallenge(challenge);
+                setChallengeAiSummary(challenge.ai_summary ?? "");
+                challengeColorSyncRef.current = challenge?.color ?? null;
+            } else {
+                setActiveChallenge(null);
+                setChallengeAiSummary("");
+                challengeColorSyncRef.current = null;
+            }
+        } catch (e) {
+            setActiveChallenge(null);
+            setChallengeAiSummary("");
+            challengeColorSyncRef.current = null;
+        } finally {
+            setChallengeLoading(false);
+        }
+    }, []);
 
     const saveEvent: () => Promise<string | undefined> = useCallback(async () => {
         if (!startAt || !endAt || !eventColor || eventId) return;
@@ -372,6 +435,11 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             setEndAt(DateUtils.parseServerDate(activeEvent.end_at));
             setEventDescription(activeEvent.description);
             setEventColor(activeEvent.color);
+            if (activeEvent.type === "challenge") {
+                await fetchChallengeByEvent(activeEvent.uuid);
+            } else {
+                setActiveChallenge(null);
+            }
 
             if (IsSameActiveAt) {
                 setFirstCenter(true);
@@ -408,6 +476,11 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                 setEndAt(DateUtils.parseServerDate(activeEvent.end_at));
                 setEventDescription(activeEvent.description);
                 setEventColor(activeEvent.color);
+                if (activeEvent.type === "challenge") {
+                    await fetchChallengeByEvent(activeEvent.uuid);
+                } else {
+                    setActiveChallenge(null);
+                }
 
                 // firstCenter를 true로 설정하여 MonthCalendarSection에서 center() 호출
                 if(IsSameActiveAt) {
@@ -642,12 +715,18 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
             await getActiveEventReminder(Event.uuid);
             await getActiveEventParticipants(Event.uuid);
 
+            setParticipantControl("");
             setEventId(Event.uuid);
             setEventTitle(Event.title);
             setEventDescription(Event.description);
             setEventColor(Event.color);
             setStartAt(startAt);
             setEndAt(DateUtils.parseServerDate(Event.end_at));
+            if (Event.type === "challenge") {
+                await fetchChallengeByEvent(Event.uuid);
+            } else {
+                setActiveChallenge(null);
+            }
 
             router.visit(`/calenote/calendar/${contentMode[0]}/${Event.uuid}`, {
                 method: "get",
@@ -659,7 +738,7 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         } finally {
             setLoading(false);
         }
-    }, [viewMode, activeAt, eventId, contentMode]);
+    }, [viewMode, activeAt, eventId, contentMode, fetchChallengeByEvent]);
 
     useEffect(() => {
         if (!window.Echo || !getDone || events.length <= 0 || contentMode !== "normal") return;
@@ -996,6 +1075,8 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         setEventColor("bg-blue-500");
         setStartAt(null);
         setEndAt(null);
+        setActiveChallenge(null);
+        setParticipantControl("");
     }
 
     const resetEvent = () => {
@@ -1033,6 +1114,671 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
         changeContentTypeUrl();
     }, [contentMode]);
 
+    useEffect(() => {
+        if (!challengeTemplateModal.status || contentMode !== "challenge" || !challengeTemplateModal.templateType) {
+            return;
+        }
+
+        const fetchTemplates = async () => {
+            setTemplatesLoading(true);
+            setTemplatesError("");
+
+            try {
+                const res = await axios.get('/api/challenge-templates', {
+                    params: {
+                        template_type: challengeTemplateModal.templateType,
+                    },
+                });
+
+                if (res.data?.success) {
+                    setTemplates(sortTemplates(res.data.templates ?? []));
+                } else {
+                    setTemplates([]);
+                    setTemplatesError("템플릿을 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
+                }
+            } catch (e) {
+                setTemplates([]);
+                setTemplatesError("템플릿을 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
+            } finally {
+                setTemplatesLoading(false);
+            }
+        };
+
+        fetchTemplates();
+    }, [challengeTemplateModal, contentMode, sortTemplates]);
+
+    const toggleTemplateLike = useCallback(async (template: ChallengeTemplateItem) => {
+        try {
+            const res = template.liked
+                ? await axios.delete(`/api/challenge-templates/${template.uuid}/like`)
+                : await axios.post(`/api/challenge-templates/${template.uuid}/like`);
+
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "좋아요 처리 중 오류가 발생했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setTemplates(prev => sortTemplates(prev.map(item => {
+                if (item.uuid !== template.uuid) return item;
+
+                const nextLiked = !item.liked;
+                return {
+                    ...item,
+                    liked: nextLiked,
+                    like_count: nextLiked ? item.like_count + 1 : Math.max(0, item.like_count - 1),
+                };
+            })));
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "좋아요 처리 중 오류가 발생했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        }
+    }, [setAlerts, sortTemplates]);
+
+    const createChallengeTemplate = useCallback(async (payload: ChallengeTemplateCreatePayload) => {
+        if (creatingTemplate) return;
+        setCreatingTemplate(true);
+
+        try {
+            const res = await axios.post('/api/challenge-templates', payload);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "템플릿 생성 중 오류가 발생했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            const createdTemplate = res.data?.template as ChallengeTemplateItem | undefined;
+            if (createdTemplate) {
+                setTemplates(prev => sortTemplates([createdTemplate, ...prev]));
+            }
+            setTemplateDaysReloadKey((prev) => prev + 1);
+
+            setChallengeTemplateCreateModal(false);
+            setChallengeTemplateModal({ status: true, templateType: "mine" });
+
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "템플릿이 생성되었습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "템플릿 생성 중 오류가 발생했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setCreatingTemplate(false);
+        }
+    }, [creatingTemplate, setAlerts, sortTemplates]);
+
+    const updateChallengeTemplate = useCallback(async (templateUuid: string, payload: ChallengeTemplateCreatePayload) => {
+        if (creatingTemplate) return;
+        setCreatingTemplate(true);
+
+        try {
+            const res = await axios.put(`/api/challenge-templates/${templateUuid}`, payload);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "템플릿 수정 중 오류가 발생했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            const updatedTemplate = res.data?.template as ChallengeTemplateItem | undefined;
+            if (updatedTemplate) {
+                setTemplates(prev => sortTemplates(prev.map(item => item.uuid === updatedTemplate.uuid ? { ...item, ...updatedTemplate } : item)));
+            }
+            setTemplateDaysReloadKey((prev) => prev + 1);
+
+            setEditingTemplate(null);
+            setChallengeTemplateCreateModal(false);
+            setChallengeTemplateModal({ status: true, templateType: "mine" });
+
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "템플릿이 수정되었습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "템플릿 수정 중 오류가 발생했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setCreatingTemplate(false);
+        }
+    }, [creatingTemplate, setAlerts, sortTemplates]);
+
+    const openEditTemplateModal = useCallback(async (template: ChallengeTemplateItem): Promise<void> => {
+        try {
+            const res = await axios.get(`/api/challenge-templates/${template.uuid}/days`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "템플릿 정보를 불러오지 못했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            const editData: ChallengeTemplateEditFormData = {
+                uuid: template.uuid,
+                title: template.title,
+                description: template.description ?? null,
+                icon: template.icon ?? null,
+                category: template.category,
+                duration_days: template.duration_days,
+                visibility: template.visibility,
+                days: (res.data?.days ?? []).map((day: any) => ({
+                    day_number: Number(day.day_number),
+                    tasks: (day.tasks ?? []).map((task: any) => ({
+                        title: String(task.title ?? ""),
+                        description: task.description ? String(task.description) : null,
+                        is_required: Boolean(task.is_required),
+                    })),
+                })),
+            };
+
+            setEditingTemplate(editData);
+            setChallengeTemplateModal({ status: false, templateType: null });
+            setChallengeTemplateCreateModal(true);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "템플릿 정보를 불러오지 못했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        }
+    }, [setAlerts]);
+
+    const openTemplateDeleteModal = useCallback(async (template: ChallengeTemplateItem): Promise<void> => {
+        setTemplateDeleteTarget(template);
+        setModalType("deleteTemplate");
+        setModalTitle("템플릿 삭제");
+        setModalMessage("이 템플릿을 삭제하시겠습니까?");
+        setModal(true);
+    }, []);
+
+    const deleteTemplate = useCallback(async (): Promise<void> => {
+        if (!templateDeleteTarget) return;
+
+        try {
+            const res = await axios.delete(`/api/challenge-templates/${templateDeleteTarget.uuid}`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "템플릿 삭제 중 오류가 발생했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setTemplates(prev => prev.filter(item => item.uuid !== templateDeleteTarget.uuid));
+            if (activeTemplate === templateDeleteTarget.uuid) {
+                setActiveTemplate(null);
+            }
+            setTemplateDaysReloadKey((prev) => prev + 1);
+
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "템플릿이 삭제되었습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "템플릿 삭제 중 오류가 발생했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setTemplateDeleteTarget(null);
+        }
+    }, [templateDeleteTarget, activeTemplate, setAlerts]);
+
+    useEffect(() => {
+        if(!challengeTemplateModal.status) setTemplates([]);
+    }, [challengeTemplateModal.status]);
+
+    useEffect(() => {
+        if (!challengeTemplateCreateModal) {
+            setEditingTemplate(null);
+        }
+    }, [challengeTemplateCreateModal]);
+
+    useEffect(() => {
+        if (!modal && modalType === "deleteTemplate") {
+            setTemplateDeleteTarget(null);
+        }
+    }, [modal, modalType]);
+
+    const startChallengeFromTemplate = useCallback(async (): Promise<void> => {
+        if (!activeTemplate || challengeStarting) return;
+
+        setChallengeStarting(true);
+        try {
+            const res = await axios.post('/api/challenges/start', {
+                template_uuid: activeTemplate,
+                color: eventColor,
+            });
+
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "챌린지 생성 중 오류가 발생했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            const createdEvent = {
+                ...res.data.event,
+                start_at: DateUtils.parseServerDate(res.data.event.start_at),
+                end_at: DateUtils.parseServerDate(res.data.event.end_at),
+            } as EventsData;
+
+            setEventsWithReminder(prev => {
+                const exists = prev.some(item => item.uuid === createdEvent.uuid);
+                return exists ? prev : [...prev, createdEvent];
+            });
+
+            const participantsData: ParticipantsData = {
+                user_name: auth.user!.name,
+                user_id: auth.user!.id,
+                event_id: createdEvent.uuid,
+                email: auth.user!.email,
+                role: "owner",
+                status: null
+            };
+
+            setEventParticipants([participantsData]);
+            setEventId(createdEvent.uuid);
+            setEventTitle(createdEvent.title);
+            setEventDescription(createdEvent.description ?? "");
+            setEventColor(createdEvent.color);
+            setStartAt(DateUtils.parseServerDate(createdEvent.start_at));
+            setEndAt(DateUtils.parseServerDate(createdEvent.end_at));
+            const challenge = res.data.challenge as ActiveChallengeData;
+            setActiveChallenge(challenge);
+            setChallengeAiSummary(challenge.ai_summary ?? "");
+            challengeColorSyncRef.current = challenge?.color ?? null;
+            setChallengeTemplateModal({ status: false, templateType: null });
+
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지가 시작되었습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+
+            router.visit(`/calenote/calendar/c/${createdEvent.uuid}`, {
+                method: "get",
+                preserveState: true,
+                preserveScroll: true,
+            });
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지 생성 중 오류가 발생했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setChallengeStarting(false);
+        }
+    }, [activeTemplate, challengeStarting, auth.user, eventColor, setAlerts, setEventsWithReminder]);
+
+    const toggleChallengeTask = useCallback(async (taskId: number, isDone: boolean): Promise<void> => {
+        if (!activeChallenge || challengeTaskUpdating) return;
+        setChallengeTaskUpdating(true);
+
+        try {
+            const res = await axios.patch(`/api/challenges/${activeChallenge.uuid}/tasks/${taskId}`, {
+                is_done: isDone,
+            });
+
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "할 일 업데이트에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setActiveChallenge(res.data.challenge as ActiveChallengeData);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "할 일 업데이트에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setChallengeTaskUpdating(false);
+        }
+    }, [activeChallenge, challengeTaskUpdating, setAlerts]);
+
+    const saveChallengeDailyLog = useCallback(async (logDate: string, reviewText: string, difficultyScore: number | null): Promise<void> => {
+        if (!activeChallenge || challengeLogSaving) return;
+        setChallengeLogSaving(true);
+
+        try {
+            const res = await axios.put(`/api/challenges/${activeChallenge.uuid}/daily-logs`, {
+                log_date: logDate,
+                review_text: reviewText.length > 0 ? reviewText : null,
+                difficulty_score: difficultyScore,
+            });
+
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "일지 저장에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setActiveChallenge(res.data.challenge as ActiveChallengeData);
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지 일지를 저장했습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "일지 저장에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setChallengeLogSaving(false);
+        }
+    }, [activeChallenge, challengeLogSaving, setAlerts]);
+
+    const retryChallenge = useCallback(async (): Promise<void> => {
+        if (!activeChallenge || challengeRetrying) return;
+        setChallengeRetrying(true);
+
+        try {
+            const res = await axios.post(`/api/challenges/${activeChallenge.uuid}/retry`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "챌린지 재도전에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            const challenge = res.data.challenge as ActiveChallengeData;
+            setActiveChallenge(challenge);
+            setChallengeAiSummary(challenge.ai_summary ?? "");
+
+            const eventData = res.data?.event;
+            if (eventData) {
+                const startAtDate = DateUtils.parseServerDate(eventData.start_at);
+                const endAtDate = DateUtils.parseServerDate(eventData.end_at);
+                setStartAt(startAtDate);
+                setEndAt(endAtDate);
+
+                setEventsWithReminder(prev => prev.map(item => {
+                    if (item.uuid !== eventData.uuid) return item;
+                    return {
+                        ...item,
+                        start_at: startAtDate,
+                        end_at: endAtDate,
+                    };
+                }));
+            }
+
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지를 재도전으로 다시 시작했습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지 재도전에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setChallengeRetrying(false);
+        }
+    }, [activeChallenge, challengeRetrying, setAlerts, setEventsWithReminder]);
+
+    const extendChallenge = useCallback(async (): Promise<void> => {
+        if (!activeChallenge || challengeExtending) return;
+        setChallengeExtending(true);
+
+        try {
+            const res = await axios.post(`/api/challenges/${activeChallenge.uuid}/extend`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "챌린지 연장에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            setActiveChallenge(res.data.challenge as ActiveChallengeData);
+
+            const eventData = res.data?.event;
+            if (eventData) {
+                const endAtDate = DateUtils.parseServerDate(eventData.end_at);
+                setEndAt(endAtDate);
+
+                setEventsWithReminder(prev => prev.map(item => {
+                    if (item.uuid !== eventData.uuid) return item;
+                    return {
+                        ...item,
+                        end_at: endAtDate,
+                        status: eventData.status ?? item.status,
+                    };
+                }));
+            }
+
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지를 템플릿 1회분 연장했습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지 연장에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setChallengeExtending(false);
+        }
+    }, [activeChallenge, challengeExtending, setAlerts, setEventsWithReminder]);
+
+    const deleteChallenge = useCallback(async (): Promise<void> => {
+        if (!activeChallenge || challengeDeleting) return;
+        setChallengeDeleting(true);
+
+        try {
+            const res = await axios.delete(`/api/challenges/${activeChallenge.uuid}`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "챌린지 삭제에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            const deletedEventUuid = (res.data?.event_uuid as string | null) ?? activeChallenge.event_uuid ?? eventId;
+            if (deletedEventUuid) {
+                setEventsWithReminder(prev => prev.filter(item => item.uuid !== deletedEventUuid));
+                setReminders(prev => prev.filter(item => item.event_uuid !== deletedEventUuid));
+            }
+
+            setActiveChallenge(null);
+            setChallengeAiSummary("");
+            challengeColorSyncRef.current = null;
+            resetEvent();
+
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지를 삭제했습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지 삭제에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setChallengeDeleting(false);
+        }
+    }, [activeChallenge, challengeDeleting, eventId, resetEvent, setAlerts, setEventsWithReminder, setReminders]);
+
+    const summarizeChallengeWithAi = useCallback(async (): Promise<void> => {
+        if (!activeChallenge || challengeAiSummarizing) return;
+
+        setChallengeAiSummarizing(true);
+        try {
+            const res = await axios.post(`/api/challenges/${activeChallenge.uuid}/summary`);
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "AI 요약 생성에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            const nextSummary = String(res.data?.summary ?? "").trim();
+            setChallengeAiSummary(nextSummary);
+            if (res.data?.challenge) {
+                setActiveChallenge(res.data.challenge as ActiveChallengeData);
+            } else {
+                setActiveChallenge(prev => prev ? { ...prev, ai_summary: nextSummary } : prev);
+            }
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "AI 요약이 생성되었습니다.",
+                type: "success",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "AI 요약 생성에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setChallengeAiSummarizing(false);
+        }
+    }, [activeChallenge, challengeAiSummarizing, setAlerts]);
+
+    const updateChallengeColor = useCallback(async (color: "bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500"): Promise<void> => {
+        if (!activeChallenge || challengeColorUpdating) return;
+        if (challengeColorSyncRef.current === color) return;
+
+        setChallengeColorUpdating(true);
+        try {
+            const res = await axios.patch(`/api/challenges/${activeChallenge.uuid}/color`, { color });
+            if (!res.data?.success) {
+                const alertData: AlertsData = {
+                    id: new Date(),
+                    message: res.data?.message ?? "챌린지 색상 업데이트에 실패했습니다.",
+                    type: res.data?.type ?? "danger",
+                };
+                setAlerts(pre => [...pre, alertData]);
+                return;
+            }
+
+            challengeColorSyncRef.current = color;
+            setActiveChallenge(prev => prev ? { ...prev, color } : prev);
+
+            const updatedEventUuid = (res.data?.event_uuid as string | null) ?? eventId;
+            if (updatedEventUuid) {
+                setEventsWithReminder(prev => prev.map(item => item.uuid === updatedEventUuid ? { ...item, color } : item));
+            }
+        } catch (e) {
+            const alertData: AlertsData = {
+                id: new Date(),
+                message: "챌린지 색상 업데이트에 실패했습니다.",
+                type: "danger",
+            };
+            setAlerts(pre => [...pre, alertData]);
+        } finally {
+            setChallengeColorUpdating(false);
+        }
+    }, [activeChallenge, challengeColorUpdating, eventId, setAlerts, setEventsWithReminder]);
+
+    useEffect(() => {
+        if (contentMode !== "challenge" || !activeChallenge) return;
+        if (!eventColor) return;
+        updateChallengeColor(eventColor);
+    }, [eventColor, contentMode, activeChallenge, updateChallengeColor]);
+
+    const openChallengeDeleteModal = useCallback(async (): Promise<void> => {
+        if (!activeChallenge) return;
+        setModalType("deleteChallenge");
+        setModalTitle("챌린지 삭제");
+        setModalMessage("챌린지를 정말 삭제하시겠습니까?");
+        setModal(true);
+    }, [activeChallenge]);
+
+    useEffect(() => {
+        if (contentMode !== "challenge") {
+            setActiveChallenge(null);
+            setChallengeAiSummary("");
+            return;
+        }
+        if (eventId) {
+            fetchChallengeByEvent(eventId);
+        }
+    }, [contentMode, eventId, fetchChallengeByEvent]);
+
     return (
         <>
             <Head title="Calendar"/>
@@ -1043,12 +1789,12 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
 
                         {
                             viewMode === "month" && (
-                                <MonthCalendarSection allDates={allDates} setAllDates={setAllDates} handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} events={events} firstCenter={firstCenter} setFirstCenter={setFirstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} sideBar={sideBar} />
+                                <MonthCalendarSection resetEvent={resetEvent} allDates={allDates} setAllDates={setAllDates} handleEventClick={handleEventClick} getActiveEventReminder={getActiveEventReminder} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} setEventIdChangeDone={setEventIdChangeDone} events={events} firstCenter={firstCenter} setFirstCenter={setFirstCenter} eventId={eventId} setEventId={setEventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} months={months} setMonths={setMonths} activeAt={activeAt} setActiveAt={setActiveAt} now={now} viewMode={viewMode} setViewMode={setViewMode} contentMode={contentMode} sideBar={sideBar} />
                             )
                         }
                         {
                             (viewMode === "week" || viewMode === "day") && (
-                                <WeekAndDayCalendarSection now={now} handleEventClick={handleEventClick} events={events} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
+                                <WeekAndDayCalendarSection resetEvent={resetEvent} now={now} handleEventClick={handleEventClick} events={events} setEventParticipants={setEventParticipants} setEventReminder={setEventReminder} eventId={eventId} setEventDescription={setEventDescription} setEventColor={setEventColor} setEventTitle={setEventTitle} contentMode={contentMode} viewMode={viewMode} isDragging={isDragging} setIsDragging={setIsDragging} startAt={startAt} setStartAt={setStartAt} endAt={endAt} setEndAt={setEndAt} activeAt={activeAt} setActiveAt={setActiveAt} activeDay={activeDay} setActiveDay={setActiveDay} />
                             )
                         }
                     </div>
@@ -1059,6 +1805,31 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                         <FontAwesomeIcon icon={sideBarToggle ? faAngleRight : faAngleLeft} />
                     </button>
                     <SideBarSection
+                        participantControl={participantControl}
+                        setParticipantControl={setParticipantControl}
+                        challengeTemplateModal={challengeTemplateModal}
+                        setChallengeTemplateModal={setChallengeTemplateModal}
+                        setChallengeTemplateCreateModal={setChallengeTemplateCreateModal}
+                        activeTemplate={activeTemplate}
+                        activeChallenge={activeChallenge}
+                        challengeLoading={challengeLoading}
+                        challengeStarting={challengeStarting}
+                        challengeTaskUpdating={challengeTaskUpdating}
+                        challengeLogSaving={challengeLogSaving}
+                        challengeRetrying={challengeRetrying}
+                        challengeExtending={challengeExtending}
+                        challengeDeleting={challengeDeleting}
+                        challengeColorUpdating={challengeColorUpdating}
+                        challengeAiSummarizing={challengeAiSummarizing}
+                        challengeAiSummary={challengeAiSummary}
+                        startChallengeFromTemplate={startChallengeFromTemplate}
+                        toggleChallengeTask={toggleChallengeTask}
+                        saveChallengeDailyLog={saveChallengeDailyLog}
+                        retryChallenge={retryChallenge}
+                        extendChallenge={extendChallenge}
+                        deleteChallenge={openChallengeDeleteModal}
+                        summarizeChallengeWithAi={summarizeChallengeWithAi}
+
                         contentMode={contentMode}
                         resetEvent={resetEvent}
                         eventUserControl={eventUserControl}
@@ -1101,7 +1872,60 @@ export default function Calendar({ event, activeEvent, activeEventParticipants, 
                         setEndAt={setEndAt} />
                 </div>
 
-                {modal ? <Modal custom={true} Title={modalTitle} onClickEvent={modalType === "delete" ? deleteEvent : removeParticipantsAll} setModal={setModal} setEditId={setModalTitle} setEditStatus={setModalMessage} Text={`${events.find(event => event.uuid === eventId)?.title || ""} ${modalMessage}`} Position="top" CloseText="삭제" /> : ""}
+                <ChallengeTemplateModal
+                    activeTemplate={activeTemplate}
+                    setActiveTemplate={setActiveTemplate}
+                    contentMode={contentMode}
+                    challengeTemplateModal={challengeTemplateModal}
+                    templates={templates}
+                    templatesLoading={templatesLoading}
+                    templatesError={templatesError}
+                    templateDaysReloadKey={templateDaysReloadKey}
+                    onClose={() => setChallengeTemplateModal({ status: false, templateType: null })}
+                    onConfirm={() => {
+                        if (!activeTemplate) return;
+                        setChallengeTemplateModal({ status: false, templateType: null });
+                    }}
+                    onToggleTemplateLike={toggleTemplateLike}
+                    onEditTemplate={openEditTemplateModal}
+                    onDeleteTemplate={openTemplateDeleteModal}
+                />
+
+                <ChallengeTemplateCreateModal
+                    open={challengeTemplateCreateModal}
+                    setOpen={setChallengeTemplateCreateModal}
+                    creating={creatingTemplate}
+                    onCreate={createChallengeTemplate}
+                    onUpdate={updateChallengeTemplate}
+                    editingTemplate={editingTemplate}
+                />
+
+                {modal ? (
+                    <Modal
+                        custom={true}
+                        Title={modalTitle}
+                        onClickEvent={
+                            modalType === "delete"
+                                ? deleteEvent
+                                : modalType === "deleteChallenge"
+                                    ? deleteChallenge
+                                    : modalType === "deleteTemplate"
+                                        ? deleteTemplate
+                                        : removeParticipantsAll
+                        }
+                        setModal={setModal}
+                        setEditId={setModalTitle}
+                        setEditStatus={setModalMessage}
+                        Text={`${modalType === "deleteChallenge"
+                            ? activeChallenge?.title || ""
+                            : modalType === "deleteTemplate"
+                                ? templateDeleteTarget?.title || ""
+                                : events.find(event => event.uuid === eventId)?.title || ""
+                        } ${modalMessage}`}
+                        Position="top"
+                        CloseText="삭제"
+                    />
+                ) : ""}
             </div>
         </>
     );

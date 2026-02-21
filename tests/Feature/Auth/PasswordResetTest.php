@@ -3,71 +3,102 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_reset_password_link_screen_can_be_rendered(): void
+    public function test_forgot_password_screen_can_be_rendered(): void
     {
         $response = $this->get('/forgot-password');
 
         $response->assertStatus(200);
     }
 
-    public function test_reset_password_link_can_be_requested(): void
+    public function test_password_reset_code_can_be_requested_for_registered_email(): void
     {
-        Notification::fake();
-
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $response = $this->postJson('/password/send-reset-code', [
+            'email' => $user->email,
+        ]);
 
-        Notification::assertSentTo($user, ResetPassword::class);
+        $response->assertStatus(200)->assertJson([
+            'success' => true,
+        ]);
+
+        $sessionData = session('password_reset');
+
+        $this->assertNotNull($sessionData);
+        $this->assertSame($user->email, $sessionData['email']);
+        $this->assertFalse((bool) $sessionData['verified']);
+        $this->assertNotEmpty($sessionData['code']);
     }
 
-    public function test_reset_password_screen_can_be_rendered(): void
+    public function test_password_reset_code_can_be_verified(): void
     {
-        Notification::fake();
-
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->postJson('/password/send-reset-code', [
+            'email' => $user->email,
+        ])->assertStatus(200);
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-            $response = $this->get('/reset-password/'.$notification->token);
+        $code = session('password_reset.code');
 
-            $response->assertStatus(200);
+        $response = $this->postJson('/password/verify-reset-code', [
+            'code' => $code,
+        ]);
 
-            return true;
-        });
+        $response->assertStatus(200)->assertJson([
+            'success' => true,
+        ]);
+
+        $this->assertTrue((bool) session('password_reset.verified'));
     }
 
-    public function test_password_can_be_reset_with_valid_token(): void
+    public function test_password_can_be_reset_after_email_verification(): void
     {
-        Notification::fake();
-
         $user = User::factory()->create();
 
-        $this->post('/forgot-password', ['email' => $user->email]);
+        $this->postJson('/password/send-reset-code', [
+            'email' => $user->email,
+        ])->assertStatus(200);
 
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $response = $this->post('/reset-password', [
-                'token' => $notification->token,
-                'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ]);
+        $code = session('password_reset.code');
+        $this->postJson('/password/verify-reset-code', [
+            'code' => $code,
+        ])->assertStatus(200);
 
-            $response
-                ->assertSessionHasNoErrors()
-                ->assertRedirect(route('login'));
+        $response = $this->postJson('/password/reset', [
+            'email' => $user->email,
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ]);
 
-            return true;
-        });
+        $response->assertStatus(200)->assertJson([
+            'success' => true,
+        ]);
+
+        $this->assertTrue(Hash::check('new-password', $user->fresh()->password));
+        $this->assertNull(session('password_reset'));
+    }
+
+    public function test_social_account_can_not_request_password_reset_code(): void
+    {
+        $socialUser = User::factory()->create([
+            'google_id' => 'google-12345',
+        ]);
+
+        $response = $this->postJson('/password/send-reset-code', [
+            'email' => $socialUser->email,
+        ]);
+
+        $response->assertStatus(200)->assertJson([
+            'success' => false,
+            'message' => '소셜 로그인 계정은 비밀번호 찾기를 사용할 수 없습니다.',
+        ]);
     }
 }

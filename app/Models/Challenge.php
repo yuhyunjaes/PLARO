@@ -24,6 +24,7 @@ class Challenge extends Model
         'last_check_date',
         'restart_count',
         'review',
+        'ai_summary',
         'color',
     ];
 
@@ -60,8 +61,8 @@ class Challenge extends Model
         return $this->hasMany(ChallengeDailyLog::class, 'challenge_id', 'id');
     }
 
-    public function events()
+    public function event()
     {
-        return $this->hasMany(Event::class, 'challenge_id', 'id');
+        return $this->hasOne(Event::class, 'challenge_id', 'id');
     }
 }

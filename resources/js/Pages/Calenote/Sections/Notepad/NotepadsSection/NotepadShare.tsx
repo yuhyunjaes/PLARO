@@ -65,7 +65,7 @@ export default function NotepadShare({ notepadId, shareId, setShareId, isLastInR
                 e.stopPropagation();
                 setShareId(notepadId)
             }}
-            className={`transition-colors duration-300 relative ${
+            className={`transition-colors duration-150 relative ${
                 shareId === notepadId
                     ? "text-blue-700"
                     : "text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
@@ -77,13 +77,13 @@ export default function NotepadShare({ notepadId, shareId, setShareId, isLastInR
                 <div
                     ref={menuRef}
                     className={`
-                        w-[160px] absolute p-2 bg-gray-50 dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 top-[100%] rounded
+                        w-[160px] absolute p-2 bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 top-[100%] rounded
                         ${isLastInRow ? "right-0" : "left-0"}
                     `}
                 >
                     <button onClick={() => {
                         sendEmail(shareId)
-                    }} className="btn text-xs transition-colors duration-300 w-full flex justify-start items-center px-0 py-2 text-gray-950 dark:text-white hover:bg-gray-950/10 dark:hover:bg-gray-600 space-x-1">
+                    }} className="btn text-xs transition-colors duration-150 w-full flex justify-start items-center px-0 py-2 text-gray-950 dark:text-white hover:bg-gray-950/10 dark:hover:bg-gray-600 space-x-1">
                         <FontAwesomeIcon icon={faEnvelope}/>
                         <span>
                             메일 공유

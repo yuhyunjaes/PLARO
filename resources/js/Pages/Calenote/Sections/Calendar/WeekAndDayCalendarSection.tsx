@@ -3,6 +3,7 @@ import {CalendarAtData, EventReminderItem, EventsData, ParticipantsData} from ".
 import {DateUtils} from "../../../../Utils/dateUtils";
 
 interface WeekCalendarSectionProps {
+    resetEvent: () => void;
     now: Date;
     handleEventClick: (Event:EventsData) => Promise<void>;
     events: EventsData[];
@@ -12,6 +13,7 @@ interface WeekCalendarSectionProps {
     setEventDescription: Dispatch<SetStateAction<string>>;
     setEventColor: Dispatch<SetStateAction<"bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500">>;
     setEventTitle: Dispatch<SetStateAction<string>>;
+    contentMode: "normal" | "challenge" | "dday";
     viewMode: "month" | "week" | "day";
     isDragging: boolean;
     setIsDragging: Dispatch<SetStateAction<boolean>>;
@@ -33,6 +35,7 @@ interface EventWithLayout extends EventsData {
 }
 
 export default function WeekAndDayCalendarSection({
+    resetEvent,
     now,
     handleEventClick,
     events,
@@ -42,6 +45,7 @@ export default function WeekAndDayCalendarSection({
     setEventDescription,
     setEventColor,
     setEventTitle,
+    contentMode,
     viewMode,
     isDragging,
     setIsDragging,
@@ -207,6 +211,10 @@ export default function WeekAndDayCalendarSection({
     }, []);
 
     const handleDateStart = useCallback((e: any):void => {
+        if (contentMode !== "normal") {
+            resetEvent();
+            return;
+        }
         if (isMobile) return;
 
         if(eventId && startAt) {
@@ -230,17 +238,23 @@ export default function WeekAndDayCalendarSection({
             setStartAt(dateStr);
             setEndAt(add15Minutes(dateStr));
         }
-    }, [startAt, isMobile, eventId]);
+    }, [startAt, isMobile, eventId, contentMode]);
 
     const handleDateMove = useCallback((e: any):void => {
+        if (contentMode !== "normal") {
+            return;
+        }
         if (!isDragging || isMobile) return;
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
         if(!dateStr) return;
 
         setEndAt(add15Minutes(dateStr));
-    }, [isDragging, isMobile]);
+    }, [isDragging, isMobile, contentMode]);
 
     const handleDateEnd = useCallback((e: any) => {
+        if (contentMode !== "normal") {
+            return;
+        }
         if (!isDragging || isMobile) return;
 
         const dateStr:Date | undefined = new Date(e.target.dataset.date);
@@ -248,12 +262,16 @@ export default function WeekAndDayCalendarSection({
 
         setEndAt(add15Minutes(dateStr));
         setIsDragging(false);
-    }, [isDragging, isMobile]);
+    }, [isDragging, isMobile, contentMode]);
 
     const isInitialRange = (start: Date, end: Date) =>
         end.getTime() === add15Minutes(start).getTime();
 
     const handleMobileDateClick = useCallback((e: any) => {
+        if (contentMode !== "normal") {
+            resetEvent();
+            return;
+        }
         if (!isMobile) return;
 
         const date = new Date(e.target.dataset.date);
@@ -282,7 +300,7 @@ export default function WeekAndDayCalendarSection({
             setEventDescription("");
             setEventColor("bg-blue-500");
         }
-    }, [isMobile, startAt, endAt, eventId]);
+    }, [isMobile, startAt, endAt, eventId, contentMode]);
 
 
     useEffect(() => {

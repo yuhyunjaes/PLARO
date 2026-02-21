@@ -55,13 +55,33 @@ class SocialAuthController extends Controller
             abort(404);
         }
 
-        $socialUser = Socialite::driver($provider)->stateless()->user();
+        if ($request->filled('error')) {
+            return redirect()
+                ->route('login')
+                ->with('social_error', $this->buildSocialErrorMessage($provider, $request));
+        }
+
+        try {
+            $socialUser = Socialite::driver($provider)->stateless()->user();
+        } catch (\Throwable $e) {
+            return redirect()
+                ->route('login')
+                ->with('social_error', ucfirst($provider) . ' 로그인 과정이 취소되었거나 만료되었습니다. 다시 시도해주세요.');
+        }
+
+        $socialEmail = $socialUser->getEmail();
+        if ($socialEmail) {
+            $existingUser = User::where('email', $socialEmail)->first();
+            if ($existingUser) {
+                return $this->loginAndRedirect($request, $existingUser);
+            }
+        }
 
         $user = $this->resolveOrCreateSocialUser(
             provider: $provider,
             providerId: (string) $socialUser->getId(),
             name: $socialUser->getName() ?: $socialUser->getNickname(),
-            email: $socialUser->getEmail(),
+            email: $socialEmail,
         );
 
         return $this->loginAndRedirect($request, $user);
@@ -165,10 +185,6 @@ class SocialAuthController extends Controller
 
         $user = User::where($providerColumn, $providerId)->first();
 
-        if (!$user && $email) {
-            $user = User::where('email', $email)->first();
-        }
-
         if ($user) {
             $updates = [];
 
@@ -247,6 +263,12 @@ class SocialAuthController extends Controller
 
     private function handleKakaoCallback(Request $request): RedirectResponse
     {
+        if ($request->filled('error')) {
+            return redirect()
+                ->route('login')
+                ->with('social_error', $this->buildSocialErrorMessage('kakao', $request));
+        }
+
         if (!$request->filled('code')) {
             return redirect()->route('login')->with('social_error', '카카오 로그인에 실패했습니다.');
         }
@@ -292,6 +314,13 @@ class SocialAuthController extends Controller
             return redirect()->route('login')->with('social_error', '카카오 사용자 식별값이 없습니다.');
         }
 
+        if ($email) {
+            $existingUser = User::where('email', $email)->first();
+            if ($existingUser) {
+                return $this->loginAndRedirect($request, $existingUser);
+            }
+        }
+
         $user = $this->resolveOrCreateSocialUser(
             provider: 'kakao',
             providerId: $providerId,
@@ -311,7 +340,7 @@ class SocialAuthController extends Controller
         $token = Session::get('invitation_token');
 
         if (!$token) {
-            return redirect('/');
+            return null;
         }
 
         $invitation = EventInvitation::where('token', $token)
@@ -319,7 +348,7 @@ class SocialAuthController extends Controller
             ->first();
 
         if (!$invitation) {
-            return redirect('/');
+            return null;
         }
 
         if ($invitation->email !== $user->email) {
@@ -353,13 +382,22 @@ class SocialAuthController extends Controller
             ]
         ))->toOthers();
 
-        Session::forget([
-            'invitation_token',
-            'invitation_email',
-            'invitation_active',
-            'invitation_session_started_at',
-        ]);
-
         return redirect("/calenote/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
+    }
+
+    private function buildSocialErrorMessage(string $provider, Request $request): string
+    {
+        $providerLabel = $provider === 'kakao'
+            ? '카카오'
+            : ($provider === 'google' ? '구글' : '페이스북');
+
+        $error = strtolower((string) $request->query('error', ''));
+        $description = strtolower((string) $request->query('error_description', ''));
+
+        if ($error === 'access_denied' || str_contains($description, 'access_denied') || str_contains($description, 'cancel')) {
+            return $providerLabel . ' 로그인 동의가 취소되었습니다.';
+        }
+
+        return $providerLabel . ' 로그인 중 오류가 발생했습니다. 다시 시도해주세요.';
     }
 }

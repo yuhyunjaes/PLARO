@@ -8,19 +8,26 @@ use App\Models\ChatMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class ChatController extends Controller
 {
 //    새로운 봇 채팅방 생성
     public function StoreRooms(Request $request) {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'model_name' => ['required', 'string', 'max:255'],
+            'prompt_profile' => ['nullable', 'string', 'max:2000'],
+            'use_history' => ['nullable', 'boolean'],
+        ]);
 
         $room = ChatRoom::create([
             'user_id' => Auth::id(),
             'uuid' => Str::uuid()->toString(),
-            'title' => $request->title,
-            'model_name' => $request->model_name,
-            'prompt_profile' => null,
-            'use_history' => true,
+            'title' => $data['title'],
+            'model_name' => $data['model_name'],
+            'prompt_profile' => $data['prompt_profile'] ?? null,
+            'use_history' => $data['use_history'] ?? true,
         ]);
 
         return response()->json(['success'=>true, 'room_id'=>$room->uuid, 'title'=>$room->title]);
@@ -177,6 +184,62 @@ class ChatController extends Controller
         return response()->json([
             'success' => true,
             'message' => '대화 설정이 저장되었습니다.',
+            'type' => 'success'
+        ]);
+    }
+
+    // 채팅방 요약 조회
+    public function GetRoomSummary($roomId)
+    {
+        $room = ChatRoom::where('uuid', $roomId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$room) {
+            return response()->json([
+                'success' => false,
+                'message' => '채팅방이 존재하지 않습니다.',
+                'type' => 'danger'
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'summary' => $room->summary ?? '',
+            'summary_updated_at' => $room->summary_updated_at?->toDateTimeString(),
+            'type' => 'success'
+        ]);
+    }
+
+    // 채팅방 요약 저장/수정
+    public function UpsertRoomSummary(Request $request, $roomId)
+    {
+        $room = ChatRoom::where('uuid', $roomId)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$room) {
+            return response()->json([
+                'success' => false,
+                'message' => '채팅방이 존재하지 않습니다.',
+                'type' => 'danger'
+            ]);
+        }
+
+        $data = $request->validate([
+            'summary' => ['required', 'string', 'max:20000'],
+        ]);
+
+        $room->update([
+            'summary' => trim($data['summary']),
+            'summary_updated_at' => Carbon::now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'summary' => $room->summary,
+            'summary_updated_at' => $room->summary_updated_at?->toDateTimeString(),
+            'message' => '대화 요약이 저장되었습니다.',
             'type' => 'success'
         ]);
     }

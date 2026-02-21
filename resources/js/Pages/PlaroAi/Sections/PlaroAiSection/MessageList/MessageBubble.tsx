@@ -15,7 +15,7 @@ export default function MessageBubble({ msg, handleNotepad } : MessageBubbleProp
 
     return (
         <div
-            className={`flex chat-item mb-[100px] transition-opacity duration-300 ${
+            className={`flex chat-item mb-[100px] transition-opacity duration-150 ${
                 isUser ? "justify-end" : "justify-start relative"
             }`}
         >

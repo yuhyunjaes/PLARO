@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useState} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {faX} from "@fortawesome/free-solid-svg-icons";
-import {EventReminderItem} from "../../CalenoteSectionsData";
+import {EventReminderItem} from "../../../CalenoteSectionsData";
 
 interface ReminderControlProps {
     eventReminder: EventReminderItem[];
@@ -127,7 +127,7 @@ export default function ReminderControl({ eventReminder, addEventReminder, remov
     }, [eventReminder]);
 
     return (
-        <div className="px-5 flex flex-wrap">
+        <div className="px-5 mb-5 flex flex-wrap">
             <div className="w-full relative">
                 <input
                     onFocus={() => { setReminderSelector(true); }}

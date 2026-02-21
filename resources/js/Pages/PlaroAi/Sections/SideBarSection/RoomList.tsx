@@ -61,8 +61,8 @@ export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, ch
 
     return (
         <>
-            <div className={`my-3 ${(mdRoomList || sideBar) ? "block" : "hidden"}`}>
-                <p className="text-xs py-2 font-semibold mx-5 text-gray-950 dark:text-white">채팅</p>
+            <div className={`p-2 ${(mdRoomList || sideBar) ? "block" : "hidden"}`}>
+                <p className="text-[11px] py-2 font-semibold px-3 text-gray-500 dark:text-gray-400">채팅</p>
                 {rooms.map((room) => (
                     <div onClick={() => {
                         if(room.room_id === chatId) return;
@@ -75,8 +75,8 @@ export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, ch
                             preserveState: true,
                             preserveScroll: true,
                         });
-                    }} key={room.room_id} className={`btn group transition-colors duration-300 w-full text-gray-950 dark:text-white flex justify-between items-center py-2
-                ${chatId === room.room_id ? "bg-blue-500 text-white" : "hover:bg-blue-500/80 hover:text-white"}
+                    }} key={room.room_id} className={`group transition-colors duration-150 w-full text-gray-800 dark:text-gray-100 flex justify-between items-center py-2 px-3 rounded text-sm font-semibold
+                ${chatId === room.room_id ? "bg-blue-500 text-white" : "hover:bg-gray-100 dark:hover:bg-gray-800"}
                 `}>
                         {
                             (editStatus === "update" && editId === room.room_id) ?
@@ -117,6 +117,8 @@ export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, ch
                                 const scrollY = sidebar?.scrollTop || 0;
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 const margin = 8;
+                                const menuWidth = 180;
+                                const gap = 6;
 
                                 // align menu top with ellipsis button top
                                 const y = rect.top;
@@ -124,7 +126,7 @@ export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, ch
                                 // place menu to the right of ellipsis button
                                 const x = Math.max(
                                     margin,
-                                    Math.min(rect.right + margin, window.innerWidth - 160 - margin)
+                                    Math.min(rect.right + gap, window.innerWidth - menuWidth - margin)
                                 );
 
                                 if (editRoomRef.current) {

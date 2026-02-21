@@ -28,13 +28,7 @@ return new class extends Migration
             $table->foreignId('challenge_id')
                 ->nullable()
                 ->constrained('challenges')
-                ->cascadeOnDelete()
-                ->index();
-
-            // 챌린지 Day 표시
-            $table->unsignedTinyInteger('day_number')
-                ->nullable()
-                ->index();
+                ->cascadeOnDelete();
 
             $table->string('title')->nullable();
 
@@ -55,6 +49,7 @@ return new class extends Migration
 
             $table->index(['start_at', 'end_at']);
             $table->index(['creator_id', 'type', 'start_at']);
+            $table->unique(['challenge_id']);
 
             $table->timestamps();
         });

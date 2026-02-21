@@ -46,7 +46,6 @@ class Event extends Model
         'chat_id',
         'creator_id',
         'challenge_id',
-        'day_number',
         'title',
         'start_at',
         'end_at',
@@ -61,7 +60,6 @@ class Event extends Model
         return [
             'start_at' => 'datetime',
             'end_at' => 'datetime',
-            'day_number' => 'integer',
         ];
     }
 }

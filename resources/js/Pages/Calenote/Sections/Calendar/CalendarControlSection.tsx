@@ -215,7 +215,7 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
                     <FontAwesomeIcon className="normal-text absolute end-0 pointer-events-none pe-2 text-xs" icon={faChevronDown}/>
                 </div>
 
-                <button onClick={() => setContentChangeToggle(!contentChangeToggle)} className="flex items-center justify-center">
+                <button onClick={() => setContentChangeToggle(!contentChangeToggle)} className="flex items-center justify-center cursor-pointer">
                     <FontAwesomeIcon className="normal-text pointer-events-none pe-2 text-xs" icon={faEllipsisVertical}/>
                 </button>
 

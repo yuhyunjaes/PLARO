@@ -9,13 +9,13 @@ import Header from "./Components/Header/Header";
 import {DateUtils} from "./Utils/dateUtils";
 
 interface RootProps {
-    auth: any;
     children: ReactNode;
     [key: string]: any;
 }
 
-export default function Root({ auth, children, ...props }: RootProps) {
-    const { url, component } = usePage();
+export default function Root({ children, ...props }: RootProps) {
+    const { url, component, props: pageProps } = usePage<any>();
+    const auth = pageProps.auth;
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {

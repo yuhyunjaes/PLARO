@@ -16,6 +16,8 @@ use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\EventUserController;
 use App\Http\Controllers\PlaroAiController;
 use App\Http\Controllers\SocialAuthController;
+use App\Http\Controllers\ChallengeTemplateController;
+use App\Http\Controllers\ChallengeController;
 use App\Models\Notepad;
 use App\Models\Event;
 use Illuminate\Support\Facades\Session;
@@ -47,19 +49,17 @@ Route::middleware('web')->group(function () {
     Route::middleware('guest')->group(function () {
 
         Route::get('/login', function () {
-            $email = Session::get('invitation_email', null);
             return Inertia::render('Auth/Login', [
-                'sessionEmail' => $email,
                 'socialError' => Session::pull('social_error', null),
             ]);
         })->name('login');
 
-        Route::get('/register', function () {
-            $email = Session::get('invitation_email', null);
+        Route::get('/forgot-password', function () {
+            return Inertia::render('Auth/ForgotPassword');
+        })->name('password.forgot');
 
-            return Inertia::render('Auth/Register', [
-                'sessionEmail' => $email,
-            ]);
+        Route::get('/register', function () {
+            return Inertia::render('Auth/Register');
         })->name('register');
 
         Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
@@ -70,6 +70,13 @@ Route::middleware('web')->group(function () {
         Route::get('/check-id/{id}', [AuthController::class, 'checkId'])->name('checkId');
         Route::post('/send-email-code', [AuthController::class, 'sendEmail'])->name('sendEmail');
         Route::post('/check-email-code', [AuthController::class, 'checkEmail'])->name('checkEmail');
+        Route::post('/password/send-reset-code', [AuthController::class, 'sendPasswordResetCode'])->name('password.send-reset-code');
+        Route::post('/password/verify-reset-code', [AuthController::class, 'verifyPasswordResetCode'])->name('password.verify-reset-code');
+        Route::post('/password/reset', [AuthController::class, 'resetPassword'])->name('password.reset');
+
+        Route::get('/logout', function () {
+            return redirect()->route('login');
+        });
     });
 
     // --------------------
@@ -285,6 +292,8 @@ Route::middleware('web')->group(function () {
         Route::delete('/api/rooms/{roomId}', [ChatController::class, 'DeleteRooms'])->name('rooms.delete');
         Route::get('/api/rooms/{roomId}/settings', [ChatController::class, 'GetRoomSettings'])->name('rooms.settings.get');
         Route::put('/api/rooms/{roomId}/settings', [ChatController::class, 'UpdateRoomSettings'])->name('rooms.settings.update');
+        Route::get('/api/rooms/{roomId}/summary', [ChatController::class, 'GetRoomSummary'])->name('rooms.summary.get');
+        Route::post('/api/rooms/{roomId}/summary', [ChatController::class, 'UpsertRoomSummary'])->name('rooms.summary.upsert');
 
         Route::get('/api/rooms/{roomId}/categories', [ChatCategoryController::class, 'GetRoomsCategories'])->name('rooms.categories.get');
         Route::post('/api/rooms/{roomId}/categories', [ChatCategoryController::class, 'StoreRoomsCategories'])->name('rooms.categories.store');
@@ -301,6 +310,22 @@ Route::middleware('web')->group(function () {
         Route::get('/api/events/{uuid}', [EventController::class, 'GetActiveEvents'])->name('event.active.get');
         Route::delete('/api/events/{uuid}', [EventController::class, 'DeleteEvents'])->name('event.delete');
         Route::get('/api/events', [EventController::class, 'GetEvents'])->name('event.get');
+        Route::post('/api/challenge-templates', [ChallengeTemplateController::class, 'StoreChallengeTemplate'])->name('challenge.templates.store');
+        Route::get('/api/challenge-templates', [ChallengeTemplateController::class, 'GetChallengeTemplates'])->name('challenge.templates.get');
+        Route::put('/api/challenge-templates/{uuid}', [ChallengeTemplateController::class, 'UpdateChallengeTemplate'])->name('challenge.templates.update');
+        Route::delete('/api/challenge-templates/{uuid}', [ChallengeTemplateController::class, 'DeleteChallengeTemplate'])->name('challenge.templates.delete');
+        Route::get('/api/challenge-templates/{uuid}/days', [ChallengeTemplateController::class, 'GetChallengeTemplateDays'])->name('challenge.templates.days.get');
+        Route::post('/api/challenge-templates/{uuid}/like', [ChallengeTemplateController::class, 'StoreChallengeTemplateLike'])->name('challenge.templates.like.store');
+        Route::delete('/api/challenge-templates/{uuid}/like', [ChallengeTemplateController::class, 'DeleteChallengeTemplateLike'])->name('challenge.templates.like.delete');
+        Route::post('/api/challenges/start', [ChallengeController::class, 'StartChallenge'])->name('challenges.start');
+        Route::get('/api/challenges/event/{uuid}', [ChallengeController::class, 'GetChallengeByEvent'])->name('challenges.event.get');
+        Route::patch('/api/challenges/{challengeUuid}/tasks/{taskId}', [ChallengeController::class, 'UpdateChallengeDayTask'])->name('challenges.tasks.update');
+        Route::put('/api/challenges/{challengeUuid}/daily-logs', [ChallengeController::class, 'UpsertChallengeDailyLog'])->name('challenges.daily-logs.upsert');
+        Route::post('/api/challenges/{challengeUuid}/retry', [ChallengeController::class, 'RetryChallenge'])->name('challenges.retry');
+        Route::post('/api/challenges/{challengeUuid}/extend', [ChallengeController::class, 'ExtendChallenge'])->name('challenges.extend');
+        Route::patch('/api/challenges/{challengeUuid}/color', [ChallengeController::class, 'UpdateChallengeColor'])->name('challenges.color.update');
+        Route::post('/api/challenges/{challengeUuid}/summary', [ChallengeController::class, 'SummarizeChallengeWithAi'])->name('challenges.summary.ai');
+        Route::delete('/api/challenges/{challengeUuid}', [ChallengeController::class, 'DeleteChallenge'])->name('challenges.delete');
         Route::post('/api/event/{uuid}/reminders', [EventReminderController::class, 'StoreEventReminder'])->name('event.reminder.store');
         Route::get('/api/event/{uuid}/reminders', [EventReminderController::class, 'getActiveEventReminder'])->name('event.active.reminder.get');
         Route::put('/api/event/{uuid}/reminders', [EventReminderController::class, 'updateEventRemindersRead'])->name('event.reminders.read.update');

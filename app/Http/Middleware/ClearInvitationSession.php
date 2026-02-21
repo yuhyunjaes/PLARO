@@ -28,45 +28,7 @@ class ClearInvitationSession
                 'invitation_active',
                 'invitation_session_started_at',
             ]);
-
-            return $next($request);
         }
-
-        $routeName = $request->route()?->getName();
-        $method = strtoupper($request->method());
-
-        $invitationFlowRoutes = [
-            'login',
-            'register',
-            'login.submit',
-            'register.submit',
-            'checkId',
-            'sendEmail',
-            'checkEmail',
-            'invitations.show',
-            'invitations.accept',
-            'invitations.accept.session.store',
-            'invitations.decline',
-            'social.redirect',
-            'social.callback',
-            'social.complete.form',
-            'social.complete.submit',
-        ];
-
-        if (in_array($routeName, $invitationFlowRoutes, true)) {
-            return $next($request);
-        }
-
-        if ($method === 'POST') {
-            return $next($request);
-        }
-
-        Session::forget([
-            'invitation_token',
-            'invitation_email',
-            'invitation_active',
-            'invitation_session_started_at',
-        ]);
 
         return $next($request);
     }

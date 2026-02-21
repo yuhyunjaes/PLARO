@@ -85,6 +85,29 @@ export const DateUtils = {
         return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
     },
 
+    formatDate: (date: Date | null): string => {
+        if (!date || isNaN(date.getTime())) return "";
+
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const dd = String(date.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    },
+
+    formatTime: (date: Date | null): string => {
+        if (!date || isNaN(date.getTime())) return "";
+
+        const hh = String(date.getHours()).padStart(2, "0");
+        const mi = String(date.getMinutes()).padStart(2, "0");
+        return `${hh}:${mi}`;
+    },
+
+    formatDateTime: (date: Date | null): string => {
+        if (!date || isNaN(date.getTime())) return "";
+
+        return `${DateUtils.formatDate(date)} ${DateUtils.formatTime(date)}`;
+    },
+
     // 날짜를 하루의 시작(00:00:00.000)으로 정규화
     toStartOfDay: (date: Date | null): Date | null => {
         if (!date) return null;

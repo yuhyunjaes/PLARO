@@ -146,7 +146,12 @@ export default function ChatInput({
                     });
 
                     const title = titleRes.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || text.trim();
-                    const roomRes = await axios.post("/api/rooms", { title, model_name: MODEL_NAME });
+                    const roomRes = await axios.post("/api/rooms", {
+                        title,
+                        model_name: MODEL_NAME,
+                        prompt_profile: roomPromptProfile.trim() ? roomPromptProfile.trim() : null,
+                        use_history: useHistory,
+                    });
                     const roomData = roomRes.data;
 
                     if (roomData.success) {
@@ -382,7 +387,9 @@ export default function ChatInput({
         prompt,
         chatId,
         messages,
-        handleNotepad
+        handleNotepad,
+        roomPromptProfile,
+        useHistory
     ]);
 
     const handleCalendarEvent = async (event:{
@@ -501,7 +508,7 @@ export default function ChatInput({
                                         }
                                     }}
                                     key={i}
-                                    className={`flex-shrink-0 px-3 h-[80%] cursor-pointer bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl text-sm md:text-base transition-transform duration-200 hover:border-transparent hover:-translate-y-[0.15rem] ${categoryFadeAnimation ? "animate-categoryChipIn" : ""}`}
+                                    className={`flex-shrink-0 px-3 h-[80%] cursor-pointer bg-gray-100 dark:bg-gray-950 border border-gray-300 dark:border-gray-800 normal-text font-semibold flex justify-center items-center rounded-2xl text-sm md:text-base transition-transform duration-150 hover:border-transparent hover:-translate-y-[0.15rem] ${categoryFadeAnimation ? "animate-categoryChipIn" : ""}`}
                                 >
                                     {item.category}
                                 </div>

@@ -24,7 +24,6 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
 
     const {
         setAlerts,
-        setLoading,
     } = ui;
 
     const [categoryEditId, setCategoryEditId] = useState<string>("");
@@ -33,7 +32,6 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
     const editNotepadCategory = useCallback(async (temporary? : string) => {
         const temporaryCategory = temporary ? temporary : temporaryEditCategory;
         if(!categoryEditId || !temporaryCategory) return;
-        setLoading(true);
 
         try {
             const res = await axios.put(`/api/notepads/${categoryEditId}/category`, {
@@ -61,8 +59,6 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
 
     }, [categoryEditId, temporaryEditCategory]);
@@ -115,7 +111,7 @@ export default function NotepadCategoryEdit({ notepadId, notepadCategory, setNot
             )}
             {
                 (notepadId === categoryEditId) && (
-                    <div ref={categoryRef} className="w-[200px] max-h-[100px] absolute px-2 py-1 bg-gray-50 dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 top-[100%] rounded left-0 divide-y divide-gray-200 dark:divide-gray-800 overflow-y-auto text-xs font-semibold">
+                    <div ref={categoryRef} className="w-[200px] max-h-[100px] absolute px-2 py-1 bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-800 top-[100%] rounded left-0 divide-y divide-gray-300 dark:divide-gray-800 overflow-y-auto text-xs font-semibold">
                         {(categories.filter(item => item !== notepadCategory).length <= 0) ? (
                             <div className="py-2 rounded">
                                 <p className="normal-text">등록된 카테고리가 없습니다.</p>

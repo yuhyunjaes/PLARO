@@ -8,11 +8,8 @@ import FormInput from "../../Components/Elements/FormInput";
 import FormInputWithButton from "../../Components/Elements/FormInputWithButton";
 import SocialLoginButtons from "../../Components/Auth/SocialLoginButtons";
 
-interface RegisterProps {
-    sessionEmail: string | null;
-}
-
-export default function Register({ sessionEmail }:RegisterProps) {
+export default function Register() {
+    const userIdRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/;
     const nationalityOptions = [
         { code: "KR", label: "대한민국" },
         { code: "JP", label: "일본" },
@@ -53,7 +50,7 @@ export default function Register({ sessionEmail }:RegisterProps) {
     const [password, setPassword] = useState<string>("");
     const [confirmPassword, setConfirmPassword] = useState<string>("");
     const [passwordMatch, setPasswordMatch] = useState<boolean>(true);
-    const [email, setEmail] = useState<string>(sessionEmail ?? "");
+    const [email, setEmail] = useState<string>("");
     const [name, setName] = useState<string>("");
     const [nationality, setNationality] = useState<string>("");
     const [emailAuthCode, setEmailAuthCode] = useState<string>("");
@@ -75,6 +72,9 @@ export default function Register({ sessionEmail }:RegisterProps) {
 
     const checkId = useCallback(async () => {
         if (!userId) return setIdMessage("아이디를 작성해주세요.");
+        if (!userIdRegex.test(userId)) return setIdMessage("아이디는 영문/숫자 조합으로 입력해주세요.");
+        if (userId.length < 4) return setIdMessage("아이디는 4자 이상 입력해주세요.");
+        if (userId.length > 15) return setIdMessage("아이디는 15자 이하로 입력해주세요.");
 
         try {
             const res = await axios.get(`/check-id/${userId}`);
@@ -146,8 +146,13 @@ export default function Register({ sessionEmail }:RegisterProps) {
     function handleSubmit(e : any) {
         e.preventDefault();
         if(!name) return alert("이름을 작성해주세요.");
+        if(name.length < 2) return alert("이름은 2자 이상 입력해주세요.");
+        if(name.length > 15) return alert("이름은 15자 이하로 입력해주세요.");
         if(!nationality) return alert("국적을 선택해주세요.");
         if(!userId) return alert("아이디를 작성해주세요.");
+        if (!userIdRegex.test(userId)) return alert("아이디는 영문/숫자 조합으로 입력해주세요.");
+        if (userId.length < 4) return alert("아이디는 4자 이상 입력해주세요.");
+        if (userId.length > 15) return alert("아이디는 15자 이하로 입력해주세요.");
         if (!idConfirm) return alert("아이디 중복확인은 필수압니다.");
         if(!password) return alert("비밀번호를 작성해주세요.");
         if (!passwordMatch) return alert("비밀번호가 일치하지 않습니다.");
@@ -172,8 +177,6 @@ export default function Register({ sessionEmail }:RegisterProps) {
             <Head title="회원가입" />
             <div className="flex justify-center pt-8">
                 <form
-                    method="POST"
-                    action="/register"
                     onSubmit={handleSubmit}
                     className="w-[400px] p-5"
                 >
@@ -195,6 +198,7 @@ export default function Register({ sessionEmail }:RegisterProps) {
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        maxLength={15}
                     />
                     <div className="w-full">
                         <label htmlFor="nationality" className="form-label">
@@ -221,13 +225,15 @@ export default function Register({ sessionEmail }:RegisterProps) {
                         name="user_id"
                         value={userId}
                         onChange={(e) => {
-                            setUserId(e.target.value);
+                            const normalized = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
+                            setUserId(normalized);
                             setIdMessage("");
                             setIdConfirm(false);
                         }}
                         buttonText="중복확인"
                         onButtonClick={checkId}
                         message={idMessage}
+                        maxLength={15}
                         autoComplete="username"
                     />
                     <FormInput
@@ -260,7 +266,6 @@ export default function Register({ sessionEmail }:RegisterProps) {
                         message={emailMessage && (emailMessage)}
                         onButtonClick={sendEmailCode}
                         disabled={(emailCode || isEmailVerified)}
-                        readOnly={!!sessionEmail}
                         buttonText={isEmailVerified
                             ? "인증완료"
                             : emailTimer > 0

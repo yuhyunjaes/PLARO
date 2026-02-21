@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventInvitation;
 use App\Models\EventUser;
-use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -201,14 +200,11 @@ class InvitationController extends Controller
 
             Session::put([
                 'invitation_token' => $token,
-                'invitation_email' => $invitation->email,
                 'invitation_active' => true,
                 'invitation_session_started_at' => now()->timestamp,
             ]);
 
-            $existsUser = User::where('email', $invitation->email)->exists();
-
-            return response()->json(['success' => true, 'redirect' => $existsUser ? 'login' : 'register']);
+            return response()->json(['success' => true, 'redirect' => 'login']);
 
         } catch (\Throwable $e) {
             return response()->json(['success' => false]);

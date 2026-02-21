@@ -15,6 +15,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '아침 루틴 정착 7일',
                     'description' => '무리 없이 하루를 시작하기 위한 기본 아침 습관을 만듭니다.',
+                    'icon' => '🌅',
                     'category' => 'routine',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -52,6 +53,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '영어 회화 기초 7일',
                     'description' => '짧은 말하기 연습으로 회화 습관을 만드는 학습 챌린지입니다.',
+                    'icon' => '🗣️',
                     'category' => 'study',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -89,6 +91,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '기초 홈트 7일',
                     'description' => '짧고 안정적인 운동 루틴으로 체력 기반을 만듭니다.',
+                    'icon' => '💪',
                     'category' => 'workout',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -126,6 +129,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '정리 습관 만들기 7일',
                     'description' => '작은 정리 행동을 반복해 생활 환경을 안정적으로 유지합니다.',
+                    'icon' => '🧹',
                     'category' => 'routine',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -163,6 +167,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '지출 점검 7일',
                     'description' => '일일 지출 기록으로 소비 패턴을 파악하고 절약 습관을 만듭니다.',
+                    'icon' => '💸',
                     'category' => 'custom',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -200,6 +205,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '콘텐츠 작성 루틴 7일',
                     'description' => '짧은 분량을 매일 작성해 꾸준한 제작 습관을 형성합니다.',
+                    'icon' => '✍️',
                     'category' => 'custom',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -237,6 +243,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '수면 루틴 안정화 7일',
                     'description' => '취침과 기상 시간을 일정하게 맞추는 수면 관리 챌린지입니다.',
+                    'icon' => '😴',
                     'category' => 'routine',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -274,6 +281,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '집밥 기초 7일',
                     'description' => '간단한 조리 습관으로 식사 준비의 부담을 줄입니다.',
+                    'icon' => '🍳',
                     'category' => 'custom',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -311,6 +319,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '대화 습관 개선 7일',
                     'description' => '무리 없는 소통 실천으로 관계에서의 기본 대화력을 높입니다.',
+                    'icon' => '💬',
                     'category' => 'custom',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -348,6 +357,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                 [
                     'title' => '업무 효율 정리 7일',
                     'description' => '작은 실행 단위로 업무 흐름을 정돈하고 집중 시간을 확보합니다.',
+                    'icon' => '📌',
                     'category' => 'study',
                     'duration_days' => 7,
                     'visibility' => 'public',
@@ -396,6 +406,7 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                         'owner_id' => null,
                         'title' => $tpl['title'],
                         'description' => $tpl['description'],
+                        'icon' => $tpl['icon'],
                         'category' => $tpl['category'],
                         'duration_days' => $tpl['duration_days'],
                         'visibility' => $tpl['visibility'],
@@ -407,6 +418,17 @@ class ChallengeSystemTemplatesSeeder extends Seeder
                     ]);
                 } else {
                     $templateId = $template->id;
+
+                    DB::table('challenge_templates')
+                        ->where('id', $templateId)
+                        ->update([
+                            'description' => $tpl['description'],
+                            'icon' => $tpl['icon'],
+                            'category' => $tpl['category'],
+                            'duration_days' => $tpl['duration_days'],
+                            'visibility' => $tpl['visibility'],
+                            'updated_at' => now(),
+                        ]);
                 }
 
                 DB::table('challenge_template_days')

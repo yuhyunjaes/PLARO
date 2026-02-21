@@ -42,11 +42,13 @@ export interface EventsData {
     id: number;
     uuid: string;
     creator_id: number;
+    challenge_id?: number | null;
     title: string;
     description: string;
     start_at: Date;
     end_at: Date;
     type: "normal" | "challenge" | "dday";
+    status?: "active" | "completed" | "cancelled";
     color: "bg-red-500" | "bg-orange-500" | "bg-yellow-500" | "bg-green-500" | "bg-blue-500" | "bg-purple-500" | "bg-gray-500";
     start_area? : number;
     end_area? : number;
@@ -104,4 +106,81 @@ export interface ParticipantsData {
     email: string;
     role: "owner" | "editor" | "viewer" | null;
     status: "pending" | "declined" | "expired" | null;
+}
+
+
+export interface ChallengeTemplateItem {
+    id: number;
+    uuid: string;
+    owner_id: number | null;
+    owner_name: string | null;
+    title: string;
+    description: string | null;
+    icon: string | null;
+    category: "routine" | "study" | "workout" | "custom";
+    duration_days: number;
+    visibility: "private" | "public" | "unlisted";
+    is_system: boolean;
+    is_active: boolean;
+    liked: boolean;
+    usage_count: number;
+    like_count: number;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
+export interface ChallengeDayTaskItem {
+    id: number;
+    day_number: number;
+    task_order: number;
+    title: string;
+    description: string | null;
+    is_required: boolean;
+    is_done: boolean;
+    done_at: string | null;
+}
+
+export interface ChallengeDayGroupItem {
+    day_number: number;
+    tasks: ChallengeDayTaskItem[];
+}
+
+export interface ChallengeDailyLogItem {
+    id: number;
+    log_date: string;
+    review_text: string | null;
+    difficulty_score: number | null;
+    updated_at: string | null;
+}
+
+export interface ActiveChallengeData {
+    id: number;
+    uuid: string;
+    title: string;
+    status: "active" | "paused" | "completed" | "cancelled";
+    mode: "template" | "custom";
+    current_day: number;
+    unlocked_day: number;
+    can_retry: boolean;
+    extension_count: number;
+    total_required_count: number;
+    done_required_count: number;
+    remaining_required_count: number;
+    streak_count: number;
+    achievement_rate: number;
+    start_date: string | null;
+    end_date: string | null;
+    last_check_date: string | null;
+    review: string | null;
+    ai_summary: string | null;
+    color: string | null;
+    event_uuid: string | null;
+    template: {
+        uuid: string;
+        title: string;
+        icon: string | null;
+        duration_days: number;
+    } | null;
+    days: ChallengeDayGroupItem[];
+    daily_logs: ChallengeDailyLogItem[];
 }

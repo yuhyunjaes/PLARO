@@ -13,6 +13,7 @@ interface FormInputProps {
     readOnly?: boolean;
     autoFocus?: boolean;
     autoComplete?: string;
+    maxLength?: number;
 }
 
 export default function FormInput({
@@ -26,7 +27,8 @@ message = "",
 messageType = "default",
 readOnly = false,
 autoFocus = false,
-autoComplete
+autoComplete,
+maxLength
 }: FormInputProps) {
     return (
         <div>
@@ -41,6 +43,7 @@ autoComplete
                 className="form-control"
                 autoFocus={autoFocus}
                 autoComplete={autoComplete || undefined}
+                maxLength={maxLength}
             />
             {message && (
                 <p

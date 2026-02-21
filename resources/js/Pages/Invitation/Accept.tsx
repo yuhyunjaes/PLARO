@@ -95,24 +95,26 @@ export default function Accept({ auth, mode, event, inviter, invitation }:Status
                                     setLoading(false);
                                 }
                             } else if (mode === "guest") {
-                                const res = await axios.post(`/invitations/${invitation.token}/accept/session`);
+                                try {
+                                    const res = await axios.post(`/invitations/${invitation.token}/accept/session`);
 
-                                if(!res.data.success) {
-                                    router.visit(`/invitations/${invitation.token}`, {
-                                        method: "get",
-                                        preserveState: true,
-                                        preserveScroll: true,
-                                    });
-                                }
+                                    if(!res.data.success) {
+                                        router.visit(`/invitations/${invitation.token}`, {
+                                            method: "get",
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        });
+                                        return;
+                                    }
 
-                                if (res.data.redirect === "login") {
                                     router.visit("/login", {
                                         method: "get",
                                         preserveState: true,
                                         preserveScroll: true,
                                     });
-                                } else if((res.data.redirect === "register")) {
-                                    router.visit("/register", {
+                                } catch (err) {
+                                    console.error(err);
+                                    router.visit(`/invitations/${invitation.token}`, {
                                         method: "get",
                                         preserveState: true,
                                         preserveScroll: true,

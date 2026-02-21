@@ -1,7 +1,7 @@
-import {EventsData, ReminderData} from "../../CalenoteSectionsData";
+import {EventsData, ReminderData} from "../../../CalenoteSectionsData";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faClock} from "@fortawesome/free-solid-svg-icons";
-import {DateUtils} from "../../../../../Utils/dateUtils";
+import {DateUtils} from "../../../../../../Utils/dateUtils";
 
 interface ReminderViewProps {
     handleEventClick: (Event:EventsData) => Promise<void>;

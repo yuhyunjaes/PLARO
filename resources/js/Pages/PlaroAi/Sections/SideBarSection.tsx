@@ -73,17 +73,17 @@ export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatI
 
     return (
         <>
-            <aside ref={sidebarRef} className={`lifeBot-side-bar bg-white border-r border-gray-300 dark:border-gray-800 dark:bg-gray-950 overflow-x-hidden overflow-y-auto transition-transform duration-150 md:transition-[width] ${mdRoomList ? "fixed top-[70px] left-0 z-10 h-[calc(100vh-70px)]" : "relative"} ${mdRoomList ? (mdRoomListToggle ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none") : "translate-x-0 pointer-events-auto"}`} style={mdRoomList ? {width: "230px"} : {width: sideBar+'px'}} onScroll={(e) => {
+            <aside ref={sidebarRef} className={`lifeBot-side-bar bg-white/95 border-r border-gray-300 dark:border-gray-800 dark:bg-gray-950/95 overflow-x-hidden overflow-y-auto transition-transform duration-150 md:transition-[width] backdrop-blur md:rounded-r md:shadow-sm md:shadow-gray-200/60 md:dark:shadow-black/30 ${mdRoomList ? "fixed top-[70px] left-0 z-10 h-[calc(100vh-70px)]" : "relative"} ${mdRoomList ? (mdRoomListToggle ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none") : "translate-x-0 pointer-events-auto"}`} style={mdRoomList ? {width: "230px"} : {width: sideBar+'px'}} onScroll={(e) => {
                 if (!editRoomRef.current) return;
                 const target = e.target as HTMLElement;
                 const delta = target.scrollTop - baseScroll;
                 editRoomRef.current.style.top = `${baseTop - delta}px`;
             }}
             >
-                <div className="sticky top-0 bg-white dark:bg-gray-950">
+                <div className="sticky top-0 bg-white/95 dark:bg-gray-950/95 backdrop-blur">
                     {(!mdRoomListToggle || !mdRoomList) && (
-                        <div className={`px-5 w-full text-gray-950 dark:text-white flex ${(sideBar > 50) ? "justify-end" : "justify-center"} items-center py-2 border-b border-gray-300 dark:border-gray-800`}>
-                            <button className="m-0 cursor-pointer" onClick={() => {
+                        <div className={`px-4 w-full text-gray-950 dark:text-white flex ${(sideBar > 50) ? "justify-end" : "justify-center"} items-center py-3 border-b border-gray-200 dark:border-gray-800`}>
+                            <button type="button" className="m-0 cursor-pointer" onClick={() => {
                                 (sideBar > 50) ? setSideBar(50) : setSideBar(230)
                             }}>
                                 {(sideBar > 50) ? <FontAwesomeIcon icon={faSquareCaretLeft} className="text-xl"/> : <FontAwesomeIcon icon={faSquareCaretRight} className="text-xl"/>}
@@ -91,8 +91,9 @@ export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatI
                         </div>
                     )}
                     <button
+                        type="button"
                         onClick={resetRoom}
-                        className={`btn transition-colors duration-300 w-full text-gray-950 dark:text-white flex ${(sideBar > 50 || mdRoomListToggle) ? "justify-start" : "justify-center"} items-center px-0 py-2 hover:bg-blue-500/80 hover:text-white`}
+                        className={`transition-colors duration-150 w-full text-gray-800 dark:text-gray-100 flex ${(sideBar > 50 || mdRoomListToggle) ? "justify-start px-5" : "justify-center"} items-center py-2.5 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800`}
                     >
                         <FontAwesomeIcon icon={faPenSquare} className="m-0 text-xl"/>
                         {(sideBar > 50 || mdRoomListToggle)&& (
@@ -101,7 +102,7 @@ export default function SideBarSection({ auth, rooms, setRooms, chatId, setChatI
                     </button>
                 </div>
                 <RoomList setMdRoomListToggle={setMdRoomListToggle} mdRoomListToggle={mdRoomListToggle} mdRoomList={mdRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} setBaseScroll={setBaseScroll} setBaseTop={setBaseTop} editRoomRef={editRoomRef} setEditId={setEditId} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId} sideBar={(sideBar > 50)} editId={editId}/>
-                <div className="h-[70px] sticky bottom-0 w-full bg-white dark:bg-gray-950 border-t border-t-gray-300 dark:border-t-gray-800"></div>
+                <div className="h-[70px] sticky bottom-0 w-full bg-white/95 dark:bg-gray-950/95 border-t border-t-gray-200 dark:border-t-gray-800 backdrop-blur"></div>
             </aside>
         </>
     );

@@ -50,6 +50,7 @@ return new class extends Migration
 
             // 간단 버전: 최근 회고 1개만 저장 (누적은 challenge_daily_logs로)
             $table->text('review')->nullable();
+            $table->longText('ai_summary')->nullable();
 
             // (선택) 챌린지 색상: 템플릿/인스턴스 단위로 컬러를 고정하고 싶다면
             $table->string('color')->nullable();

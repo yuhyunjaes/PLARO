@@ -30,10 +30,13 @@ class ChatRoom extends Model
         'title',
         'model_name',
         'prompt_profile',
-        'use_history'
+        'use_history',
+        'summary',
+        'summary_updated_at',
     ];
 
     protected $casts = [
         'use_history' => 'boolean',
+        'summary_updated_at' => 'datetime',
     ];
 }

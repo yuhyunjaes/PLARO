@@ -25,6 +25,10 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
 
+            // 🔹 아이콘 (이모지 또는 아이콘 키)
+            // 예: 🌅 🎤 🏋️ 또는 'sunrise', 'mic', 'dumbbell'
+            $table->string('icon', 32)->nullable();
+
             // 🔹 카테고리
             $table->enum('category', ['routine', 'study', 'workout', 'custom'])
                 ->default('custom')
@@ -39,7 +43,7 @@ return new class extends Migration
                 ->index();
             // private   : 나만 사용
             // public    : 검색/목록 노출
-            // unlisted  : 링크로만 접근 가능
+            // unlisted  : 링크 공유 전용
 
             // 🔹 시스템 템플릿 여부
             $table->boolean('is_system')->default(false)->index();
@@ -47,8 +51,9 @@ return new class extends Migration
             // 🔹 관리자 비활성화용
             $table->boolean('is_active')->default(true)->index();
 
-            // 🔹 사용 횟수 (추천/정렬용 최소 통계)
+            // 🔹 통계
             $table->unsignedInteger('usage_count')->default(0);
+            $table->unsignedInteger('like_count')->default(0);
 
             $table->timestamps();
 

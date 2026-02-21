@@ -38,7 +38,6 @@ export default function ControlSection({ currentCategory, setCurrentCategory, no
 
     const {
         setAlerts,
-        setLoading
     } = ui;
 
     const handleLikeInsertOrDelete = useCallback(async (type: "insert" | "delete") => {
@@ -56,7 +55,6 @@ export default function ControlSection({ currentCategory, setCurrentCategory, no
 
     const handleEditNotepadTitle = useCallback(async () => {
         if (!uuid || !currentTitle.trim()) return;
-        setLoading(true);
 
         try {
             const res = await axios.put(`/api/notepads/${uuid}/title`, {
@@ -73,14 +71,11 @@ export default function ControlSection({ currentCategory, setCurrentCategory, no
 
         } catch (err) {
             console.log(err);
-        } finally {
-            setLoading(false);
         }
     }, [uuid, currentTitle]);
 
     const handleEditNotepadCategory = useCallback(async () => {
         if (!uuid || !currentCategory.trim()) return;
-        setLoading(true);
 
         try {
             const res = await axios.put(`/api/notepads/${uuid}/category`, {
@@ -97,8 +92,6 @@ export default function ControlSection({ currentCategory, setCurrentCategory, no
 
         } catch (err) {
             console.log(err);
-        } finally {
-            setLoading(false);
         }
     }, [uuid, currentCategory]);
 
@@ -120,12 +113,12 @@ export default function ControlSection({ currentCategory, setCurrentCategory, no
                         setCurrentCategory(e.target.value);
                     }} type="text" value={currentCategory} className="normal-text text-[0.65rem] truncate border-0 outline-none"/>
                 </div>
-                <div className={`size-2 rounded-full bg-gray-300 dark:bg-gray-800 transition-opacity duration-300 ${saveStatus ? "opacity-100" : "opacity-0"}`}></div>
+                <div className={`size-2 rounded-full bg-gray-300 dark:bg-gray-800 transition-opacity duration-150 ${saveStatus ? "opacity-100" : "opacity-0"}`}></div>
             </div>
             <div className="flex items-center space-x-2">
                 <button onClick={() => {
                     handleLikeInsertOrDelete(notepadLiked ? "delete" : "insert");
-                }} className="transition-colors duration-300 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700">
+                }} className="transition-colors duration-150 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700">
                     <FontAwesomeIcon
                         icon={notepadLiked ? faHeartSolid : faHeartRegular}
                     />
@@ -133,13 +126,13 @@ export default function ControlSection({ currentCategory, setCurrentCategory, no
 
                 <button onClick={() => {
                     setNotepadShareToggle(!notepadShareToggle);
-                }} className={`transition-colors duration-300 relative ${notepadShareToggle ? "text-blue-700" : "text-blue-500 hover:text-blue-600 active:text-blue-700"} cursor-pointer`}>
+                }} className={`transition-colors duration-150 relative ${notepadShareToggle ? "text-blue-700" : "text-blue-500 hover:text-blue-600 active:text-blue-700"} cursor-pointer`}>
                     <FontAwesomeIcon icon={faShareNodes} />
                 </button>
 
                 <button onClick={() => {
                     setNotepadContentsToggle(!notepadContentsToggle);
-                }} className={`transition-colors duration-300 relative ${notepadContentsToggle ? "text-blue-700" : "text-blue-500 hover:text-blue-600 active:text-blue-700"} cursor-pointer`}>
+                }} className={`transition-colors duration-150 relative ${notepadContentsToggle ? "text-blue-700" : "text-blue-500 hover:text-blue-600 active:text-blue-700"} cursor-pointer`}>
                     <FontAwesomeIcon icon={faEllipsisVertical} />
                 </button>
             </div>

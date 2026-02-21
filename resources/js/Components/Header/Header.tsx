@@ -58,7 +58,11 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
     }, [handleResize]);
 
     const handleLogout = async () => {
+        setMyBox(false);
         router.post("/logout", {}, {
+            onSuccess: () => {
+                router.visit("/login", { replace: true });
+            },
             onError: (err) => {
                 alert('로그아웃 중 오류가 발생했습니다.');
                 console.error(err);
@@ -98,6 +102,7 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
                         {auth.user ? (
                             <div ref={profileRef} className="relative">
                                 <button
+                                    type="button"
                                     className="profile"
                                     onClick={() => setMyBox(!myBox)}
                                 >
@@ -107,16 +112,26 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
                                 {myBox && (
                                     <div
                                         className={`
-                                        absolute overflow-hidden w-[200px] bg-white dark:bg-gray-950 top-[calc(100%+10px)] right-0
-                                        shadow-md rounded-md
-                                        border border-gray-300 dark:border-gray-800
+                                        absolute top-full right-0 mt-2 w-[240px] z-[20]
+                                        rounded border border-gray-300 dark:border-gray-800
+                                        bg-white/95 dark:bg-gray-950/95  overflow-hidden
                                     `}
                                     >
-                                        <div className="p-5 space-y-5">
-                                            <Link className="py-2 block">
-                                                <span className="normal-text font-semibold ms-2">마이페이지</span>
-                                            </Link>
-                                            <button onClick={handleLogout} className="btn w-full main-btn">로그아웃</button>
+                                        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+                                            <div className="flex items-center gap-3">
+                                                <div className="size-9 rounded-full bg-gray-950 dark:bg-white text-white dark:text-gray-950 text-sm font-semibold flex items-center justify-center">
+                                                    {auth.user.name.slice(0, 1)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="normal-text text-sm font-semibold truncate">{auth.user.name}</p>
+                                                    <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">{auth.user.email}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="p-3">
+                                            <button type="button" onClick={handleLogout} className="w-full rounded px-3 py-2 text-sm font-semibold text-left text-red-500 hover:text-red-50 hover:bg-red-500/80 transition-colors duration-150 cursor-pointer">
+                                                로그아웃
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -129,6 +144,7 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
 
 
                         <button
+                            type="button"
                             className="md:hidden"
                             onClick={() => setSideBar(true)}
                         >

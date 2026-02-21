@@ -9,6 +9,10 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\Notepad;
 use App\Models\ChatRoom;
 use App\Models\Event;
+use App\Models\ChallengeTemplate;
+use App\Models\Challenge;
+use App\Models\NotepadLike;
+use App\Models\ChallengeTemplateLike;
 
 class User extends Authenticatable
 {
@@ -43,6 +47,15 @@ class User extends Authenticatable
 
     public function likedNotepads() {
         return $this->hasMany(NotepadLike::class);
+    }
+
+    public function challengeTemplateLikes() {
+        return $this->hasMany(ChallengeTemplateLike::class, 'user_id', 'id');
+    }
+
+    public function likedChallengeTemplates() {
+        return $this->belongsToMany(ChallengeTemplate::class, 'challenge_template_likes', 'user_id', 'template_id')
+            ->withTimestamps();
     }
 
     protected $fillable = [

@@ -31,7 +31,6 @@ export default function Notepad({ auth } : NotepadProps) {
 
     const {
         setAlerts,
-        setLoading,
     } = ui;
 
     const [tab, setTab] = useState<"all" | "liked">("all");
@@ -79,7 +78,6 @@ export default function Notepad({ auth } : NotepadProps) {
 
     const handleStoreNotepad = useCallback(async () => {
         if(!notepadTitle || !notepadCategory) return;
-        setLoading(true);
 
         try {
             const res = await axios.post("/api/notepads", {
@@ -104,8 +102,6 @@ export default function Notepad({ auth } : NotepadProps) {
             });
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     }, [notepadTitle, notepadCategory]);
 
@@ -115,7 +111,9 @@ export default function Notepad({ auth } : NotepadProps) {
     const getNotepads = useCallback(async (append = false) => {
         if (!tab) return;
 
-        append ? setIsFetchingMore(true) : setLoading(true);
+        if(append) {
+            setIsFetchingMore(true)
+        }
 
         try {
             const res = await axios.get('/api/notepads', {
@@ -145,7 +143,9 @@ export default function Notepad({ auth } : NotepadProps) {
         } catch (err) {
             console.log(err);
         } finally {
-            append ? setIsFetchingMore(false) : setLoading(false);
+            if(append) {
+                setIsFetchingMore(false)
+            }
         }
     }, [tab, searchTitle, searchCategory, page]);
 
@@ -179,7 +179,6 @@ export default function Notepad({ auth } : NotepadProps) {
 
     const handleDeleteNotepad = useCallback( async () => {
         if(!deleteId) return;
-        setLoading(true);
         try {
             const res = await axios.delete(`/api/notepads/${deleteId}`);
             if(res.data.success) {
@@ -196,8 +195,6 @@ export default function Notepad({ auth } : NotepadProps) {
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     }, [deleteId]);
 

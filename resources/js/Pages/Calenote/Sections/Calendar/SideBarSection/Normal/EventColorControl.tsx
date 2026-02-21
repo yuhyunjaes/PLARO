@@ -44,10 +44,10 @@ export default function EventColorControl({ disabled, eventColor, setEventColor 
     ];
 
     return (
-        <div className="px-5 flex flex-wrap">
-            <div className="flex justify-start items-center space-x-3 w-full">
+        <div className="flex flex-wrap">
+            <div className="grid grid-cols-7 gap-2 w-full">
                 {colors.map((item) => (
-                    <label key={item.color} className="relative cursor-pointer">
+                    <label key={item.color} className="relative cursor-pointer size-4">
                         <input
                             disabled={disabled}
                             type="radio"
@@ -60,7 +60,7 @@ export default function EventColorControl({ disabled, eventColor, setEventColor 
 
                         <div
                             className={`
-                size-4 rounded
+                size-full rounded
                 ${item.color}
                 peer-checked:ring-2
                 peer-checked:ring-black

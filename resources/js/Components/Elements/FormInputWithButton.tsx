@@ -16,6 +16,7 @@ interface FormInputWithButtonProps {
     disabled?: boolean;
     autoComplete?: string;
     readOnly?: boolean;
+    maxLength?: number;
 }
 
 export default function FormInputWithButton({
@@ -32,7 +33,8 @@ export default function FormInputWithButton({
     messageType = "default",
     disabled = false,
     readOnly = false,
-    autoComplete
+    autoComplete,
+    maxLength
 }: FormInputWithButtonProps) {
     return (
         <div className={className}>
@@ -48,6 +50,7 @@ export default function FormInputWithButton({
                     disabled={disabled}
                     readOnly={readOnly}
                     autoComplete={autoComplete || undefined}
+                    maxLength={maxLength}
                 />
                 <button
                     type="button"

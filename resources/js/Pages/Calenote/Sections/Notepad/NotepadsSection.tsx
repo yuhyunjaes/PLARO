@@ -42,7 +42,6 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
 
     const {
         setAlerts,
-        setLoading,
     } = ui;
     const [shareId, setShareId] = useState<string>("");
 
@@ -86,7 +85,6 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
     const handleLikeInsert = async (uuid: string) => {
         if(!uuid) return;
 
-        setLoading(true);
         try {
             const res = await axios.post(`/notepads/${uuid}/like`);
 
@@ -102,15 +100,11 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
 
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     };
 
     const handleLikeDelete = useCallback(async (uuid: string) => {
         if(!uuid) return;
-
-        setLoading(true);
         try {
             const res = await axios.delete(`/notepads/${uuid}/like`);
 
@@ -125,8 +119,6 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     }, [tab]);
 
@@ -156,7 +148,6 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
 
     const handleEditNotepadTitle = useCallback(async () => {
         if (!editId || !temporaryEditTitle.trim()) return;
-        setLoading(true);
 
         try {
             const res = await axios.put(`/api/notepads/${editId}/title`, {
@@ -184,8 +175,6 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
 
         } catch (err) {
             console.log(err);
-        } finally {
-            setLoading(false);
         }
     }, [editId, temporaryEditTitle]);
 
@@ -244,7 +233,7 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
                             </p>
                             <div className="flex flex-row gap-2">
                                 <div>
-                                    <p className="text-xs normal-text truncate font-semibold">{notepad.created_at.substring(0, 10)}</p>
+                                    <p className="text-xs normal-text truncate font-semibold">{DateUtils.formatDate(DateUtils.parseServerDate(notepad.created_at))}</p>
                                 </div>
                                 <div className="flex-1 flex justify-center items-center">
                                     <div className="h-[1px] w-full bg-gray-300 dark:bg-gray-800"></div>
@@ -264,7 +253,7 @@ export default function NotepadsSection({ deleteId, setDeleteId, notepads, setNo
                                     />
 
                                     <button
-                                        className="transition-colors duration-300 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
+                                        className="transition-colors duration-150 text-blue-500 cursor-pointer hover:text-blue-600 active:text-blue-700"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             notepad.liked

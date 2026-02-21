@@ -27,6 +27,7 @@ return new class extends Migration
 
             $table->string('title');
             $table->text('description')->nullable();
+            $table->boolean('is_required')->default(true);
 
             // 체크 여부
             $table->boolean('is_done')->default(false);
