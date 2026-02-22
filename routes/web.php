@@ -52,11 +52,17 @@ Route::middleware('web')->group(function () {
         Route::get('/login', function () {
             return Inertia::render('Auth/Login', [
                 'socialError' => Session::pull('social_error', null),
+                'logoutReason' => Session::pull('logout_reason', null),
+                'authFeedback' => Session::pull('auth_feedback', null),
             ]);
         })->name('login');
 
+        Route::get('/login/unlock', [AuthController::class, 'showLoginUnlockForm'])->name('login.unlock.form');
+
         Route::get('/forgot-password', function () {
-            return Inertia::render('Auth/ForgotPassword');
+            return Inertia::render('Auth/ForgotPassword', [
+                'prefillEmail' => request()->query('email'),
+            ]);
         })->name('password.forgot');
 
         Route::get('/register', function () {
@@ -65,6 +71,8 @@ Route::middleware('web')->group(function () {
 
         Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
         Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+        Route::post('/login/unlock/send-code', [AuthController::class, 'sendLoginUnlockCode'])->name('login.unlock.send-code');
+        Route::post('/login/unlock/verify-code', [AuthController::class, 'verifyLoginUnlockCode'])->name('login.unlock.verify-code');
         Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
         Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
 

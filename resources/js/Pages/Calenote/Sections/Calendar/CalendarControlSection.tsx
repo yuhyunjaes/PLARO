@@ -46,6 +46,23 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
 
     const [contentChangeToggle, setContentChangeToggle] = useState<boolean>(false);
     const contentChangeAreaRef = useRef<HTMLDivElement | null>(null);
+    const contentModeMeta: Record<"normal" | "challenge" | "dday", {label: string; mobileLabel: string; activeClass: string}> = {
+        normal: {
+            label: "일반 모드",
+            mobileLabel: "일반",
+            activeClass: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+        },
+        challenge: {
+            label: "챌린지 모드",
+            mobileLabel: "챌린지",
+            activeClass: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+        },
+        dday: {
+            label: "D-day 모드",
+            mobileLabel: "D-day",
+            activeClass: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+        }
+    };
 
     function addOrSubOneMonth(date:Date, status:"add" | "sub") {
         const newDate = new Date(date);
@@ -156,6 +173,14 @@ export default function CalendarControlSection({ getWeekWednesday, activeAtToTod
             </div>
 
             <div className="flex items-center relative">
+                <div
+                    className={`mr-1 rounded border px-2 md:px-3 py-1 text-[10px] md:text-xs font-semibold transition-colors ${contentModeMeta[contentMode].activeClass}`}
+                    aria-live="polite"
+                    title={`현재 ${contentModeMeta[contentMode].label}`}
+                >
+                    <span className="md:hidden">{contentModeMeta[contentMode].mobileLabel}</span>
+                    <span className="hidden md:inline">{contentModeMeta[contentMode].label}</span>
+                </div>
                 <button onClick={activeAtToToday} className="px-3 py-1 mr-1 font-semibold rounded text-xs bg-gray-50 hover:bg-gray-200 dark:bg-gray-950 hover:dark:bg-gray-800 normal-text  transition-colors duration-150 cursor-pointer border border-gray-300 dark:border-gray-800">오늘</button>
 
                 <div className="relative flex items-center mr-1">

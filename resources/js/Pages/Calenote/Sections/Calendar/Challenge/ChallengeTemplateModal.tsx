@@ -205,7 +205,7 @@ export default function ChallengeTemplateModal({
                                             }
                                         }}
                                         key={template.uuid}
-                                        className={`w-full rounded-lg border border-gray-300 dark:border-gray-800  ${activeTemplate === template.uuid ? "bg-gray-100 dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-950 hover:bg-gray-100 hover:dark:bg-gray-800"} transition-colors text-left p-3`}
+                                        className={`w-full rounded-lg border border-gray-300 dark:border-gray-800  ${activeTemplate === template.uuid ? "bg-gray-200 dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-950 hover:bg-gray-100 hover:dark:bg-gray-800"} transition-colors text-left p-3`}
                                     >
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex items-start gap-2 min-w-0">

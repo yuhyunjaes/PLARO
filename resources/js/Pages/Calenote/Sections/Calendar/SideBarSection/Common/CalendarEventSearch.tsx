@@ -42,12 +42,12 @@ export default function CalendarEventSearch({
         return sortedEvents.filter((event) => (event.title ?? "").toLowerCase().includes(normalizedKeyword));
     }, [normalizedKeyword, sortedEvents]);
 
-    const titleLabel = mode === "normal" ? "일반 이벤트 검색" : mode === "challenge" ? "챌린지 검색" : "D-day 검색";
+    const titleLabel = mode === "normal" ? "진행 중인 일반 이벤트 검색" : mode === "challenge" ? "진행 중인 챌린지 검색" : "진행 중인 D-day 검색";
     const placeholder = mode === "normal"
-        ? "일반 이벤트 제목 검색"
+        ? "진행 중인 일반 이벤트 제목 검색"
         : mode === "challenge"
-            ? "챌린지 제목 검색"
-            : "D-day 제목 검색";
+            ? "진행 중인 챌린지 제목 검색"
+            : "진행 중인 D-day 제목 검색";
     const emptyLabel = normalizedKeyword
         ? "검색 결과가 없습니다."
         : "제목을 입력하면 원하는 이벤트를 빠르게 찾을 수 있어요.";

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\ParticipantUpdated;
+use App\Http\Controllers\Concerns\EnforcesSingleSession;
 use App\Models\EventInvitation;
 use App\Models\EventUser;
 use App\Models\User;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -20,7 +22,10 @@ use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
 {
+    use EnforcesSingleSession;
+
     private const SOCIAL_PLACEHOLDER_DOMAIN = 'social.local';
+    private const LOGIN_MAX_ATTEMPTS = 5;
 
     public function redirect(string $provider): RedirectResponse
     {
@@ -165,8 +170,15 @@ class SocialAuthController extends Controller
 
     private function loginAndRedirect(Request $request, User $user): RedirectResponse
     {
+        $limiterMeta = $this->buildLoginLimiterMeta($request, $user);
+        if ($limiterMeta['account_locked'] || $limiterMeta['ip_account_locked']) {
+            return $this->redirectLockedSocialLogin($user, $limiterMeta);
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
+        $this->invalidateOtherSessions($request, (int) $user->id);
+        $this->clearLoginRateLimiters($limiterMeta);
 
         if ($user->needsSocialProfileCompletion()) {
             return redirect()->route('social.complete.form');
@@ -177,6 +189,60 @@ class SocialAuthController extends Controller
         }
 
         return redirect('/');
+    }
+
+    private function buildLoginLimiterMeta(Request $request, User $user): array
+    {
+        $accountIdentifier = 'uid:' . $user->id;
+        $ip = (string) ($request->ip() ?? 'unknown');
+
+        $accountKey = 'auth:login:account:' . sha1($accountIdentifier);
+        $ipAccountKey = 'auth:login:ip_account:' . sha1($ip . '|' . $accountIdentifier);
+
+        $accountAttempts = RateLimiter::attempts($accountKey);
+        $ipAccountAttempts = RateLimiter::attempts($ipAccountKey);
+        $accountLocked = RateLimiter::tooManyAttempts($accountKey, self::LOGIN_MAX_ATTEMPTS);
+        $ipAccountLocked = RateLimiter::tooManyAttempts($ipAccountKey, self::LOGIN_MAX_ATTEMPTS);
+
+        return [
+            'account_key' => $accountKey,
+            'ip_account_key' => $ipAccountKey,
+            'account_locked' => $accountLocked,
+            'ip_account_locked' => $ipAccountLocked,
+            'account_remaining' => max(0, self::LOGIN_MAX_ATTEMPTS - $accountAttempts),
+            'ip_account_remaining' => max(0, self::LOGIN_MAX_ATTEMPTS - $ipAccountAttempts),
+            'account_retry_after' => $accountLocked ? RateLimiter::availableIn($accountKey) : 0,
+            'ip_account_retry_after' => $ipAccountLocked ? RateLimiter::availableIn($ipAccountKey) : 0,
+        ];
+    }
+
+    private function clearLoginRateLimiters(array $limiterMeta): void
+    {
+        RateLimiter::clear((string) $limiterMeta['account_key']);
+        RateLimiter::clear((string) $limiterMeta['ip_account_key']);
+    }
+
+    private function redirectLockedSocialLogin(User $user, array $limiterMeta): RedirectResponse
+    {
+        $accountLocked = (bool) $limiterMeta['account_locked'];
+        $ipAccountLocked = (bool) $limiterMeta['ip_account_locked'];
+
+        return redirect()
+            ->route('login.unlock.form', ['login' => (string) ($user->email ?: $user->user_id)])
+            ->with('auth_feedback', [
+                'type' => 'locked',
+                'message' => $accountLocked
+                    ? '계정이 15분간 잠겼습니다. 이메일 인증으로 바로 해제할 수 있습니다.'
+                    : '현재 IP와 계정 조합이 15분간 차단되었습니다.',
+                'account_locked' => $accountLocked,
+                'ip_account_locked' => $ipAccountLocked,
+                'retry_after' => max((int) $limiterMeta['account_retry_after'], (int) $limiterMeta['ip_account_retry_after']),
+                'max_attempts' => self::LOGIN_MAX_ATTEMPTS,
+                'account_remaining' => (int) $limiterMeta['account_remaining'],
+                'ip_account_remaining' => (int) $limiterMeta['ip_account_remaining'],
+                'unlock_available' => $accountLocked && !empty($user->email),
+                'login' => (string) ($user->email ?: $user->user_id),
+            ]);
     }
 
     private function resolveOrCreateSocialUser(string $provider, string $providerId, ?string $name, ?string $email): User

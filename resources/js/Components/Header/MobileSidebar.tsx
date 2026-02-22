@@ -51,9 +51,11 @@ export default function MobileSidebar({ sideBar, setSideBar, auth } : MobileSide
 
     const handleLogout = () => {
         router.post("/logout", {}, {
+            preserveState: false,
+            preserveScroll: false,
             onSuccess: () => {
                 CloseSideBar();
-                router.visit("/login", { replace: true });
+                window.location.replace("/login");
             },
             onError: (err) => {
                 alert('로그아웃 중 오류가 발생했습니다.');

@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
@@ -28,7 +29,7 @@ class PasswordResetTest extends TestCase
 
         $response->assertStatus(200)->assertJson([
             'success' => true,
-        ]);
+        ])->assertJsonPath('ttl_seconds', 90);
 
         $sessionData = session('password_reset');
 
@@ -99,6 +100,25 @@ class PasswordResetTest extends TestCase
         $response->assertStatus(200)->assertJson([
             'success' => false,
             'message' => '소셜 로그인 계정은 비밀번호 찾기를 사용할 수 없습니다.',
+        ]);
+    }
+
+    public function test_locked_account_can_not_request_password_reset_code(): void
+    {
+        $user = User::factory()->create();
+        $accountKey = 'auth:login:account:' . sha1('uid:' . $user->id);
+
+        for ($i = 0; $i < 5; $i++) {
+            RateLimiter::hit($accountKey, 900);
+        }
+
+        $response = $this->postJson('/password/send-reset-code', [
+            'email' => $user->email,
+        ]);
+
+        $response->assertStatus(423)->assertJson([
+            'success' => false,
+            'message' => '계정이 잠겨 있습니다. 계정 잠금 해제 후 다시 시도해주세요.',
         ]);
     }
 }

@@ -60,8 +60,10 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
     const handleLogout = async () => {
         setMyBox(false);
         router.post("/logout", {}, {
+            preserveState: false,
+            preserveScroll: false,
             onSuccess: () => {
-                router.visit("/login", { replace: true });
+                window.location.replace("/login");
             },
             onError: (err) => {
                 alert('로그아웃 중 오류가 발생했습니다.');

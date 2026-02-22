@@ -5,7 +5,11 @@ import FormInput from "../../Components/Elements/FormInput";
 import FormInputWithButton from "../../Components/Elements/FormInputWithButton";
 import Loading from "../../Components/Elements/Loading";
 
-export default function ForgotPassword() {
+interface ForgotPasswordProps {
+    prefillEmail?: string | null;
+}
+
+export default function ForgotPassword({ prefillEmail }: ForgotPasswordProps) {
     const [email, setEmail] = useState<string>("");
     const [code, setCode] = useState<string>("");
     const [password, setPassword] = useState<string>("");
@@ -16,6 +20,12 @@ export default function ForgotPassword() {
     const [emailMessage, setEmailMessage] = useState<string>("");
     const [timer, setTimer] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (prefillEmail && !email) {
+            setEmail(prefillEmail);
+        }
+    }, [prefillEmail, email]);
 
     useEffect(() => {
         if (!password && !passwordConfirm) {
@@ -61,8 +71,13 @@ export default function ForgotPassword() {
             setEmailCodeSent(!!data.success);
             setEmailVerified(false);
             setCode("");
-            setTimer(Number(data.ttl_seconds || 180));
+            setTimer(Number(data.ttl_seconds || 90));
         } catch (err: any) {
+            const unlockUrl = err?.response?.data?.unlock_url;
+            if (unlockUrl) {
+                window.location.href = String(unlockUrl);
+                return;
+            }
             const msg = err?.response?.data?.message || "인증번호 전송 중 오류가 발생했습니다.";
             setEmailMessage(msg);
         } finally {
@@ -113,6 +128,11 @@ export default function ForgotPassword() {
             alert(res.data?.message || "비밀번호가 변경되었습니다.");
             window.location.href = "/login";
         } catch (err: any) {
+            const unlockUrl = err?.response?.data?.unlock_url;
+            if (unlockUrl) {
+                window.location.href = String(unlockUrl);
+                return;
+            }
             const firstError = err?.response?.data?.errors
                 ? Object.values(err.response.data.errors)[0]
                 : null;
@@ -159,6 +179,7 @@ export default function ForgotPassword() {
                         onButtonClick={sendCode}
                         disabled={emailVerified}
                         message={emailMessage}
+                        autoComplete="username"
                     />
 
                     <FormInputWithButton
@@ -172,6 +193,7 @@ export default function ForgotPassword() {
                         buttonText={emailVerified ? "인증완료" : "인증하기"}
                         onButtonClick={verifyCode}
                         disabled={emailVerified}
+                        autoComplete="one-time-code"
                     />
 
                     <FormInput

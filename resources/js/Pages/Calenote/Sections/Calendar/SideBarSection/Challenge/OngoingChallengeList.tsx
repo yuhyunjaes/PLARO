@@ -60,11 +60,6 @@ export default function OngoingChallengeList({
 
     return (
         <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-600 dark:text-gray-300">{sectionTitle}</p>
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">{challengeEvents.length}개</span>
-            </div>
-
             <div className="max-h-[240px] overflow-y-auto hidden-scroll space-y-3 pr-1">
                 {challengeEvents.length === 0 ? (
                     <p className="text-xs text-gray-500 dark:text-gray-400 py-6 text-center">
@@ -75,7 +70,12 @@ export default function OngoingChallengeList({
                         <div key={`ongoing-group-${group.key}`} className="space-y-1.5">
                             <p className="text-xs font-semibold normal-text">
                                 {(() => {
-                                    const startAt = new Date(group.list[0].start_at);
+                                    const firstEvent = group.list[0];
+                                    if (!firstEvent) {
+                                        return group.key;
+                                    }
+
+                                    const startAt = new Date(firstEvent.start_at);
                                     return `${group.key}(${koreanDate[startAt.getDay()]})`;
                                 })()}
                             </p>
