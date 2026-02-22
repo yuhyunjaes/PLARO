@@ -448,7 +448,7 @@ class SocialAuthController extends Controller
             ]
         ))->toOthers();
 
-        return redirect("/calenote/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
+        return redirect("/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
     }
 
     private function buildSocialErrorMessage(string $provider, Request $request): string

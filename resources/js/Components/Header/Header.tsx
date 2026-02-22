@@ -1,11 +1,10 @@
 // 본 헤더 컴포넌트
 
 import { Link, router } from "@inertiajs/react";
-import {useEffect, useCallback, useState, useRef, SetStateAction, Dispatch} from "react";
+import {useEffect, useCallback, useState, useRef} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {faBars, faMessage, faUser, faEllipsisH} from "@fortawesome/free-solid-svg-icons";
+import {faUser} from "@fortawesome/free-solid-svg-icons";
 import DesktopMenu from "./DeskTopMenu";
-import MobileSidebar from "./MobileSidebar";
 import Logo from "../Elements/Logo";
 import {AuthUser} from "../../Types/PlaroAiTypes";
 
@@ -14,19 +13,14 @@ interface HeaderProps {
         user: AuthUser | null;
     };
     className?: string;
-    toggle?: boolean;
-    setToggle?: Dispatch<SetStateAction<boolean>>;
-    check?: boolean;
 }
 
 
 
-export default function Header({ auth, className = "", toggle, setToggle, check } : HeaderProps) {
-    const [sideBar, setSideBar] = useState<boolean>(false);
+export default function Header({ auth, className = "" } : HeaderProps) {
     const [myBox, setMyBox] = useState<boolean>(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const myBoxRef = useRef<boolean>(myBox);
-    const showMenuButton = Boolean(!toggle && check);
 
     useEffect(() => {
         myBoxRef.current = myBox;
@@ -76,26 +70,14 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
         <>
             <header
                 className={`
-                    w-full h-[70px] sticky top-0 left-0 z-[999]
+                    hidden md:block w-full h-[70px] sticky top-0 left-0 z-[999]
                     border-b border-gray-300 dark:border-gray-800 bg-white dark:bg-gray-950
                     ${className && className}
                 `}
             >
-                <div className={`w-full h-full flex ${!toggle && check ? "justify-between md:justify-end" : "justify-end"} items-center px-5 md:px-12 relative`}>
-                    {(!toggle && check) && (
-                        <button onClick={() => {
-                            setToggle?.(true)
-                        }} className="normal-text text-xl block md:hidden">
-                            <FontAwesomeIcon icon={faBars} />
-                        </button>
-                    )}
-
+                <div className="w-full h-full flex justify-end items-center px-12 relative">
                     <Logo
-                        className={`absolute top-1/2 transition-[left,transform] duration-150 ${
-                            !toggle && check
-                                ? "left-1/2 -translate-x-1/2 -translate-y-1/2 md:left-12 md:translate-x-0"
-                                : "left-5 md:left-12 -translate-y-1/2"
-                        }`}
+                        className="absolute top-1/2 left-12 -translate-y-1/2"
                     />
 
                     <div className="m-0 flex items-center">
@@ -139,24 +121,13 @@ export default function Header({ auth, className = "", toggle, setToggle, check 
                                 )}
                             </div>
                         ) : (
-                            <Link href="/login" className="btn hidden md:block btn-outline-white">
+                            <Link href="/login" className="btn btn-outline-white">
                                 로그인
                             </Link>
                         )}
-
-
-                        <button
-                            type="button"
-                            className="md:hidden"
-                            onClick={() => setSideBar(true)}
-                        >
-                            <FontAwesomeIcon icon={faEllipsisH} className="normal-text" />
-                        </button>
                     </div>
                 </div>
             </header>
-
-            <MobileSidebar sideBar={sideBar} setSideBar={setSideBar} auth={auth} />
         </>
     );
 }

@@ -58,11 +58,10 @@ export default function ChatInput({
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
-        throw new Error("CalenoteLayout must be used within GlobalProvider");
+        throw new Error("GlobalProvider context is required");
     }
 
     const {
-        setLoading,
         setAlerts
     } = ui;
 
@@ -280,7 +279,6 @@ export default function ChatInput({
                 !eventCode) {
                 setLoad(false);
                 setPrompt("");
-                setLoading(false);
 
                 if (newChat) {
                     try {
@@ -399,7 +397,6 @@ export default function ChatInput({
         end_at: Date
     }, id:string) => {
         if(!event) return;
-        setLoading(true);
 
         try {
             const res = await axios.post(`/api/events`, {
@@ -419,8 +416,6 @@ export default function ChatInput({
             setAlerts(pre => [...pre, alertData]);
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     }
 
@@ -486,7 +481,7 @@ export default function ChatInput({
     return (
         <div className="w-full h-[80px]">
             <div
-                className={`w-full flex justify-center items-end absolute ${chatId ? "bottom-0 left-0" : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"} mb-3 px-5`}
+                className={`w-full flex justify-center items-end absolute ${chatId ? "bottom-0 left-0" : "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"} mb-3 px-5 mt-[64px] md:mt-0`}
             >
                 {!chatId && auth.user && (
                     <h1 className="normal-text flex absolute top-[-150%] text-xl md:text-3xl lg:text-4xl font-semibold">

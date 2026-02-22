@@ -2,10 +2,10 @@
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {faTrashCan, faPen, faFloppyDisk} from "@fortawesome/free-solid-svg-icons";
-import {RefObject, useContext} from "react";
-import {GlobalUIContext} from "../../../../../Providers/GlobalUIContext";
+import {RefObject} from "react";
 
 interface EditRoomProps {
+    sideBar: number;
     EditTitle: () => void;
     editRoomRef: RefObject<HTMLDivElement | null>;
     toggle: string | null;
@@ -16,15 +16,7 @@ interface EditRoomProps {
     handleEditRoom: () => Promise<void>;
     temporaryEditTitle: string;
 }
-export default function EditRoom({ EditTitle, editRoomRef, toggle, deleteRoom, mdRoomList, mdRoomListToggle, editStatus, handleEditRoom, temporaryEditTitle } : EditRoomProps) {
-    const ui = useContext(GlobalUIContext);
-
-    if (!ui) {
-        throw new Error("CalenoteLayout must be used within GlobalProvider");
-    }
-
-    const { sideBar } = ui;
-
+export default function EditRoom({ sideBar, EditTitle, editRoomRef, toggle, deleteRoom, mdRoomList, mdRoomListToggle, editStatus, handleEditRoom, temporaryEditTitle } : EditRoomProps) {
     return (
         <div ref={editRoomRef} className={`fixed z-[11] ${((sideBar > 50 && toggle) || (mdRoomList && mdRoomListToggle && toggle)) ? "block" : "hidden"} w-[180px] bg-white border dark:bg-gray-950 border-gray-300 dark:border-gray-800 rounded`}>
             <div className="p-2">

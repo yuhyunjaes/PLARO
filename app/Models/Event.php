@@ -58,7 +58,10 @@ class Event extends Model
         'type',
         'status',
         'description',
+        'ai_source_text',
+        'ai_summary',
         'color',
+        'lock_version',
     ];
 
     protected function casts(): array

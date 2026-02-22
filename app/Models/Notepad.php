@@ -29,6 +29,8 @@ class Notepad extends Model
         'user_id',
         'title',
         'content',
+        'ai_source_text',
+        'ai_summary',
         'category',
     ];
 }

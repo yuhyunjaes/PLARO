@@ -1,11 +1,13 @@
 import axios from "axios";
 import React, {ReactNode, useEffect, useState, cloneElement, ReactElement, useContext} from "react";
 import { usePage } from "@inertiajs/react";
-import {EventsData, ReminderData} from "./Pages/Calenote/Sections/CalenoteSectionsData";
+import {EventsData, ReminderData} from "./Pages/Calendar/Sections/Calendar/CalendarData";
 import Reminder from "./Components/Elements/Reminder";
 import Alert from "./Components/Elements/Alert";
+import Loading from "./Components/Elements/Loading";
 import {GlobalUIContext} from "./Providers/GlobalUIContext";
 import Header from "./Components/Header/Header";
+import MobileBottomNav from "./Components/Header/MobileBottomNav";
 import {DateUtils} from "./Utils/dateUtils";
 
 interface RootProps {
@@ -19,19 +21,24 @@ export default function Root({ children, ...props }: RootProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
-        throw new Error("CalenoteLayout must be used within GlobalProvider");
+        throw new Error("GlobalProvider context is required");
     }
 
     const {
         alerts,
         setAlerts,
-        sideBar,
-        sideBarToggle,
-        setSideBarToggle
+        loading
     } = ui;
     const path = url.split("?")[0] ?? "";
     const isAuthPage = path === "/login" || path === "/register";
-    const isCalenoteOrPlaroAi = component.startsWith("Calenote/") || component.startsWith("PlaroAi/");
+    const isAppContent = component.startsWith("Calendar/")
+        || component.startsWith("Notepad/")
+        || component.startsWith("Dashboard/")
+        || component.startsWith("PlaroAi/");
+    const isMainAppContent = component.startsWith("Calendar/")
+        || component.startsWith("Notepad/")
+        || component.startsWith("Dashboard/");
+    const isPlaroAiContent = component.startsWith("PlaroAi/");
 
     const [reminderEvents, setReminderEvents] = useState<EventsData[]>([]);
     const [reminders, setReminders] = useState<ReminderData[]>([]);
@@ -46,14 +53,14 @@ export default function Root({ children, ...props }: RootProps) {
     }, [auth?.user?.timezone]);
 
     useEffect(() => {
-        if(!auth.user || !isCalenoteOrPlaroAi) {
+        if(!auth.user || !isAppContent) {
             setReminderEvents([]);
             setReminders([]);
         } else {
             getReminderEvents();
             getEventReminders();
         }
-    }, [auth, isCalenoteOrPlaroAi]);
+    }, [auth, isAppContent]);
 
     const getReminderEvents:()=>Promise<void> = async ():Promise<void> => {
         if(!auth.user) return;
@@ -160,7 +167,7 @@ export default function Root({ children, ...props }: RootProps) {
     return (
         <>
             {(() => {
-                if (!isCalenoteOrPlaroAi) return;
+                if (!isAppContent) return;
                 if(reminders.length <= 0) return;
 
                 const excludedReminders: ReminderData[] = [];
@@ -200,7 +207,7 @@ export default function Root({ children, ...props }: RootProps) {
 
                 return (
                     <>
-                        <div className="fixed pointer-events-none right-5 top-[calc(70px+1.25rem)] z-[5] w-[200px] sm:w-[250px] md:w-[300px] space-y-2">
+                        <div className="fixed pointer-events-none right-5 top-5 md:top-[calc(70px+1.25rem)] z-[5] w-[200px] sm:w-[250px] md:w-[300px] space-y-2">
                             {filterReminders.map((reminder) => {
                                 const event = reminderEvents.find(event => event.uuid === reminder.event_uuid);
                                 if (!event) return null;
@@ -223,7 +230,7 @@ export default function Root({ children, ...props }: RootProps) {
                                         type="reminder"
                                         uuid={event.uuid}
                                         color={event.color}
-                                        url="/calenote/calendar"
+                                        url="/calendar"
                                         arr={setReminders}
                                         id={reminder.id}
                                     />
@@ -237,25 +244,30 @@ export default function Root({ children, ...props }: RootProps) {
                                 setAlerts={setAlerts}
                                 type={alerts[0]!.type}
                                 message={alerts[0]!.message}
-                                width={sideBar}
+                                width={0}
                             />
                         )}
                     </>
                 );
             })()}
             {!isAuthPage && (
-                <Header
-                    auth={auth}
-                    {...(isCalenoteOrPlaroAi && {
-                        toggle: sideBarToggle,
-                        setToggle: setSideBarToggle,
-                        check: sideBar < 230
-                    })}
-                />
+                <Header auth={auth} />
             )}
-            {React.isValidElement(children)
-                ? cloneElement(children as ReactElement, sharedProps)
-                : children}
+            {isMainAppContent ? (
+                <main className="app-content-container h-[calc(100vh-64px)] md:h-[calc(100vh-70px)] overflow-y-auto overflow-x-hidden">
+                    {React.isValidElement(children)
+                        ? cloneElement(children as ReactElement, sharedProps)
+                        : children}
+                </main>
+            ) : (
+                <div className={isPlaroAiContent ? "h-[calc(100vh-64px)] md:h-auto" : ""}>
+                    {React.isValidElement(children)
+                        ? cloneElement(children as ReactElement, sharedProps)
+                        : children}
+                </div>
+            )}
+            {!isAuthPage && isAppContent && <MobileBottomNav />}
+            <Loading Toggle={loading} />
         </>
     );
 }

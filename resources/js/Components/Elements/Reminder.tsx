@@ -1,6 +1,6 @@
 import React, {Dispatch, SetStateAction, useEffect, useState} from "react";
 import {router} from "@inertiajs/react";
-import {ReminderData} from "../../Pages/Calenote/Sections/CalenoteSectionsData";
+import {ReminderData} from "../../Pages/Calendar/Sections/Calendar/CalendarData";
 import axios from "axios";
 interface ReminderProps {
     title: string;

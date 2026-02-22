@@ -17,8 +17,10 @@ use App\Http\Controllers\EventUserController;
 use App\Http\Controllers\PlaroAiController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\ChallengeTemplateController;
+use App\Http\Controllers\MarkdownTemplateController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DdayController;
+use App\Http\Controllers\DashboardController;
 use App\Models\Notepad;
 use App\Models\Event;
 use Illuminate\Support\Facades\Session;
@@ -105,11 +107,11 @@ Route::middleware('web')->group(function () {
             return Inertia::render('PlaroAi/PlaroAi', ['roomId' => $uuid]);
         })->name('plaroai.room');
 
-        Route::get('/calenote', function () {
-            return Inertia::render('Calenote/Dashboard');
+        Route::get('/dashboard', function () {
+            return Inertia::render('Dashboard/Dashboard');
         })->name('dashboard');
 
-        Route::get('/calenote/calendar/{mode}/{year}/{month}/{day?}', function ($mode, $year = 0, $month = 0, $day = 0) {
+        Route::get('/calendar/{mode}/{year}/{month}/{day?}', function ($mode, $year = 0, $month = 0, $day = 0) {
             // mode 체크
             $modeTypes = ['month', 'week', 'day'];
             if (!in_array($mode, $modeTypes)) {
@@ -137,7 +139,7 @@ Route::middleware('web')->group(function () {
                 }
             }
 
-            return Inertia::render('Calenote/Calendar', [
+            return Inertia::render('Calendar/Calendar', [
                 'mode' => $mode,
                 'year' => (int)$year,
                 'month' => (int)$month,
@@ -145,7 +147,7 @@ Route::middleware('web')->group(function () {
             ]);
         })->name('calendar.mode');
 
-        Route::get('/calenote/calendar/{type?}', function ($type = null) {
+        Route::get('/calendar/{type?}', function ($type = null) {
             $modeTypes = [
                 'n' => 'normal',
                 'c' => 'challenge',
@@ -160,12 +162,12 @@ Route::middleware('web')->group(function () {
                 $type = $modeTypes[$type];
             }
 
-            return Inertia::render('Calenote/Calendar', [
+            return Inertia::render('Calendar/Calendar', [
                 'type' => $type,
             ]);
         })->name('calendar.index');
 
-        Route::get('/calenote/calendar/{type}/{uuid}', function ($type, $uuid) {
+        Route::get('/calendar/{type}/{uuid}', function ($type, $uuid) {
 
             $modeTypes = [
                 'n' => 'normal',
@@ -234,7 +236,7 @@ Route::middleware('web')->group(function () {
                 'seconds' => $reminder->seconds,
             ])->values();
 
-            return Inertia::render('Calenote/Calendar', [
+            return Inertia::render('Calendar/Calendar', [
                 'event' => $uuid,
                 'type' => $allType,
                 'activeEvent' => $event,
@@ -244,11 +246,11 @@ Route::middleware('web')->group(function () {
 
         })->name('calendar.event');
 
-        Route::get('/calenote/notepad', function () {
-            return Inertia::render('Calenote/Notepad');
+        Route::get('/notepad', function () {
+            return Inertia::render('Notepad/Notepad');
         })->name('notepad');
 
-        Route::get('/calenote/notepad/{uuid}', function () {
+        Route::get('/notepad/{uuid}', function () {
             $user = Auth::user();
 
             $notepad = Notepad::where('user_id', $user->id)
@@ -264,8 +266,10 @@ Route::middleware('web')->group(function () {
                 return Inertia::render('Status/Status', ['status' => 404]);
             }
 
-            return Inertia::render('Calenote/Sections/Notepad/NotepadWriteSection', [
+            return Inertia::render('Notepad/Sections/Notepad/NotepadWriteSection', [
                 'content' => $notepad->content,
+                'ai_source_text' => $notepad->ai_source_text,
+                'ai_summary' => $notepad->ai_summary,
                 'uuid' => $notepad->uuid,
                 'title' => $notepad->title,
                 'liked' => (bool) $notepad->liked,
@@ -280,14 +284,15 @@ Route::middleware('web')->group(function () {
         Route::post('/api/notepads', [NotepadController::class, 'StoreNotepads'])->name('notepads.store');
         Route::get('/api/notepads', [NotepadController::class, 'GetNotepads'])->name('notepads.get');
         Route::put('/api/notepads/{uuid}', [NotepadController::class, 'UpdateNotepads'])->name('notepads.update');
+        Route::post('/api/notepads/{uuid}/summary', [NotepadController::class, 'SummarizeNotepadWithAi'])->name('notepads.summary.ai');
         Route::delete('/api/notepads/{uuid}', [NotepadController::class, 'DeleteNotepads'])->name('notepads.delete');
 
         Route::put('/api/notepads/{uuid}/title', [NotepadController::class, 'UpdateNotepadTitle'])->name('notepads.title.update');
         Route::put('/api/notepads/{uuid}/category', [NotepadController::class, 'UpdateNotepadCategory'])->name('notepads.category.update');
-        Route::get('/api/notepads/categories', [NotepadController::class, 'GetNotepadsByCategory'])->name('notepads.category.get');
-        Route::get('/api/notepads/count', [NotepadController::class, 'GetNotepadsCount'])->name('notepads.count.get');
         Route::get('/api/notepads/contents/{id}', [NotepadController::class, 'GetContents'])->name('notepads.contents.get');
         Route::post("/api/notepads/{notepad}/share/email", [NotepadController::class, 'ShareEmail'])->name('notepads.share.email');
+
+        Route::get('/api/dashboard/overview', [DashboardController::class, 'GetOverview'])->name('dashboard.overview');
 
         Route::post('/notepads/{uuid}/like', [NotepadLikeController::class, 'StoreNotepadsLike'])->name('notepads.like.store');
         Route::delete('/notepads/{uuid}/like', [NotepadLikeController::class, 'DeleteNotepadsLike'])->name('notepads.like.delete');
@@ -316,6 +321,7 @@ Route::middleware('web')->group(function () {
         // --------------------
         Route::post('/api/events', [EventController::class, 'StoreEvents'])->name('event.store');
         Route::put('/api/events/{uuid}', [EventController::class, 'UpdateEvents'])->name('event.update');
+        Route::post('/api/events/{uuid}/summary', [EventController::class, 'SummarizeEventWithAi'])->name('event.summary.ai');
         Route::get('/api/events/{uuid}', [EventController::class, 'GetActiveEvents'])->name('event.active.get');
         Route::delete('/api/events/{uuid}', [EventController::class, 'DeleteEvents'])->name('event.delete');
         Route::get('/api/events', [EventController::class, 'GetEvents'])->name('event.get');
@@ -335,6 +341,13 @@ Route::middleware('web')->group(function () {
         Route::patch('/api/challenges/{challengeUuid}/color', [ChallengeController::class, 'UpdateChallengeColor'])->name('challenges.color.update');
         Route::post('/api/challenges/{challengeUuid}/summary', [ChallengeController::class, 'SummarizeChallengeWithAi'])->name('challenges.summary.ai');
         Route::delete('/api/challenges/{challengeUuid}', [ChallengeController::class, 'DeleteChallenge'])->name('challenges.delete');
+        Route::post('/api/markdown-templates', [MarkdownTemplateController::class, 'StoreMarkdownTemplate'])->name('markdown.templates.store');
+        Route::put('/api/markdown-templates/{uuid}', [MarkdownTemplateController::class, 'UpdateMarkdownTemplate'])->name('markdown.templates.update');
+        Route::delete('/api/markdown-templates/{uuid}', [MarkdownTemplateController::class, 'DeleteMarkdownTemplate'])->name('markdown.templates.delete');
+        Route::get('/api/markdown-templates', [MarkdownTemplateController::class, 'GetMarkdownTemplates'])->name('markdown.templates.get');
+        Route::post('/api/markdown-templates/{uuid}/like', [MarkdownTemplateController::class, 'StoreMarkdownTemplateLike'])->name('markdown.templates.like.store');
+        Route::delete('/api/markdown-templates/{uuid}/like', [MarkdownTemplateController::class, 'DeleteMarkdownTemplateLike'])->name('markdown.templates.like.delete');
+        Route::post('/api/markdown-templates/{uuid}/usage', [MarkdownTemplateController::class, 'IncreaseUsage'])->name('markdown.templates.usage');
         Route::get('/api/ddays/event/{uuid}', [DdayController::class, 'GetDdayByEvent'])->name('ddays.event.get');
         Route::patch('/api/ddays/{ddayUuid}/today-check', [DdayController::class, 'ToggleTodayCheck'])->name('ddays.today-check.update');
         Route::post('/api/ddays/{ddayUuid}/retry', [DdayController::class, 'RetryDday'])->name('ddays.retry');

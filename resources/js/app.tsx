@@ -1,10 +1,9 @@
-import CalenoteLayout from './Layouts/CalenoteLayout';
 import '../css/app.css';
 import './bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-import {ComponentType, ReactElement, useState} from 'react';
+import {ComponentType, ReactElement} from 'react';
 import GlobalProvider from "./Providers/GlobalProvider";
 import Root from "./Root";
 import Echo from 'laravel-echo';
@@ -75,16 +74,7 @@ createInertiaApp({
 
         page.default.layout = (pageElement: ReactElement) => {
             const pProps = pageElement.props as PageProps;
-
-            const content = name.startsWith('Calenote/') ? (
-                <CalenoteLayout {...pProps}>
-                    {pageElement}
-                </CalenoteLayout>
-            ) : (
-                pageElement
-            );
-
-            return <Root {...pProps}>{content}</Root>;
+            return <Root {...pProps}>{pageElement}</Root>;
         };
 
         return page;

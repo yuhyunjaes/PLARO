@@ -20,13 +20,13 @@ export const ContentsData = [
     {
         name : "메모장",
         description : "단순한 메모를 넘어, 당신의 창의력을 담습니다.",
-        link : "/calenote/notepad",
+        link : "/notepad",
         url : "/asset/images/Home/content1.jpg",
     },
     {
         name : "캘린더",
         description : "단순한 날짜를 넘어, 당신의 계획을 현실로 만듭니다.",
-        link : "/calenote/calendar",
+        link : "/calendar",
         url : "/asset/images/Home/content2.jpg",
     },
     {

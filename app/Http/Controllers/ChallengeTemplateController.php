@@ -136,9 +136,12 @@ class ChallengeTemplateController extends Controller
     {
         $validated = $request->validate([
             'template_type' => ['required', 'in:mine,every'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'keyword' => ['nullable', 'string', 'max:120'],
         ]);
 
         $templateType = $validated['template_type'];
+        $keyword = trim((string) ($validated['keyword'] ?? ''));
 
         $query = ChallengeTemplate::query()
             ->with(['owner:id,name'])
@@ -166,13 +169,25 @@ class ChallengeTemplateController extends Controller
                 ->orderByDesc('id');
         }
 
-        $templates = $query->limit(60)->get()->map(function (ChallengeTemplate $template) {
+        if ($keyword !== '') {
+            $query->where('title', 'like', '%' . $keyword . '%');
+        }
+
+        $perPage = max(1, (int) config('app_content.pagination.challenge_templates_per_page', 20));
+        $paginator = $query->paginate($perPage);
+        $templates = collect($paginator->items())->map(function (ChallengeTemplate $template) {
             return $this->buildTemplateResponse($template);
         })->values();
 
         return response()->json([
             'success' => true,
             'templates' => $templates,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
         ]);
     }
 

@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 import {AuthUser, Room } from "../../../../Types/PlaroAiTypes";
 import axios from "axios";
-import {GlobalUIContext} from "../../../../Providers/GlobalUIContext";
 
 interface RoomListProps {
     sideBar?: boolean;
@@ -32,26 +31,13 @@ interface RoomListProps {
 }
 
 export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, chatId, setEditId, editRoomRef, setBaseTop, setBaseScroll, editId, editStatus, temporaryEditTitle, setTemporaryEditTitle, handleEditRoom, mdRoomList, mdRoomListToggle, setMdRoomListToggle } : RoomListProps) {
-    const ui = useContext(GlobalUIContext);
-
-    if (!ui) {
-        throw new Error("CalenoteLayout must be used within GlobalProvider");
-    }
-
-    const {
-        setLoading
-    } = ui;
-
     const getRooms = useCallback(async () => {
-        setLoading(true);
         try {
             const res = await axios.get("/api/rooms");
             const data = res.data;
             setRooms(data.rooms);
         } catch (err) {
             console.log(err)
-        } finally {
-            setLoading(false);
         }
     }, [auth])
 
@@ -120,8 +106,8 @@ export default function RoomList({ sideBar, auth, setRooms, rooms, setChatId, ch
                                 const menuWidth = 180;
                                 const gap = 6;
 
-                                // align menu top with ellipsis button top
-                                const y = rect.top;
+                                // 모바일에서는 상단에 너무 붙지 않게 약간 아래로 보정
+                                const y = rect.top + (mdRoomList ? 10 : 0);
 
                                 // place menu to the right of ellipsis button
                                 const x = Math.max(

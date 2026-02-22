@@ -181,6 +181,13 @@ form > div {
     @apply text-xs text-gray-500 dark:text-gray-300 mt-1;
 }
 
+.modal-close-btn {
+    @apply inline-flex size-8 md:size-9 items-center justify-center rounded border border-gray-300 dark:border-gray-700
+    bg-white dark:bg-gray-900 normal-text transition-colors duration-150
+    hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700
+    focus:outline-none focus:ring-2 focus:ring-blue-500/35 dark:focus:ring-blue-300/35 cursor-pointer shrink-0;
+}
+
 @keyframes fadeUp {
     0% {
         opacity: 0;
@@ -267,21 +274,125 @@ form > div {
     @apply bg-white dark:bg-gray-950 rounded border border-gray-300 dark:border-gray-800 p-5 space-y-1;
 }
 
-.write-notepad * {
-    @apply !border-t-transparent !border-r-transparent !border-l-transparent !border-b-gray-300 dark:!border-b-gray-800;
-}
-
-.ql-picker-options {
-    @apply dark:!bg-gray-950 dark:!border dark:!border-gray-800;
-}
-.ql-toolbar {
-    @apply sticky top-[2.6rem] bg-white dark:bg-gray-950 z-[1];
-}
 .user-select-none {
     user-select: none;
 }
 .today span {
     @apply bg-red-500 rounded;
+}
+
+.md-preview h1,
+.md-preview h2,
+.md-preview h3,
+.md-preview h4,
+.md-preview h5,
+.md-preview h6 {
+    @apply font-semibold mt-2 mb-1;
+}
+
+.md-preview h1 { @apply text-base; }
+.md-preview h2 { @apply text-sm; }
+.md-preview h3,
+.md-preview h4,
+.md-preview h5,
+.md-preview h6 { @apply text-xs; }
+
+.md-preview p {
+    @apply mb-1 whitespace-pre-wrap break-words;
+}
+
+.md-preview em {
+    @apply italic;
+}
+
+.md-preview ul,
+.md-preview ol {
+    @apply pl-4 mb-1 space-y-1;
+}
+
+.md-preview ul { list-style: disc; }
+.md-preview ol { list-style: decimal; }
+
+.md-preview ul.md-check {
+    list-style: none;
+    padding-left: 0;
+}
+
+.md-preview blockquote {
+    @apply border-l-2 border-gray-300 dark:border-gray-700 pl-2 text-gray-600 dark:text-gray-300 my-1;
+}
+
+.md-preview code {
+    @apply px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-800 text-[0.9em];
+}
+
+.md-preview pre {
+    @apply my-2 p-3 rounded-lg bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-800 overflow-x-auto;
+}
+
+.md-preview pre code {
+    @apply bg-transparent p-0;
+}
+
+.md-preview a {
+    @apply text-blue-600 dark:text-blue-300 underline break-all;
+}
+
+.md-preview .md-color-red {
+    @apply text-red-600 dark:text-red-300 font-semibold;
+}
+
+.md-preview .md-color-blue {
+    @apply text-blue-600 dark:text-blue-300 font-semibold;
+}
+
+.md-preview .md-color-green {
+    @apply text-green-600 dark:text-green-300 font-semibold;
+}
+
+.md-preview .md-color-amber {
+    @apply text-amber-600 dark:text-amber-300 font-semibold;
+}
+
+.md-preview .md-color-violet {
+    @apply text-violet-600 dark:text-violet-300 font-semibold;
+}
+
+.md-preview .md-bg-red {
+    @apply bg-red-500/20 dark:bg-red-500/25 px-1 rounded;
+}
+
+.md-preview .md-bg-blue {
+    @apply bg-blue-500/20 dark:bg-blue-500/25 px-1 rounded;
+}
+
+.md-preview .md-bg-green {
+    @apply bg-green-500/20 dark:bg-green-500/25 px-1 rounded;
+}
+
+.md-preview .md-bg-amber {
+    @apply bg-amber-500/20 dark:bg-amber-500/25 px-1 rounded;
+}
+
+.md-preview .md-bg-violet {
+    @apply bg-violet-500/20 dark:bg-violet-500/25 px-1 rounded;
+}
+
+.md-preview table {
+    @apply w-full border-collapse text-xs my-2;
+}
+
+.md-preview th,
+.md-preview td {
+    @apply border border-gray-300 dark:border-gray-700 px-2 py-1 text-left;
+}
+
+.md-preview th {
+    @apply bg-gray-100 dark:bg-gray-900 font-semibold;
+}
+
+.md-preview hr {
+    @apply my-3 border-0 h-px bg-gray-300 dark:bg-gray-700;
 }
 
 

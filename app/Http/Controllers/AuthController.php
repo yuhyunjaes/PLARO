@@ -271,7 +271,7 @@ class AuthController extends Controller
                     ]
                 ))->toOthers();
 
-                return Inertia::location("/calenote/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
+                return Inertia::location("/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
                 }
             }
         }
@@ -358,7 +358,7 @@ class AuthController extends Controller
                             ]
                         ))->toOthers();
 
-                        return inertia::location("/calenote/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
+                        return inertia::location("/calendar/{$invitation->event->type[0]}/{$invitation->event->uuid}");
                     }
                 }
             }

@@ -11,11 +11,17 @@ export interface MenuItem {
 
 export const menuData: MenuItem[] =[
     {
-        title: "캘리노트",
+        title: "캘린더",
         links: [
-            { label: "대시보드", href: "/calenote" },
-            { label: "메모장", href: "/calenote/notepad" },
-            { label: "캘린더", href: "/calenote/calendar" },
+            { label: "일반", href: "/calendar/n" },
+            { label: "챌린지", href: "/calendar/c" },
+            { label: "디데이", href: "/calendar/d" },
+        ],
+    },
+    {
+        title: "메모장",
+        links: [
+            { label: "메모장", href: "/notepad" },
         ],
     },
     {
@@ -25,11 +31,10 @@ export const menuData: MenuItem[] =[
         ],
     },
     {
-        title: "소식/자료",
+        title: "대시보드",
         links: [
-            { label: "라이프 소식", href: "/news" },
-            { label: "자유게시판", href: "/calendar" },
-            { label: "포토 갤러리", href: "/gallery" },
+            { label: "대시보드", href: "/dashboard" },
         ],
     },
+
 ]

@@ -71,9 +71,9 @@ export default function FormModal({
             >
                 <div className="p-5 mb-2 flex justify-between items-center">
                     {Title && <h1 className="normal-text text-xl font-semibold">{Title}</h1>}
-                    <button onClick={close}>
-                        <FontAwesomeIcon className="normal-text cursor-pointer" icon={faX} />
-                    </button>
+                    {/*<button type="button" onClick={close} className="modal-close-btn" aria-label="닫기">*/}
+                    {/*    <FontAwesomeIcon className="pointer-events-none text-xs md:text-sm" icon={faX} />*/}
+                    {/*</button>*/}
                 </div>
 
                 {/* 단일 Input 방식 */}

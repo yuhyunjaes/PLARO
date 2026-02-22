@@ -36,7 +36,7 @@ export default function Accept({ auth, mode, event, inviter, invitation }:Status
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
-        throw new Error("Calendar must be used within GlobalProvider");
+        throw new Error("GlobalProvider context is required");
     }
 
     const {
@@ -69,7 +69,7 @@ export default function Accept({ auth, mode, event, inviter, invitation }:Status
                                 try {
                                     const res = await axios.post(`/invitations/${invitation.token}/accept`);
                                     if(res.data.success) {
-                                        router.visit(`/calenote/calendar/${res.data.uuid}`, {
+                                        router.visit(`/calendar/${res.data.uuid}`, {
                                             method: "get",
                                             preserveState: true,
                                             preserveScroll: true,

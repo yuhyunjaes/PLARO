@@ -16,7 +16,7 @@ export default function MessageActions({ msg, handleNotepad } : MessageActionsPr
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
-        throw new Error("CalenoteLayout must be used within GlobalProvider");
+        throw new Error("GlobalProvider context is required");
     }
 
     const {

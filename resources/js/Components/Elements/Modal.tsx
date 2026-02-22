@@ -41,7 +41,7 @@ export default function Modal({ Title, Text, Position, CloseText, setEditStatus,
     };
 
     return (
-        <div className="fixed inset-0 bg-black/30 z-[999] flex justify-center items-center" onClick={Close}>
+        <div className="fixed inset-0 bg-black/30 z-[14000] flex justify-center items-center" onClick={Close}>
             <div
                 className={`w-full ${
                     modalAnimation === "in" ? "animate-in-modal" : "animate-out-modal"
@@ -54,9 +54,9 @@ export default function Modal({ Title, Text, Position, CloseText, setEditStatus,
             >
                 <div className="p-5 mb-2 flex justify-between items-center">
                     {Title && <h1 className="normal-text text-xl font-semibold">{Title}</h1>}
-                    <button onClick={Close}>
-                        <FontAwesomeIcon className="normal-text cursor-pointer" icon={faX} />
-                    </button>
+                    {/*<button type="button" onClick={Close} className="modal-close-btn" aria-label="닫기">*/}
+                    {/*    <FontAwesomeIcon className="pointer-events-none text-xs md:text-sm" icon={faX} />*/}
+                    {/*</button>*/}
                 </div>
 
                 {Text && (

@@ -34,7 +34,7 @@ export default function Footer() {
 
                 </div>
                 <div className="text-center">
-                    <p className="normal-text text-xs font-semibold">© 2025 LifeHubPro. All rights reserved.</p>
+                    <p className="normal-text text-xs font-semibold">© 2025 Plaro. All rights reserved.</p>
                 </div>
             </div>
         </footer>

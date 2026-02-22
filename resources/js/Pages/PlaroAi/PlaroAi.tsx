@@ -8,8 +8,6 @@ import { Categories, AuthUser, Message, Room } from "../../Types/PlaroAiTypes";
 import SideBarSection from "./Sections/SideBarSection";
 import PlaroAiSection from "./Sections/PlaroAiSection";
 import Modal from "../../Components/Elements/Modal";
-import Loading from "../../Components/Elements/Loading";
-import Header from "../../Components/Header/Header";
 import {AlertsData} from "../../Components/Elements/ElementsData";
 import {GlobalUIContext} from "../../Providers/GlobalUIContext";
 import {DateUtils} from "../../Utils/dateUtils";
@@ -27,20 +25,17 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
     const ui = useContext(GlobalUIContext);
 
     if (!ui) {
-        throw new Error("CalenoteLayout must be used within GlobalProvider");
+        throw new Error("GlobalProvider context is required");
     }
 
     const {
         setAlerts,
-        loading,
-        setLoading,
-        sideBar,
-        setSideBar,
-        saveWidth,
-        setSaveWidth,
-        sideBarToggle,
-        setSideBarToggle
     } = ui;
+    const [sideBar, setSideBar] = useState<number>(() =>
+        window.innerWidth < 768 ? 0 : 230
+    );
+    const [saveWidth, setSaveWidth] = useState<number>(230);
+    const [sideBarToggle, setSideBarToggle] = useState<boolean>(false);
 
     const [chatId, setChatId] = useState<string | null>(roomId || null);
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -155,7 +150,6 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
             return;
         }
 
-        setLoading(true);
         try {
             const res = await axios.put(`/api/rooms/${chatId}/settings`, {
                 prompt_profile: roomPromptProfile,
@@ -173,10 +167,8 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
-    }, [chatId, roomPromptProfile, useHistory, setAlerts, setLoading]);
+    }, [chatId, roomPromptProfile, useHistory, setAlerts]);
 
     const getSavedSummary = useCallback(async (): Promise<string> => {
         if (!chatId) return "";
@@ -246,7 +238,6 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
     const getMessages = useCallback(async () => {
         if (!chatId || newChat) return;
 
-        setLoading(true);
         try {
             const res = await axios.get(`/api/messages/${chatId}`);
             const data = res.data;
@@ -269,8 +260,6 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
             }
         } catch (err) {
             console.error("메시지 불러오기 오류:", err);
-        } finally {
-            setLoading(false);
         }
     }, [chatId, newChat]);
 
@@ -322,7 +311,6 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
 
     const handleEditRoom = useCallback(async () => {
         if (!editId || !temporaryEditTitle.trim()) return;
-        setLoading(true);
 
         try {
             const res = await axios.put(`/api/rooms/${editId}`, {
@@ -351,8 +339,6 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     }, [editId, temporaryEditTitle]);
 
@@ -370,8 +356,6 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
 
     const handleDeleteRoom = useCallback( async () => {
         if(!editId) return;
-
-        setLoading(true);
 
         try {
             const res = await axios.delete(`/api/rooms/${editId}`);
@@ -398,16 +382,14 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     }, [editId, chatId]);
 
     return (
         <>
             <Head title="PlaroAi" />
-            <div className="relative overflow-hidden flex h-[calc(100vh-70px)]">
-                <SideBarSection setMdRoomListToggle={setSideBarToggle} mdRoomListToggle={sideBarToggle} mdRoomList={mdRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} baseScroll={baseScroll} setBaseScroll={setBaseScroll} baseTop={baseTop} setBaseTop={setBaseTop} editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId}/>
+            <div className="relative overflow-hidden flex h-full md:h-[calc(100vh-70px)]">
+                <SideBarSection sideBar={sideBar} setSideBar={setSideBar} setMdRoomListToggle={setSideBarToggle} mdRoomListToggle={sideBarToggle} mdRoomList={mdRoomList} handleEditRoom={handleEditRoom} temporaryEditTitle={temporaryEditTitle} setTemporaryEditTitle={setTemporaryEditTitle} editStatus={editStatus} baseScroll={baseScroll} setBaseScroll={setBaseScroll} baseTop={baseTop} setBaseTop={setBaseTop} editRoomRef={editRoomRef} editId={editId} setEditId={setEditId} setMessages={setMessages} auth={auth} rooms={rooms} setRooms={setRooms} chatId={chatId} setChatId={setChatId}/>
                 <div className="flex-1 relative h-full">
                     <div className="absolute top-3 right-3 z-[2] flex items-center gap-2">
                         <div className="relative group">
@@ -446,9 +428,9 @@ export default function PlaroAi({ auth, roomId, now }: PlaroAiProps) {
                             </button>
                         </div>
                     </div>
-                    <PlaroAiSection now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} roomPromptProfile={roomPromptProfile} useHistory={useHistory}/>
+                    <PlaroAiSection now={now} getMessages={getMessages} roomCategories={roomCategories} setRoomCategories={setRoomCategories} handleDeleteChatCategories={handleDeleteChatCategories} setNewChat={setNewChat} prompt={prompt} setPrompt={setPrompt} messages={messages} setMessages={setMessages} auth={auth} roomId={roomId} setRooms={setRooms} chatId={chatId} setChatId={setChatId} roomPromptProfile={roomPromptProfile} useHistory={useHistory} mdRoomList={mdRoomList} mdRoomListToggle={sideBarToggle} setMdRoomListToggle={setSideBarToggle}/>
                 </div>
-                <EditRoom temporaryEditTitle={temporaryEditTitle} handleEditRoom={handleEditRoom} editStatus={editStatus} mdRoomList={mdRoomList} mdRoomListToggle={sideBarToggle} EditTitle={EditTitle} deleteRoom={deleteRoom} editRoomRef={editRoomRef} toggle={editId} />
+                <EditRoom sideBar={sideBar} temporaryEditTitle={temporaryEditTitle} handleEditRoom={handleEditRoom} editStatus={editStatus} mdRoomList={mdRoomList} mdRoomListToggle={sideBarToggle} EditTitle={EditTitle} deleteRoom={deleteRoom} editRoomRef={editRoomRef} toggle={editId} />
             </div>
             {settingsModal && (
                 <div className="fixed inset-0 z-[999] bg-black/30 flex justify-center items-center px-5" onClick={() => setSettingsModal(false)}>

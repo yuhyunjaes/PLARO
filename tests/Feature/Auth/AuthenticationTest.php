@@ -106,7 +106,7 @@ class AuthenticationTest extends TestCase
         $this->post('/logout')->assertRedirect('/login');
 
         $this->withCookie((string) config('session.cookie'), 'old-session-a')
-            ->get('/calenote')
+            ->get('/dashboard')
             ->assertRedirect('/login')
             ->assertSessionHas('logout_reason', '다른 기기에서 로그인되어 자동 로그아웃되었습니다.');
     }
