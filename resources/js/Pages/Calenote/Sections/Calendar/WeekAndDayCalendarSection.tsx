@@ -765,6 +765,9 @@ export default function WeekAndDayCalendarSection({
                     const WEEK_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
                     const today = DateUtils.now();
                     const IsToday = (day.getFullYear() === today.getFullYear()) && (day.getMonth() === today.getMonth()) && (day.getDate() === today.getDate());
+                    const isActiveDay = day.getFullYear() === activeAt.getFullYear()
+                        && day.getMonth() === activeAt.getMonth()
+                        && day.getDate() === activeDay;
                     return (
                         <div
                             data-prentdate={day}
@@ -774,8 +777,8 @@ export default function WeekAndDayCalendarSection({
                             } ${index === 1 ? "first" : ""}`}
                         >
                             <div className="py-2 text-center text-sm bg-white dark:bg-gray-950 max-h-[36px] lg:max-h-[72px] user-select-none font-semibold normal-text flex flex-col items-center justify-center leading-tight">
-                                <p className={`text-xs ${(IsToday ? "today text-white" : "text-gray-500")} flex flex-col lg:flex-row gap-1`}>
-                                    <span className="px-2">{WEEK_DAYS[day.getDay()]} {day.getDate()}</span>
+                                <p className={`text-xs ${IsToday ? "today text-white" : isActiveDay ? "text-blue-600 dark:text-blue-300 font-semibold" : "text-gray-500"} flex flex-col lg:flex-row gap-1`}>
+                                    <span className={`px-2 ${isActiveDay && !IsToday ? "bg-blue-500/10 rounded" : ""}`}>{WEEK_DAYS[day.getDay()]} {day.getDate()}</span>
                                 </p>
                             </div>
                             <div className="h-[100px]"></div>
